@@ -1,0 +1,8 @@
+name: recipe-parser-group10
+channels:
+  - defaults
+dependencies:
+  - python
+  - pip
+  - pip:
+    - -e .
