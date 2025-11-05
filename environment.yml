@@ -4,5 +4,10 @@ channels:
 dependencies:
   - python
   - pip
+  - requests
+  - beautifulsoup4
+  - lxml
+  - urllib
+  - json
   - pip:
     - -e .

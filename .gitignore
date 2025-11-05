@@ -1,5 +1,5 @@
-experiments/
 .DS_Store
 *.egg-info/
 __pycache__/
 eda/
+exp_scraper.ipynb
