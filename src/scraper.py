@@ -3,17 +3,6 @@ from urllib.parse import urlparse
 import requests
 from bs4 import BeautifulSoup
 
-DEFAULT_HEADERS = {
-    "User-Agent": (
-        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
-        "AppleWebKit/537.36 (KHTML, like Gecko) "
-        "Chrome/124.0 Safari/537.36"
-    )
-}
-
-DEFAULT_TIMEOUT = 25
-
-
 def get_recipe_data(url: str):
     """
     Route to a site-specific scraper based on the recipe domain.
@@ -39,36 +28,41 @@ def get_recipe_data(url: str):
         )
 
 def _http_get_soup(url: str) -> BeautifulSoup:
-    response = requests.get(url, headers=DEFAULT_HEADERS, timeout=DEFAULT_TIMEOUT)
+    response = requests.get(url)
     response.raise_for_status()
     return BeautifulSoup(response.text, "lxml")
-
 
 def _extract_json_ld_recipe(soup: BeautifulSoup) -> tuple[str | None, list[str], list[str]]:
     """
     Attempts to extract (title, ingredients, directions) from JSON-LD <script> blocks.
     Returns (None, [], []) if no usable Recipe block is found.
     """
+    
     title: str | None = None
     ingredients: list[str] = []
     directions: list[str] = []
 
     for script_tag in soup.select('script[type="application/ld+json"]'):
-        # Some sites include multiple JSON objects/arrays per <script>
+
+        # Parse JSON content
         raw = script_tag.string
         if not raw:
             continue
+
+        # Try to load JSON
         try:
             data = json.loads(raw)
         except Exception:
             continue
-
+        
+        # make sure to handle both single objects and lists of objects, as JSON-LD can be either
         blocks = data if isinstance(data, list) else [data]
         for block in blocks:
             if not isinstance(block, dict):
                 continue
 
             block_type = block.get("@type")
+            # Check if this is a Recipe block, else skip
             is_recipe = (
                 isinstance(block_type, str) and block_type == "Recipe"
             ) or (isinstance(block_type, list) and "Recipe" in block_type) or ("Recipe" in str(block_type))
@@ -101,15 +95,13 @@ def _extract_json_ld_recipe(soup: BeautifulSoup) -> tuple[str | None, list[str],
                 parts = [p.strip() for p in instructions.split("\n") if p.strip()]
                 directions.extend(parts)
 
-            # Found a usable Recipe block; early exit
+            # Found a usable Recipe block, exit
             if ingredients or directions:
                 return title, ingredients, directions
 
     return title, ingredients, directions
 
-def get_recipe_data_allrecipes(
-    url: str,
-) -> tuple[dict[str, str | None], dict[str, list[str]], dict[str, list[str]]]:
+def get_recipe_data_allrecipes(url: str,) -> tuple[dict[str, str | None], dict[str, list[str]], dict[str, list[str]]]:
     """
     Scrape an AllRecipes recipe page.
 
