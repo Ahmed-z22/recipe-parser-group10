@@ -3,3 +3,4 @@ experiments/
 *.egg-info/
 __pycache__/
 eda/
+exp_scraper.ipynb
