@@ -103,3 +103,48 @@ def _extract_json_ld_recipe(soup: BeautifulSoup) -> tuple[str | None, list[str],
                 return title, ingredients, directions
 
     return title, ingredients, directions
+
+def get_recipe_data_allrecipes(
+    url: str,
+) -> tuple[dict[str, str | None], dict[str, list[str]], dict[str, list[str]]]:
+    """
+    Scrape an AllRecipes recipe page.
+
+    Returns:
+        (
+          {"title": str|None},
+          {"ingredients": list[str]},
+          {"directions": list[str]},
+        )
+    """
+    soup = _http_get_soup(url)
+
+    title, ingredients, directions = _extract_json_ld_recipe(soup)
+
+    # Fallbacks if JSON-LD is incomplete or missing
+    if not title:
+        headline = soup.select_one("h1.headline, h1")
+        if headline:
+            text = headline.get_text(strip=True)
+            if text:
+                title = text
+
+    if not ingredients:
+        ingredients = [
+            node.get_text(strip=True)
+            for node in soup.select(
+                ".ingredients-item .ingredients-item-name, [data-component='Ingredient']"
+            )
+            if node.get_text(strip=True)
+        ]
+
+    if not directions:
+        directions = [
+            node.get_text(strip=True)
+            for node in soup.select(
+                ".instructions-section-item p, .recipe-directions__list--item"
+            )
+            if node.get_text(strip=True)
+        ]
+
+    return ({"title": title}, {"ingredients": ingredients}, {"directions": directions})
