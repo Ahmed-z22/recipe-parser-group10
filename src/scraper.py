@@ -76,22 +76,29 @@ def _extract_json_ld_recipe(soup: BeautifulSoup, url: str, domain: str) -> tuple
     ingredients: list[str] = []
     directions: list[str] = []
 
+    # Iterate over all JSON-LD script tags, looking for Recipe data
     for script_tag in soup.select('script[type="application/ld+json"]'):
         raw = script_tag.string
         if not raw:
             continue
 
         try:
+            # Try parsing the JSON inside the script tag
             data = json.loads(raw)
         except Exception:
+            # Skip malformed or non-JSON script blocks
             continue
 
+        # Ensure we have a list of JSON-LD objects to process
         blocks = data if isinstance(data, list) else [data]
+
         for block in blocks:
             if not isinstance(block, dict):
                 continue
 
             block_type = block.get("@type")
+
+            # Check if this JSON block is of type "Recipe" (can be string, list, or nested object)
             is_recipe = (
                 isinstance(block_type, str) and block_type == "Recipe"
             ) or (isinstance(block_type, list) and "Recipe" in block_type) or ("Recipe" in str(block_type))
@@ -99,31 +106,41 @@ def _extract_json_ld_recipe(soup: BeautifulSoup, url: str, domain: str) -> tuple
             if not is_recipe:
                 continue
 
+            # if current block is a Recipe, extract title, ingredients, and directions
             if not title:
                 name = block.get("name")
                 if isinstance(name, str) and name.strip():
                     title = name.strip()
 
+            # Extract ingredients usually as a list of strings
             recipe_ingredients = block.get("recipeIngredient")
             if isinstance(recipe_ingredients, list):
                 ingredients = [str(s).strip() for s in recipe_ingredients if str(s).strip()]
 
+            # Extract cooking directions, can be a list of dicts or plain strings
             instructions = block.get("recipeInstructions")
+
             if isinstance(instructions, list):
                 for step in instructions:
+                    # Handle dict-based steps (common JSON-LD pattern)
                     if isinstance(step, dict):
                         text = step.get("text")
                         if isinstance(text, str) and text.strip():
                             directions.append(text.strip())
+                    # Handle plain string steps
                     elif isinstance(step, str) and step.strip():
                         directions.append(step.strip())
+
+            # Some pages store directions as a single string separated by newlines
             elif isinstance(instructions, str) and instructions.strip():
                 parts = [p.strip() for p in instructions.split("\n") if p.strip()]
                 directions.extend(parts)
 
+            # Early exit
             if ingredients or directions:
                 break
 
+    # Final validation: ensure we non-empty title, ingredients, and directions
     if not title or not ingredients or not directions:
         raise ValueError(
             f"Failed to extract recipe data from {domain} page, possibly due to site structure changes.\n"
