@@ -18,6 +18,9 @@ def get_recipe_data(url: str):
     """
     Route to a site-specific scraper based on the recipe domain.
 
+    Args:
+        url (str): URL of the recipe page.
+        
     Returns:
         ({"title": str|None}, {"ingredients": list[str]}, {"directions": list[str]})
     """
