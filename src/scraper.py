@@ -3,6 +3,12 @@ from urllib.parse import urlparse
 import requests
 from bs4 import BeautifulSoup
 
+SUPPORTED_WEBSITES = [
+    "allrecipes.com",
+    "epicurious.com",
+    "bonappetit.com"
+]
+
 def get_recipe_data(url: str):
     """
     Extracts recipe data (title, ingredients, and directions) from a supported recipe URL.
@@ -26,15 +32,15 @@ def get_recipe_data(url: str):
     """
     domain = urlparse(url).netloc.lower()
 
-    if "allrecipes.com" in domain or "epicurious.com" in domain or "bonappetit.com" in domain:
-        soup = _http_get_soup(url)
-        title, ingredients, directions = _extract_json_ld_recipe(soup, url, domain)
-        return {"title": title}, {"ingredients": ingredients}, {"directions": directions}
-    else:
+    if domain.removeprefix("www.") not in SUPPORTED_WEBSITES:
         raise ValueError(
             f"Unsupported website domain: {domain}. "
             "Currently supported: allrecipes.com, epicurious.com, bonappetit.com"
         )
+    
+    soup = _http_get_soup(url)
+    title, ingredients, directions = _extract_json_ld_recipe(soup, url, domain)
+    return {"title": title}, {"ingredients": ingredients}, {"directions": directions}
 
 def _http_get_soup(url: str) -> BeautifulSoup:
     """
@@ -143,8 +149,8 @@ def _extract_json_ld_recipe(soup: BeautifulSoup, url: str, domain: str) -> tuple
     # Final validation: ensure we non-empty title, ingredients, and directions
     if not title or not ingredients or not directions:
         raise ValueError(
-            f"Failed to extract recipe data from {domain} page, possibly due to site structure changes.\n"
-            f"Check the URL: {url}"
+            f"Failed to extract recipe data from this website: {domain}.\n"
+            f"Check the URL: {url} and confirm if it is a valid recipe page."
         )
 
     return title, ingredients, directions
