@@ -5,22 +5,31 @@ from bs4 import BeautifulSoup
 
 def get_recipe_data(url: str):
     """
-    Route to a site-specific scraper based on the recipe domain.
+    Extracts recipe data (title, ingredients, and directions) from a supported recipe URL.
+
+    Supported domains:
+        - allrecipes.com
+        - epicurious.com
+        - bonappetit.com
 
     Args:
-        url (str): URL of the recipe page.
+        url (str): The full URL of the recipe page.
 
     Returns:
-        ({"title": str|None}, {"ingredients": list[str]}, {"directions": list[str]})
+        tuple[dict, dict, dict]: A tuple containing:
+            - {"title": str | None}: The recipe title (or None if unavailable).
+            - {"ingredients": list[str]}: A list of ingredients.
+            - {"directions": list[str]}: A list of cooking directions.
+
+    Raises:
+        ValueError: If the URL domain is unsupported or recipe data cannot be extracted.
     """
     domain = urlparse(url).netloc.lower()
 
-    if "allrecipes.com" in domain:
-        return get_recipe_data_allrecipes(url)
-    elif "epicurious.com" in domain:
-        return get_recipe_data_epicurious(url)
-    elif "bonappetit.com" in domain:
-        return get_recipe_data_bonappetit(url)
+    if "allrecipes.com" in domain or "epicurious.com" in domain or "bonappetit.com" in domain:
+        soup = _http_get_soup(url)
+        title, ingredients, directions = _extract_json_ld_recipe(soup, url, domain)
+        return {"title": title}, {"ingredients": ingredients}, {"directions": directions}
     else:
         raise ValueError(
             f"Unsupported website domain: {domain}. "
@@ -28,41 +37,61 @@ def get_recipe_data(url: str):
         )
 
 def _http_get_soup(url: str) -> BeautifulSoup:
+    """
+    Sends an HTTP GET request and parses the response into a BeautifulSoup object.
+
+    Args:
+        url (str): The target URL.
+
+    Returns:
+        BeautifulSoup: Parsed HTML content of the page.
+
+    Raises:
+        requests.HTTPError: If the HTTP request fails (e.g., 404, 500).
+    """
     response = requests.get(url)
     response.raise_for_status()
     return BeautifulSoup(response.text, "lxml")
 
-def _extract_json_ld_recipe(soup: BeautifulSoup) -> tuple[str | None, list[str], list[str]]:
+def _extract_json_ld_recipe(soup: BeautifulSoup, url: str, domain: str) -> tuple[str | None, list[str], list[str]]:
     """
-    Attempts to extract (title, ingredients, directions) from JSON-LD <script> blocks.
-    Returns (None, [], []) if no usable Recipe block is found.
+    Extracts recipe information (title, ingredients, and directions)
+    from JSON-LD <script> blocks embedded in the HTML.
+
+    Args:
+        soup (BeautifulSoup): Parsed HTML content.
+        url (str): The recipe page URL (used for error context).
+        domain (str): The website domain (used for error context).
+
+    Returns:
+        tuple[str | None, list[str], list[str]]: A tuple containing:
+            - The recipe title (or None if unavailable).
+            - A list of ingredients.
+            - A list of directions.
+
+    Raises:
+        ValueError: If no valid recipe data (title, ingredients, or directions) can be extracted.
     """
-    
-    title: str | None = None
+    title: str = ""
     ingredients: list[str] = []
     directions: list[str] = []
 
     for script_tag in soup.select('script[type="application/ld+json"]'):
-
-        # Parse JSON content
         raw = script_tag.string
         if not raw:
             continue
 
-        # Try to load JSON
         try:
             data = json.loads(raw)
         except Exception:
             continue
-        
-        # make sure to handle both single objects and lists of objects, as JSON-LD can be either
+
         blocks = data if isinstance(data, list) else [data]
         for block in blocks:
             if not isinstance(block, dict):
                 continue
 
             block_type = block.get("@type")
-            # Check if this is a Recipe block, else skip
             is_recipe = (
                 isinstance(block_type, str) and block_type == "Recipe"
             ) or (isinstance(block_type, list) and "Recipe" in block_type) or ("Recipe" in str(block_type))
@@ -70,18 +99,15 @@ def _extract_json_ld_recipe(soup: BeautifulSoup) -> tuple[str | None, list[str],
             if not is_recipe:
                 continue
 
-            # Title
             if not title:
                 name = block.get("name")
                 if isinstance(name, str) and name.strip():
                     title = name.strip()
 
-            # Ingredients
             recipe_ingredients = block.get("recipeIngredient")
             if isinstance(recipe_ingredients, list):
                 ingredients = [str(s).strip() for s in recipe_ingredients if str(s).strip()]
 
-            # Directions / Instructions
             instructions = block.get("recipeInstructions")
             if isinstance(instructions, list):
                 for step in instructions:
@@ -95,179 +121,13 @@ def _extract_json_ld_recipe(soup: BeautifulSoup) -> tuple[str | None, list[str],
                 parts = [p.strip() for p in instructions.split("\n") if p.strip()]
                 directions.extend(parts)
 
-            # Found a usable Recipe block, exit
             if ingredients or directions:
-                return title, ingredients, directions
+                break
+
+    if not title or not ingredients or not directions:
+        raise ValueError(
+            f"Failed to extract recipe data from {domain} page, possibly due to site structure changes.\n"
+            f"Check the URL: {url}"
+        )
 
     return title, ingredients, directions
-
-def get_recipe_data_allrecipes(url: str,) -> tuple[dict[str, str | None], dict[str, list[str]], dict[str, list[str]]]:
-    """
-    Scrape an AllRecipes recipe page.
-
-    Returns:
-        (
-          {"title": str|None},
-          {"ingredients": list[str]},
-          {"directions": list[str]},
-        )
-    """
-    soup = _http_get_soup(url)
-
-    title, ingredients, directions = _extract_json_ld_recipe(soup)
-
-    # Fallbacks if JSON-LD is incomplete or missing
-    if not title:
-        headline = soup.select_one("h1.headline, h1")
-        if headline:
-            text = headline.get_text(strip=True)
-            if text:
-                title = text
-
-    if not ingredients:
-        ingredients = [
-            node.get_text(strip=True)
-            for node in soup.select(
-                ".ingredients-item .ingredients-item-name, [data-component='Ingredient']"
-            )
-            if node.get_text(strip=True)
-        ]
-
-    if not directions:
-        directions = [
-            node.get_text(strip=True)
-            for node in soup.select(
-                ".instructions-section-item p, .recipe-directions__list--item"
-            )
-            if node.get_text(strip=True)
-        ]
-
-    return ({"title": title}, {"ingredients": ingredients}, {"directions": directions})
-
-
-def get_recipe_data_epicurious(
-    url: str,
-) -> tuple[dict[str, str | None], dict[str, list[str]], dict[str, list[str]]]:
-    """
-    Scrape an Epicurious recipe page.
-
-    Returns:
-        (
-          {"title": str|None},
-          {"ingredients": list[str]},
-          {"directions": list[str]},   # (called "Preparation" on-site)
-        )
-    """
-    soup = _http_get_soup(url)
-
-    title, ingredients, directions = _extract_json_ld_recipe(soup)
-
-    # Fallback selectors (site markup can change)
-    if not title:
-        for selector in (
-            "h1[data-testid='ContentHeaderHed']",
-            "h1.eoMGhC",
-            "h1",
-        ):
-            node = soup.select_one(selector)
-            if node and node.get_text(strip=True):
-                title = node.get_text(strip=True)
-                break
-
-    if not ingredients:
-        for selector in (
-            "ul[data-testid='Ingredients'] li",
-            "[data-testid='Ingredient']",
-            "li.ingredient",
-        ):
-            items = [
-                node.get_text(" ", strip=True)
-                for node in soup.select(selector)
-                if node.get_text(strip=True)
-            ]
-            if items:
-                ingredients = items
-                break
-
-    if not directions:
-        for selector in (
-            "ol[data-testid='Instructions'] li",
-            "[data-testid='InstructionStep']",
-            "section[data-testid='Instructions'] li",
-            "ol li",
-        ):
-            steps = [
-                node.get_text(" ", strip=True)
-                for node in soup.select(selector)
-                if node.get_text(strip=True)
-            ]
-            if steps:
-                directions = steps
-                break
-
-    return ({"title": title}, {"ingredients": ingredients}, {"directions": directions})
-
-
-def get_recipe_data_bonappetit(
-    url: str,
-) -> tuple[dict[str, str | None], dict[str, list[str]], dict[str, list[str]]]:
-    """
-    Scrape a Bon Appétit recipe page.
-
-    Returns:
-        (
-          {"title": str|None},
-          {"ingredients": list[str]},
-          {"directions": list[str]},
-        )
-    """
-    soup = _http_get_soup(url)
-
-    title, ingredients, directions = _extract_json_ld_recipe(soup)
-
-    # Fallback selectors
-    if not title:
-        for selector in (
-            "h1",
-            "[data-testid='ContentHeaderHed']",
-        ):
-            node = soup.select_one(selector)
-            if node and node.get_text(strip=True):
-                title = node.get_text(strip=True)
-                break
-
-    if not ingredients:
-        for selector in (
-            "[data-testid='IngredientList'] li",
-            "[data-testid='Ingredient']",
-            "ul li:has(span[data-ingredient])",
-            "section:has(h2:matches(Ingredients|INGREDIENTS)) li",
-            "ul li",
-        ):
-            items = [
-                node.get_text(" ", strip=True)
-                for node in soup.select(selector)
-                if node.get_text(strip=True)
-            ]
-            if items:
-                ingredients = items
-                break
-
-    if not directions:
-        for selector in (
-            "[data-testid='Instructions'] li",
-            "[data-testid='InstructionStep']",
-            "ol li",
-            "section:has(h2:matches(Preparation|PREPARATION|Instructions)) li",
-            "article p",
-        ):
-            steps = [
-                node.get_text(" ", strip=True)
-                for node in soup.select(selector)
-                if node.get_text(strip=True)
-            ]
-            if steps:
-                directions = steps
-                break
-
-    return ({"title": title}, {"ingredients": ingredients}, {"directions": directions})
