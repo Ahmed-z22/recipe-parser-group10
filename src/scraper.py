@@ -148,3 +148,67 @@ def get_recipe_data_allrecipes(
         ]
 
     return ({"title": title}, {"ingredients": ingredients}, {"directions": directions})
+
+
+def get_recipe_data_epicurious(
+    url: str,
+) -> tuple[dict[str, str | None], dict[str, list[str]], dict[str, list[str]]]:
+    """
+    Scrape an Epicurious recipe page.
+
+    Returns:
+        (
+          {"title": str|None},
+          {"ingredients": list[str]},
+          {"directions": list[str]},   # (called "Preparation" on-site)
+        )
+    """
+    soup = _http_get_soup(url)
+
+    title, ingredients, directions = _extract_json_ld_recipe(soup)
+
+    # Fallback selectors (site markup can change)
+    if not title:
+        for selector in (
+            "h1[data-testid='ContentHeaderHed']",
+            "h1.eoMGhC",
+            "h1",
+        ):
+            node = soup.select_one(selector)
+            if node and node.get_text(strip=True):
+                title = node.get_text(strip=True)
+                break
+
+    if not ingredients:
+        for selector in (
+            "ul[data-testid='Ingredients'] li",
+            "[data-testid='Ingredient']",
+            "li.ingredient",
+        ):
+            items = [
+                node.get_text(" ", strip=True)
+                for node in soup.select(selector)
+                if node.get_text(strip=True)
+            ]
+            if items:
+                ingredients = items
+                break
+
+    if not directions:
+        for selector in (
+            "ol[data-testid='Instructions'] li",
+            "[data-testid='InstructionStep']",
+            "section[data-testid='Instructions'] li",
+            "ol li",
+        ):
+            steps = [
+                node.get_text(" ", strip=True)
+                for node in soup.select(selector)
+                if node.get_text(strip=True)
+            ]
+            if steps:
+                directions = steps
+                break
+
+    return ({"title": title}, {"ingredients": ingredients}, {"directions": directions})
+
