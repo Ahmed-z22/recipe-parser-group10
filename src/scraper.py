@@ -40,3 +40,66 @@ def _http_get_soup(url: str) -> BeautifulSoup:
     resp.raise_for_status()
     return BeautifulSoup(resp.text, "lxml")
 
+
+def _extract_json_ld_recipe(soup: BeautifulSoup) -> tuple[str | None, list[str], list[str]]:
+    """
+    Attempts to extract (title, ingredients, directions) from JSON-LD <script> blocks.
+    Returns (None, [], []) if no usable Recipe block is found.
+    """
+    title: str | None = None
+    ingredients: list[str] = []
+    directions: list[str] = []
+
+    for script_tag in soup.select('script[type="application/ld+json"]'):
+        # Some sites include multiple JSON objects/arrays per <script>
+        raw = script_tag.string
+        if not raw:
+            continue
+        try:
+            data = json.loads(raw)
+        except Exception:
+            continue
+
+        blocks = data if isinstance(data, list) else [data]
+        for block in blocks:
+            if not isinstance(block, dict):
+                continue
+
+            block_type = block.get("@type")
+            is_recipe = (
+                isinstance(block_type, str) and block_type == "Recipe"
+            ) or (isinstance(block_type, list) and "Recipe" in block_type) or ("Recipe" in str(block_type))
+
+            if not is_recipe:
+                continue
+
+            # Title
+            if not title:
+                name = block.get("name")
+                if isinstance(name, str) and name.strip():
+                    title = name.strip()
+
+            # Ingredients
+            recipe_ingredients = block.get("recipeIngredient")
+            if isinstance(recipe_ingredients, list):
+                ingredients = [str(s).strip() for s in recipe_ingredients if str(s).strip()]
+
+            # Directions / Instructions
+            instructions = block.get("recipeInstructions")
+            if isinstance(instructions, list):
+                for step in instructions:
+                    if isinstance(step, dict):
+                        text = step.get("text")
+                        if isinstance(text, str) and text.strip():
+                            directions.append(text.strip())
+                    elif isinstance(step, str) and step.strip():
+                        directions.append(step.strip())
+            elif isinstance(instructions, str) and instructions.strip():
+                parts = [p.strip() for p in instructions.split("\n") if p.strip()]
+                directions.extend(parts)
+
+            # Found a usable Recipe block; early exit
+            if ingredients or directions:
+                return title, ingredients, directions
+
+    return title, ingredients, directions
