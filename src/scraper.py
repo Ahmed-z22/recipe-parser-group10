@@ -35,4 +35,8 @@ def get_recipe_data(url: str):
             "Currently supported: allrecipes.com, epicurious.com, bonappetit.com"
         )
 
+def _http_get_soup(url: str) -> BeautifulSoup:
+    resp = requests.get(url, headers=DEFAULT_HEADERS, timeout=DEFAULT_TIMEOUT)
+    resp.raise_for_status()
+    return BeautifulSoup(resp.text, "lxml")
 
