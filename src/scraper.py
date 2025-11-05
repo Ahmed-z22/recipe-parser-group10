@@ -20,7 +20,7 @@ def get_recipe_data(url: str):
 
     Args:
         url (str): URL of the recipe page.
-        
+
     Returns:
         ({"title": str|None}, {"ingredients": list[str]}, {"directions": list[str]})
     """
@@ -39,9 +39,9 @@ def get_recipe_data(url: str):
         )
 
 def _http_get_soup(url: str) -> BeautifulSoup:
-    resp = requests.get(url, headers=DEFAULT_HEADERS, timeout=DEFAULT_TIMEOUT)
-    resp.raise_for_status()
-    return BeautifulSoup(resp.text, "lxml")
+    response = requests.get(url, headers=DEFAULT_HEADERS, timeout=DEFAULT_TIMEOUT)
+    response.raise_for_status()
+    return BeautifulSoup(response.text, "lxml")
 
 
 def _extract_json_ld_recipe(soup: BeautifulSoup) -> tuple[str | None, list[str], list[str]]:
