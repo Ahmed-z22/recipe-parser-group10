@@ -7,6 +7,5 @@ dependencies:
   - requests
   - beautifulsoup4
   - lxml
-  - tqdm
   - pip:
     - -e .
