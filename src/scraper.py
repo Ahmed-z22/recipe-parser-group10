@@ -212,3 +212,67 @@ def get_recipe_data_epicurious(
 
     return ({"title": title}, {"ingredients": ingredients}, {"directions": directions})
 
+
+def get_recipe_data_bonappetit(
+    url: str,
+) -> tuple[dict[str, str | None], dict[str, list[str]], dict[str, list[str]]]:
+    """
+    Scrape a Bon Appétit recipe page.
+
+    Returns:
+        (
+          {"title": str|None},
+          {"ingredients": list[str]},
+          {"directions": list[str]},
+        )
+    """
+    soup = _http_get_soup(url)
+
+    title, ingredients, directions = _extract_json_ld_recipe(soup)
+
+    # Fallback selectors
+    if not title:
+        for selector in (
+            "h1",
+            "[data-testid='ContentHeaderHed']",
+        ):
+            node = soup.select_one(selector)
+            if node and node.get_text(strip=True):
+                title = node.get_text(strip=True)
+                break
+
+    if not ingredients:
+        for selector in (
+            "[data-testid='IngredientList'] li",
+            "[data-testid='Ingredient']",
+            "ul li:has(span[data-ingredient])",
+            "section:has(h2:matches(Ingredients|INGREDIENTS)) li",
+            "ul li",
+        ):
+            items = [
+                node.get_text(" ", strip=True)
+                for node in soup.select(selector)
+                if node.get_text(strip=True)
+            ]
+            if items:
+                ingredients = items
+                break
+
+    if not directions:
+        for selector in (
+            "[data-testid='Instructions'] li",
+            "[data-testid='InstructionStep']",
+            "ol li",
+            "section:has(h2:matches(Preparation|PREPARATION|Instructions)) li",
+            "article p",
+        ):
+            steps = [
+                node.get_text(" ", strip=True)
+                for node in soup.select(selector)
+                if node.get_text(strip=True)
+            ]
+            if steps:
+                directions = steps
+                break
+
+    return ({"title": title}, {"ingredients": ingredients}, {"directions": directions})
