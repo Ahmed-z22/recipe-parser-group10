@@ -17,7 +17,7 @@ def get_recipe_data(url: str):
 
     Returns:
         tuple[dict, dict, dict]: A tuple containing:
-            - {"title": str | None}: The recipe title (or None if unavailable).
+            - {"title": str}: The recipe title (name).
             - {"ingredients": list[str]}: A list of ingredients.
             - {"directions": list[str]}: A list of cooking directions.
 
@@ -41,7 +41,7 @@ def _http_get_soup(url: str) -> BeautifulSoup:
     Sends an HTTP GET request and parses the response into a BeautifulSoup object.
 
     Args:
-        url (str): The target URL.
+        url (str): The target URL (recipe page).
 
     Returns:
         BeautifulSoup: Parsed HTML content of the page.
@@ -64,8 +64,8 @@ def _extract_json_ld_recipe(soup: BeautifulSoup, url: str, domain: str) -> tuple
         domain (str): The website domain (used for error context).
 
     Returns:
-        tuple[str | None, list[str], list[str]]: A tuple containing:
-            - The recipe title (or None if unavailable).
+        tuple[str, list[str], list[str]]: A tuple containing:
+            - The recipe title.
             - A list of ingredients.
             - A list of directions.
 
