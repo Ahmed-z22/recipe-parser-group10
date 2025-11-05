@@ -7,5 +7,7 @@ dependencies:
   - requests
   - beautifulsoup4
   - lxml
+  - urllib
+  - json
   - pip:
     - -e .
