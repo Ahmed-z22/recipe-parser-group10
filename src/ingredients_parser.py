@@ -183,6 +183,7 @@ class IngredientsParser:
         Executes all extraction methods ingredients.
         returns: A list of dictionaries, each containing the parsed components of an ingredient:
             - original_ingredient_sentence: The original ingredient line.
+            - ingredient_name: The extracted ingredient name (str).
             - ingredient_quantity: The extracted quantity (int, float, or None).
             - measurement_unit: The standardized measurement unit (str or None).
             - ingredient_preparation: List of preparation phrases (list of str).
@@ -198,6 +199,7 @@ class IngredientsParser:
         for i in range(len(self.ingredients)):
             output.append({
                 "original_ingredient_sentence": self.ingredients[i],
+                "ingredient_name": self.ingredients_names[i],
                 "ingredient_quantity": self.ingredients_quantities_and_amounts[i],
                 "measurement_unit": self.ingredients_measurement_units[i],
                 "ingredient_preparation": self.preparations[i],
