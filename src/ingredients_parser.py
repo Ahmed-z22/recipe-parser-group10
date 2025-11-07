@@ -23,160 +23,77 @@ class IngredientsParser:
 
         with self.fractions_file.open("r", encoding="utf-8") as f:
             self.unicode_fractions = json.load(f)
+        
+        self.frac_chars = "".join(self.unicode_fractions.keys())
 
     def extract_ingredients_names(self):
-        frac_chars = "".join(self.unicode_fractions.keys())
-
-        # Leading “noise” words we want to ignore so quantities/units can be matched
-        re_noise = re.compile(
-            r"^\s*(?:plus|and|with|about|approximately|approx\.|around|roughly|nearly|another|extra|more)\b[\s,]*",
-            re.IGNORECASE,
-        )
-
-        # Leading quantity patterns (anchored at start)
-        re_range   = re.compile(r"^\s*\d+(?:\.\d+)?\s*(?:-|–|to)\s*\d+(?:\.\d+)?\s*", re.IGNORECASE)
-        re_unicode = re.compile(rf"^\s*(?:(\d+)\s*)?[{re.escape(frac_chars)}]\s*")
-        re_ascii   = re.compile(r"^\s*(?:(\d+)\s+)?\d+\s*/\s*\d+\s*")
-        re_decimal = re.compile(r"^\s*\d+\.\d+\s*")
-        re_integer = re.compile(r"^\s*\d+\s*")
-
-        # Parenthetical blocks following qty
-        re_paren   = re.compile(r"^\s*\([^)]*\)\s*")
-
-        # Unit tokens (longest first)
-        units_pattern = "|".join(sorted((re.escape(k) for k in self.alias_to_canon.keys()), key=len, reverse=True))
-        re_unit = re.compile(rf"^\s*(?:{units_pattern})\b\.?\s*", re.IGNORECASE)
-
-        # Optional "of" after unit
-        re_of = re.compile(r"^\s*of\b\s*", re.IGNORECASE)
-
-        names = []
-        for line in self.ingredients:
-            s = line
-
-            # 0) Strip leading noise words like "plus", "with", "about", etc.
-            #    Loop in case there are multiple (e.g., "plus about 3 tbsp ...")
-            for _ in range(3):
-                m = re_noise.search(s)
-                if m is not None:
-                    s = s[m.end():]
-                else:
-                    break
-
-            # 1) Strip leading quantity (try each pattern once)
-            m = re_range.search(s)
-            if m is not None:
-                s = s[m.end():]
-            else:
-                m = re_unicode.search(s)
-                if m is not None:
-                    s = s[m.end():]
-                else:
-                    m = re_ascii.search(s)
-                    if m is not None:
-                        s = s[m.end():]
-                    else:
-                        m = re_decimal.search(s)
-                        if m is not None:
-                            s = s[m.end():]
-                        else:
-                            m = re_integer.search(s)
-                            if m is not None:
-                                s = s[m.end():]
-
-            # 2) Remove immediate parenthetical blocks like "(28 ounce)"
-            for _ in range(3):
-                m = re_paren.search(s)
-                if m is not None:
-                    s = s[m.end():]
-                else:
-                    break
-
-            # 3) Remove a single leading unit if present
-            m = re_unit.search(s)
-            if m is not None:
-                s = s[m.end():]
-
-            # 4) Optional "of"
-            m = re_of.search(s)
-            if m is not None:
-                s = s[m.end():]
-
-            # 5) Truncate at the first comma (drop prep notes)
-            comma_idx = s.find(',')
-            if comma_idx != -1:
-                s = s[:comma_idx]
-
-            s = re.sub(r"\s+", " ", s).strip()
-
-            if not s:
-                s = line.strip()
-
-            names.append(s)
-
-        self.ingredients_names = names
-
-    def extract_quantities(self):
-
-        frac_chars = "".join(self.unicode_fractions.keys())
-
-        re_range   = re.compile(r"^\s*(\d+(?:\.\d+)?)\s*(?:-|–|to)\s*(\d+(?:\.\d+)?)", re.IGNORECASE)
-        re_unicode = re.compile(rf"^\s*(?:(\d+)\s*)?([{re.escape(frac_chars)}])")
-        re_ascii   = re.compile(r"^\s*(?:(\d+)\s+)?(\d+)\s*/\s*(\d+)")
-        re_decimal = re.compile(r"^\s*(\d+\.\d+)")
-        re_integer = re.compile(r"^\s*(\d+)")
+        """
+        Extracts ingredient names by removing leading quantities, units, an optional
+        leading "of", and any text after a comma. Normalizes whitespace and stores
+        results in self.ingredients_names.
+        """
+        qty = re.compile(
+            r"^\s*(?:\d+(?:\.\d+)?\s*(?:-|–|to)\s*\d+(?:\.\d+)?|(?:(\d+)\s*)?[" + re.escape(self.frac_chars) +
+            r"]|(?:(\d+)\s+)?\d+\s*/\s*\d+|\d+\.\d+|\d+)\s*", re.I)
+        unit = re.compile(
+            r"^\s*(?:" + "|".join(sorted(map(re.escape, self.alias_to_canon.keys()), key=len, reverse=True)) +
+            r")\b\.?\s*", re.I)
+        of = re.compile(r"^\s*of\b\.?\s*", re.I)
 
         out = []
         for line in self.ingredients:
-            qty = None
+            match = qty.search(line);  line = line[match.end():] if match else line
+            match = unit.search(line); line = line[match.end():] if match else line
+            match = of.search(line);   line = line[match.end():] if match else line
+            line = line.split(',', 1)[0]
+            line = re.sub(r"\s+", " ", line).strip()
+            out.append(line)
+        self.ingredients_names = out
 
-            m = re_range.search(line)
-            if m:
-                try:
-                    qty = float(m.group(1))
-                except:
-                    qty = None
+    def extract_quantities(self):
+        """
+        Extracts the quantity value from each ingredient line.
+        Stores the numeric results (or None if no quantity found) in
+        self.ingredients_quantities_and_amounts.
+        """
+        qty_re = re.compile(
+            r"""^\s*(?:
+                (?P<r1>\d+(?:\.\d+)?)\s*(?:-|–|to)\s*(?P<r2>\d+(?:\.\d+)?) |
+                (?:(?P<uw>\d+)\s*)?(?P<uf>[{f}]) |
+                (?:(?P<aw>\d+)\s+)?(?P<num>\d+)\s*/\s*(?P<den>\d+) |
+                (?P<dec>\d+\.\d+) |
+                (?P<int>\d+)
+            )""".format(f=re.escape(self.frac_chars)),
+            re.VERBOSE | re.IGNORECASE)
 
-            if qty is None:
-                m = re_unicode.search(line)
-                if m:
-                    whole = float(m.group(1)) if m.group(1) else 0.0
-                    frac_val = self.unicode_fractions.get(m.group(2), 0.0)
-                    qty = whole + float(frac_val)
+        out = []
+        for line in self.ingredients:
+            quantity = None
+            match = qty_re.search(line)
+            if match:
+                groups = match.group
+                if groups('r1'):
+                    quantity = float(groups('r1'))
+                elif groups('uf'):
+                    quantity = (float(groups('uw')) if groups('uw') else 0.0) + float(self.unicode_fractions.get(groups('uf'), 0.0))
+                elif groups('num'):
+                    denominator = int(groups('den'))
+                    if denominator:
+                        quantity = (float(groups('aw')) if groups('aw') else 0.0) + int(groups('num')) / denominator
+                elif groups('dec'):
+                    quantity = float(groups('dec'))
+                elif groups('int'):
+                    quantity = float(groups('int'))
 
-            if qty is None:
-                m = re_ascii.search(line)
-                if m:
-                    try:
-                        whole = float(m.group(1)) if m.group(1) else 0.0
-                        num, den = int(m.group(2)), int(m.group(3))
-                        if den != 0:
-                            qty = whole + (num / den)
-                    except:
-                        qty = None
-
-            if qty is None:
-                m = re_decimal.search(line)
-                if m:
-                    qty = float(m.group(1))
-
-            if qty is None:
-                m = re_integer.search(line)
-                if m:
-                    qty = float(m.group(1))
-
-            if qty is not None and qty.is_integer():
-                qty = int(qty)
-
-            out.append(qty)
+            if quantity is not None and float(quantity).is_integer():
+                quantity = int(quantity)
+            out.append(quantity)
 
         self.ingredients_quantities_and_amounts = out
 
     def extract_measurement_units(self):
-
         units_pattern = "|".join(sorted((re.escape(k) for k in self.alias_to_canon.keys()), key=len, reverse=True))
         regex_units = re.compile(rf"\b({units_pattern})\b", re.IGNORECASE)
-
         regex_parent = re.compile(r"\([^)]*\)")
 
         out = []
