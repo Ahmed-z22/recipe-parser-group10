@@ -105,10 +105,6 @@ class IngredientsParser:
             out.append(self.alias_to_canon.get(match.group(1).lower()) if match else None)
         self.ingredients_measurement_units = out
 
-
-
-
-
     def extract_descriptors(self):
         """
         Extracts adjective descriptors that modify the main ingredient noun in each line.
@@ -138,89 +134,54 @@ class IngredientsParser:
         self.descriptors = results
 
     def extract_preparations(self):
-        def head_noun(doc):
-            ns = [t for t in doc if t.pos_ in ("NOUN", "PROPN")]
-            return ns[-1] if ns else None
-
-        PP = {("for","drizzling"),("for","serving"),("to","taste"),("at","room"),("at","temperature")}
-
-        out = []
+        """
+        Extracts preparation phrases (e.g., “thinly sliced”, “finely chopped”) associated
+        with each ingredient by identifying participles and verbal modifiers linked to the
+        ingredient’s main noun. Results are stored in `self.preparations`.
+        """
+        results = []
         for line in self.ingredients:
             doc = self.nlp(line)
-            head = head_noun(doc)
+            head = next((t for t in reversed(doc) if t.pos_ in ("NOUN","PROPN")), None)
             if not head:
-                out.append([]); continue
+                results.append([]); continue
 
-            anchors = []  # (kind, token) where kind in {"amod","verb"}
-
-            # amod participles on head (e.g., "thinly sliced cucumbers")
+            anchors = []
             anchors += [("amod", c) for c in head.children if c.dep_=="amod" and c.tag_ in ("VBN","VBG")]
-
-            # verbal/relative clauses on head
-            anchors += [("verb", c) for c in head.children
-                        if c.dep_ in ("acl","acl:relcl") and (c.pos_=="VERB" or c.tag_ in ("VBN","VBG"))]
-
-            # verbs/participles governing head as subj/obj (e.g., "cucumbers, thinly sliced")
+            anchors += [("verb", c) for c in head.children if c.dep_ in ("acl","acl:relcl") and (c.pos_=="VERB" or c.tag_ in ("VBN","VBG"))]
             for tok in doc:
-                if not (tok.pos_=="VERB" or tok.tag_ in ("VBN","VBG")): 
-                    continue
-                if head.i in {t.i for t in tok.subtree} and {c.dep_ for c in tok.children} & {"nsubj","nsubjpass","obj","dobj"}:
+                if (tok.pos_=="VERB" or tok.tag_ in ("VBN","VBG")) and head.i in {t.i for t in tok.subtree} and {c.dep_ for c in tok.children} & {"nsubj","nsubjpass","obj","dobj"}:
                     anchors.append(("verb", tok))
-
-            # coordinated prep verbs
-            anchors += [(k, c) for k, v in list(anchors) for c in v.children
-                        if c.dep_=="conj" and (c.pos_=="VERB" or c.tag_ in ("VBN","VBG"))]
+            anchors += [(k, c) for k, v in list(anchors) for c in v.children if c.dep_=="conj" and (c.pos_=="VERB" or c.tag_ in ("VBN","VBG"))]
 
             spans = []
-
             for kind, v in anchors:
-                # include adjacent left advmods (to keep "thinly")
                 left = v.i
                 i = v.i - 1
                 while i >= 0 and doc[i].dep_=="advmod" and not doc[i].is_punct and i == left - 1:
                     left = i; i -= 1
                 if kind == "amod":
-                    s, e = left, v.i                       # don't include the noun
+                    s, e = left, v.i
                 else:
-                    s = left
-                    # go to right_edge, but stop at first comma after verb
                     right = v.right_edge.i
                     e = next((j-1 for j in range(v.i+1, right+1) if doc[j].text==","), right)
+                    s = left
                 while s <= e and doc[s].is_punct: s += 1
                 while e >= s and doc[e].is_punct: e -= 1
                 if s <= e: spans.append((s, e))
 
-            # short serving PPs from head
-            for p in head.children:
-                if p.dep_ != "prep": 
-                    continue
-                subtree = [t for t in p.subtree if not t.is_punct]
-                if not subtree: 
-                    continue
-                words = [t.lemma_.lower() for t in subtree]
-                pairs = {(words[0], words[1])} if len(words)>=2 else set()
-                if len(words)>=3: pairs.add((words[0], words[-1]))
-                if PP & pairs and not (words[0]=="at" and words[-1]!="temperature"):
-                    s = min(t.i for t in subtree); e = max(t.i for t in subtree)
-                    spans.append((s, e))
-
-            # merge overlaps (no cross-comma merging since we clip at commas)
-            spans.sort()
             merged = []
-            for s, e in spans:
+            for s, e in sorted(spans):
                 if not merged or s > merged[-1][1]: merged.append([s, e])
                 else: merged[-1][1] = max(merged[-1][1], e)
 
-            # render unique phrases
             seen, preps = set(), []
             for s, e in merged:
                 txt = " ".join(doc[s:e+1].text.split()).strip(" ,;")
                 if txt and txt not in seen:
                     seen.add(txt); preps.append(txt)
-
-            out.append(preps)
-
-        self.preparations = out
+            results.append(preps)
+        self.preparations = results
 
     def answers(self):
         output = []
