@@ -183,6 +183,16 @@ class IngredientsParser:
             results.append(preps)
         self.preparations = results
 
+    def parse(self):
+        """"
+        Executes all extraction methods to parse the ingredients.
+        """
+        self.extract_ingredients_names()
+        self.extract_quantities()
+        self.extract_measurement_units()
+        self.extract_descriptors()
+        self.extract_preparations()
+
     def answers(self):
         output = []
         for i in range(len(self.ingredients)):
