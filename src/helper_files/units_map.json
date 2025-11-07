@@ -5,66 +5,55 @@
   "tsp.": "teaspoon",
   "teaspoonful": "teaspoon",
   "teaspoonfuls": "teaspoon",
-
   "tablespoon": "tablespoon",
   "tablespoons": "tablespoon",
   "tbsp": "tablespoon",
   "tbsp.": "tablespoon",
   "tablespoonful": "tablespoon",
   "tablespoonfuls": "tablespoon",
-
   "cup": "cup",
   "cups": "cup",
-
   "pint": "pint",
   "pints": "pint",
   "quart": "quart",
   "quarts": "quart",
   "gallon": "gallon",
   "gallons": "gallon",
-
   "ml": "milliliter",
   "milliliter": "milliliter",
   "milliliters": "milliliter",
   "millilitre": "milliliter",
   "millilitres": "milliliter",
-
   "l": "liter",
   "liter": "liter",
   "liters": "liter",
   "litre": "liter",
   "litres": "liter",
-
   "fluid ounce": "fluid_ounce",
   "fluid ounces": "fluid_ounce",
   "fl oz": "fluid_ounce",
   "fl. oz.": "fluid_ounce",
   "fl. oz": "fluid_ounce",
-
   "ounce": "ounce",
   "ounces": "ounce",
   "oz": "ounce",
   "oz.": "ounce",
-
   "pound": "pound",
   "pounds": "pound",
   "lb": "pound",
   "lb.": "pound",
   "lbs": "pound",
   "lbs.": "pound",
-
   "g": "gram",
   "gram": "gram",
   "grams": "gram",
   "gramme": "gram",
   "grammes": "gram",
-
   "kg": "kilogram",
   "kilogram": "kilogram",
   "kilograms": "kilogram",
   "kilogramme": "kilogram",
   "kilogrammes": "kilogram",
-
   "can": "can",
   "cans": "can",
   "jar": "jar",
@@ -89,7 +78,6 @@
   "tubes": "tube",
   "pouch": "pouch",
   "pouches": "pouch",
-
   "clove": "clove",
   "cloves": "clove",
   "stick": "stick",
@@ -112,11 +100,9 @@
   "stalks": "stalk",
   "sheet": "sheet",
   "sheets": "sheet",
-
   "pinch": "pinch",
   "dash": "dash",
   "handful": "handful",
-
   "inch": "inch",
   "inches": "inch"
 }
