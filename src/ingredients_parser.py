@@ -11,20 +11,15 @@ class IngredientsParser:
         self.ingredients_measurement_units = None
         self.descriptors = None
         self.preparations = None
-
         self.nlp = spacy.load("en_core_web_sm")
-
-        self.base_dir = Path(__file__).resolve().parent
-        self.units_file = self.base_dir / "helper_files" / "units_map.json"
-        self.fractions_file = self.base_dir / "helper_files" / "unicode_fractions.json"
-
-        with self.units_file.open("r", encoding="utf-8") as f:
-            self.alias_to_canon = json.load(f)
-
-        with self.fractions_file.open("r", encoding="utf-8") as f:
-            self.unicode_fractions = json.load(f)
-        
+        self.path = Path(__file__).resolve().parent / "helper_files"
+        self.alias_to_canon = self._load_json(self.path / "units_map.json")
+        self.unicode_fractions = self._load_json(self.path / "unicode_fractions.json")
         self.frac_chars = "".join(self.unicode_fractions.keys())
+
+    def _load_json(self, path):
+        with path.open("r", encoding="utf-8") as f:
+            return json.load(f)
 
     def extract_ingredients_names(self):
         """
