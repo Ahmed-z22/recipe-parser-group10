@@ -88,38 +88,22 @@ class IngredientsParser:
             if quantity is not None and float(quantity).is_integer():
                 quantity = int(quantity)
             out.append(quantity)
-
         self.ingredients_quantities_and_amounts = out
 
     def extract_measurement_units(self):
-        units_pattern = "|".join(sorted((re.escape(k) for k in self.alias_to_canon.keys()), key=len, reverse=True))
+        """
+        Detects the measurement unit in each ingredient line.
+        Stores the unit name (or None if no unit found) in self.ingredients_measurement_units.
+        """
+        units_pattern = "|".join(sorted(map(re.escape, self.alias_to_canon), key=len, reverse=True))
         regex_units = re.compile(rf"\b({units_pattern})\b", re.IGNORECASE)
         regex_parent = re.compile(r"\([^)]*\)")
 
         out = []
         for line in self.ingredients:
-            tmp = regex_parent.sub(" ", line)
-            m = regex_units.search(tmp)
-
-            unit = None
-            if m:
-                unit = self.alias_to_canon.get(m.group(1).lower())
-            else:
-                m2 = regex_units.search(line)
-                if m2:
-                    unit = self.alias_to_canon.get(m2.group(1).lower())
-
-            out.append(unit)
-
+            match = regex_units.search(regex_parent.sub(" ", line)) or regex_units.search(line)
+            out.append(self.alias_to_canon.get(match.group(1).lower()) if match else None)
         self.ingredients_measurement_units = out
-
-    def _core_span_from_name(self, line: str, doc, core_name: str):
-        # Try to locate the cleaned ingredient name inside the raw line
-        i = line.lower().find(core_name.lower())
-        if i == -1:
-            return None  # fallback: no span found
-        span = doc.char_span(i, i + len(core_name), alignment_mode="expand")
-        return span  # may be None if alignment fails
 
     def _rightmost_noun(self, doc):
         nouns = [t for t in doc if t.pos_ in ("NOUN", "PROPN")]
@@ -169,6 +153,18 @@ class IngredientsParser:
 
         self.descriptors = results
         return results
+
+
+
+
+
+
+
+
+
+
+
+
 
     def extract_preparations(self):
 
