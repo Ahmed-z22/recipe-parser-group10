@@ -202,8 +202,8 @@ class IngredientsParser:
                 "ingredient_name": self.ingredients_names[i],
                 "ingredient_quantity": self.ingredients_quantities_and_amounts[i],
                 "measurement_unit": self.ingredients_measurement_units[i],
+                "ingredient_descriptors": self.descriptors[i],
                 "ingredient_preparation": self.preparations[i],
-                "ingredient_descriptors": self.descriptors[i]
             })
         
         return output
