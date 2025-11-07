@@ -6,7 +6,7 @@
             "ingredient_quantity": 1.5,
             "measurement_unit": "cup",
             "ingredient_descriptors": [],
-            "ingredient_preparation": ""
+            "ingredient_preparation": []
         },
         {
             "original_ingredient_sentence": "3.5 teaspoons baking powder",
@@ -14,7 +14,7 @@
             "ingredient_quantity": 3.5,
             "measurement_unit": "teaspoon",
             "ingredient_descriptors": [],
-            "ingredient_preparation": ""
+            "ingredient_preparation": []
         },
         {
             "original_ingredient_sentence": "1 tablespoon white sugar",
@@ -24,7 +24,7 @@
             "ingredient_descriptors": [
                 "white"
             ],
-            "ingredient_preparation": ""
+            "ingredient_preparation": []
         },
         {
             "original_ingredient_sentence": "0.25 teaspoon salt, or more to taste",
@@ -34,7 +34,7 @@
             "ingredient_descriptors": [
                 "to taste"
             ],
-            "ingredient_preparation": ""
+            "ingredient_preparation": []
         },
         {
             "original_ingredient_sentence": "1.25 cups milk",
@@ -42,7 +42,7 @@
             "ingredient_quantity": 1.25,
             "measurement_unit": "cup",
             "ingredient_descriptors": [],
-            "ingredient_preparation": ""
+            "ingredient_preparation": []
         },
         {
             "original_ingredient_sentence": "3 tablespoons butter, melted",
@@ -50,7 +50,7 @@
             "ingredient_quantity": 3,
             "measurement_unit": "tablespoon",
             "ingredient_descriptors": [],
-            "ingredient_preparation": "melted"
+            "ingredient_preparation": ["melted"]
         },
         {
             "original_ingredient_sentence": "1 egg",
@@ -58,7 +58,7 @@
             "ingredient_quantity": 1,
             "measurement_unit": "",
             "ingredient_descriptors": [],
-            "ingredient_preparation": ""
+            "ingredient_preparation": []
         }
     ],
     [
@@ -68,7 +68,7 @@
             "ingredient_quantity": 1,
             "measurement_unit": "tablespoon",
             "ingredient_descriptors": [],
-            "ingredient_preparation": ""
+            "ingredient_preparation": []
         },
         {
             "original_ingredient_sentence": "1 small onion, diced",
@@ -78,7 +78,7 @@
             "ingredient_descriptors": [
                 "small"
             ],
-            "ingredient_preparation": "diced"
+            "ingredient_preparation": ["diced"]
         },
         {
             "original_ingredient_sentence": "4 cloves garlic, minced",
@@ -86,7 +86,7 @@
             "ingredient_quantity": 4,
             "measurement_unit": "clove",
             "ingredient_descriptors": [],
-            "ingredient_preparation": "minced"
+            "ingredient_preparation": ["minced"]
         },
         {
             "original_ingredient_sentence": "1.5 pounds ground beef",
@@ -94,7 +94,7 @@
             "ingredient_quantity": 1.5,
             "measurement_unit": "pound",
             "ingredient_descriptors": [],
-            "ingredient_preparation": ""
+            "ingredient_preparation": []
         },
         {
             "original_ingredient_sentence": "1 teaspoon garlic powder",
@@ -102,7 +102,7 @@
             "ingredient_quantity": 1,
             "measurement_unit": "teaspoon",
             "ingredient_descriptors": [],
-            "ingredient_preparation": ""
+            "ingredient_preparation": []
         },
         {
             "original_ingredient_sentence": "1 (28 ounce) jar sausage flavored spaghetti sauce",
@@ -113,7 +113,7 @@
                 "28-ounce",
                 "sausage flavored"
             ],
-            "ingredient_preparation": ""
+            "ingredient_preparation": []
         },
         {
             "original_ingredient_sentence": "1 (8 ounce) can tomato sauce",
@@ -123,7 +123,7 @@
             "ingredient_descriptors": [
                 "8-ounce"
             ],
-            "ingredient_preparation": ""
+            "ingredient_preparation": []
         },
         {
             "original_ingredient_sentence": "1 teaspoon dried oregano",
@@ -133,7 +133,7 @@
             "ingredient_descriptors": [
                 "dried"
             ],
-            "ingredient_preparation": ""
+            "ingredient_preparation": []
         },
         {
             "original_ingredient_sentence": "1 (8 ounce) package shredded mozzarella cheese",
@@ -143,7 +143,7 @@
             "ingredient_descriptors": [
                 "8-ounce"
             ],
-            "ingredient_preparation": "shredded"
+            "ingredient_preparation": ["shredded"]
         },
         {
             "original_ingredient_sentence": "1 (8 ounce) package shredded provolone cheese",
@@ -153,7 +153,7 @@
             "ingredient_descriptors": [
                 "8-ounce"
             ],
-            "ingredient_preparation": "shredded"
+            "ingredient_preparation": ["shredded"]
         },
         {
             "original_ingredient_sentence": "1 (15 ounce) container ricotta cheese",
@@ -163,7 +163,7 @@
             "ingredient_descriptors": [
                 "15-ounce"
             ],
-            "ingredient_preparation": ""
+            "ingredient_preparation": [""]
         },
         {
             "original_ingredient_sentence": "0.25 cup milk",
@@ -171,7 +171,7 @@
             "ingredient_quantity": 0.25,
             "measurement_unit": "cup",
             "ingredient_descriptors": [],
-            "ingredient_preparation": ""
+            "ingredient_preparation": [""]
         },
         {
             "original_ingredient_sentence": "2 large eggs",
@@ -181,7 +181,7 @@
             "ingredient_descriptors": [
                 "large"
             ],
-            "ingredient_preparation": ""
+            "ingredient_preparation": [""]
         },
         {
             "original_ingredient_sentence": "0.5 teaspoon dried oregano",
@@ -191,7 +191,7 @@
             "ingredient_descriptors": [
                 "dried"
             ],
-            "ingredient_preparation": ""
+            "ingredient_preparation": [""]
         },
         {
             "original_ingredient_sentence": "9 no-boil lasagna noodles",
@@ -201,7 +201,7 @@
             "ingredient_descriptors": [
                 "no-boil"
             ],
-            "ingredient_preparation": ""
+            "ingredient_preparation": [""]
         },
         {
             "original_ingredient_sentence": "0.25 cup grated parmesan cheese",
@@ -209,7 +209,7 @@
             "ingredient_quantity": 0.25,
             "measurement_unit": "cup",
             "ingredient_descriptors": [],
-            "ingredient_preparation": "grated"
+            "ingredient_preparation": ["grated"]
         }
     ],
     [
@@ -221,7 +221,7 @@
             "ingredient_descriptors": [
                 "clarified"
             ],
-            "ingredient_preparation": ""
+            "ingredient_preparation": [""]
         },
         {
             "original_ingredient_sentence": "1 onion, finely chopped",
@@ -229,7 +229,7 @@
             "ingredient_quantity": 1,
             "measurement_unit": "",
             "ingredient_descriptors": [],
-            "ingredient_preparation": "finely chopped"
+            "ingredient_preparation": ["finely chopped"]
         },
         {
             "original_ingredient_sentence": "4 cloves garlic, minced",
@@ -237,7 +237,7 @@
             "ingredient_quantity": 4,
             "measurement_unit": "clove",
             "ingredient_descriptors": [],
-            "ingredient_preparation": "minced"
+            "ingredient_preparation": ["minced"]
         },
         {
             "original_ingredient_sentence": "1 tablespoon ground cumin",
@@ -247,7 +247,7 @@
             "ingredient_descriptors": [
                 "ground"
             ],
-            "ingredient_preparation": ""
+            "ingredient_preparation": [""]
         },
         {
             "original_ingredient_sentence": "1 teaspoon salt, or more to taste",
@@ -257,7 +257,7 @@
             "ingredient_descriptors": [
                 "to taste"
             ],
-            "ingredient_preparation": ""
+            "ingredient_preparation": [""]
         },
         {
             "original_ingredient_sentence": "1 teaspoon ground ginger",
@@ -267,7 +267,7 @@
             "ingredient_descriptors": [
                 "ground"
             ],
-            "ingredient_preparation": ""
+            "ingredient_preparation": [""]
         },
         {
             "original_ingredient_sentence": "1 teaspoon cayenne pepper",
@@ -275,7 +275,7 @@
             "ingredient_quantity": 1,
             "measurement_unit": "teaspoon",
             "ingredient_descriptors": [],
-            "ingredient_preparation": ""
+            "ingredient_preparation": [""]
         },
         {
             "original_ingredient_sentence": "0.5 teaspoon ground cinnamon",
@@ -285,7 +285,7 @@
             "ingredient_descriptors": [
                 "ground"
             ],
-            "ingredient_preparation": ""
+            "ingredient_preparation": [""]
         },
         {
             "original_ingredient_sentence": "0.25 teaspoon ground turmeric",
@@ -295,7 +295,7 @@
             "ingredient_descriptors": [
                 "ground"
             ],
-            "ingredient_preparation": ""
+            "ingredient_preparation": [""]
         },
         {
             "original_ingredient_sentence": "1 (14 ounce) can tomato sauce",
@@ -305,7 +305,7 @@
             "ingredient_descriptors": [
                 "14-ounce"
             ],
-            "ingredient_preparation": ""
+            "ingredient_preparation": [""]
         },
         {
             "original_ingredient_sentence": "1 cup heavy whipping cream",
@@ -315,7 +315,7 @@
             "ingredient_descriptors": [
                 "heavy"
             ],
-            "ingredient_preparation": ""
+            "ingredient_preparation": [""]
         },
         {
             "original_ingredient_sentence": "1 tablespoon white sugar, or more to taste",
@@ -326,7 +326,7 @@
                 "white",
                 "to taste"
             ],
-            "ingredient_preparation": ""
+            "ingredient_preparation": [""]
         },
         {
             "original_ingredient_sentence": "2 teaspoons paprika",
@@ -334,7 +334,7 @@
             "ingredient_quantity": 2,
             "measurement_unit": "teaspoon",
             "ingredient_descriptors": [],
-            "ingredient_preparation": ""
+            "ingredient_preparation": [""]
         },
         {
             "original_ingredient_sentence": "1 tablespoon vegetable oil",
@@ -342,7 +342,7 @@
             "ingredient_quantity": 1,
             "measurement_unit": "tablespoon",
             "ingredient_descriptors": [],
-            "ingredient_preparation": ""
+            "ingredient_preparation": [""]
         },
         {
             "original_ingredient_sentence": "4 skinless, boneless chicken breast halves, cut into bite-size pieces",
@@ -353,7 +353,7 @@
                 "skinless",
                 "boneless"
             ],
-            "ingredient_preparation": "cut into bite-size pieces"
+            "ingredient_preparation": ["cut into bite-size pieces"]
         },
         {
             "original_ingredient_sentence": "0.5 teaspoon curry powder",
@@ -361,7 +361,7 @@
             "ingredient_quantity": 0.5,
             "measurement_unit": "teaspoon",
             "ingredient_descriptors": [],
-            "ingredient_preparation": ""
+            "ingredient_preparation": [""]
         }
     ],
     [
