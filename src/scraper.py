@@ -153,4 +153,9 @@ def _extract_json_ld_recipe(soup: BeautifulSoup, url: str, domain: str) -> tuple
             f"Check the URL: {url} and confirm if it is a valid recipe page."
         )
 
+    # make sure to strip any leading/trailing whitespace, and make all strings small case
+    title = title.strip().lower()
+    ingredients = [ing.strip().lower() for ing in ingredients]
+    directions = [dir.strip().lower() for dir in directions]
+
     return title, ingredients, directions
