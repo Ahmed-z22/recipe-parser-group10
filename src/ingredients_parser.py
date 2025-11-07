@@ -105,69 +105,39 @@ class IngredientsParser:
             out.append(self.alias_to_canon.get(match.group(1).lower()) if match else None)
         self.ingredients_measurement_units = out
 
-    def _rightmost_noun(self, doc):
-        nouns = [t for t in doc if t.pos_ in ("NOUN", "PROPN")]
-        return nouns[-1] if nouns else None
+
+
+
 
     def extract_descriptors(self):
-        stop_adj = {"other", "such", "additional", "more", "another"}
-
+        """
+        Extracts adjective descriptors that modify the main ingredient noun in each line.
+        Hyphenated adjective sequences are merged, and results are stored in `self.descriptors`.
+        """
         results = []
         for line in self.ingredients:
             doc = self.nlp(line)
-            head = self._rightmost_noun(doc)
-            if head is None:
+            head = next((t for t in reversed(doc) if t.pos_ in ("NOUN", "PROPN")), None)
+            if not head:
                 results.append([])
                 continue
 
-            # collect the noun chain pointing into the head: rice <- grain <- (mods)
-            chain = {head.i}
-            for tok in doc:
-                if tok.dep_ == "compound" and tok.head == head:
-                    chain.add(tok.i)
+            chain = {head.i} | {t.i for t in doc if t.dep_ == "compound" and t.head == head}
+            cand = [t for t in doc if t.pos_ == "ADJ" and t.dep_ == "amod" and t.head.i in chain]
+            cand.sort(key=lambda t: t.i)
 
-            # adjectives directly modifying head
-            cand = []
-            for tok in doc:
-                # keep only adjectives (JJ/JJR/JJS) that modify the head or a noun in the chain
-                if tok.pos_ == "ADJ" and tok.dep_ == "amod" and (tok.head.i in chain):
-                    # exclude trivial adjectives like "other"
-                    if tok.lemma_.lower() not in stop_adj:
-                        cand.append(tok)
-
-            # join hyphenated multi-token adj like "extra - virgin" if spaCy split it
-            cand = sorted(cand, key=lambda t: t.i)
-            out = []
-            i = 0
+            out, i = [], 0
             while i < len(cand):
-                j = i
-                phrase = cand[i].text
-                # grab immediate hyphen + next ADJ if present
+                j, phrase = i, cand[i].text
                 while j + 1 < len(cand) and cand[j+1].i == cand[j].i + 2 and doc[cand[j].i + 1].text == "-":
                     phrase += "-" + cand[j+1].text
                     j += 1
                 out.append(phrase.lower().strip(",.;:"))
                 i = j + 1
-
             results.append(out)
-
         self.descriptors = results
-        return results
-
-
-
-
-
-
-
-
-
-
-
-
 
     def extract_preparations(self):
-
         def head_noun(doc):
             ns = [t for t in doc if t.pos_ in ("NOUN", "PROPN")]
             return ns[-1] if ns else None
