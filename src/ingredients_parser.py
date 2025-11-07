@@ -10,7 +10,7 @@ class IngredientsParser:
         self.ingredients_quantities_and_amounts = None
         self.ingredients_measurement_units = None
         self.descriptors = None
-        self.preparation = None
+        self.preparations = None
 
         self.nlp = spacy.load("en_core_web_sm")
 
@@ -172,7 +172,7 @@ class IngredientsParser:
 
         self.ingredients_quantities_and_amounts = out
 
-    def extract_measurement_unit(self):
+    def extract_measurement_units(self):
 
         units_pattern = "|".join(sorted((re.escape(k) for k in self.alias_to_canon.keys()), key=len, reverse=True))
         regex_units = re.compile(rf"\b({units_pattern})\b", re.IGNORECASE)
@@ -196,132 +196,208 @@ class IngredientsParser:
 
         self.ingredients_measurement_units = out
 
+    def _core_span_from_name(self, line: str, doc, core_name: str):
+        # Try to locate the cleaned ingredient name inside the raw line
+        i = line.lower().find(core_name.lower())
+        if i == -1:
+            return None  # fallback: no span found
+        span = doc.char_span(i, i + len(core_name), alignment_mode="expand")
+        return span  # may be None if alignment fails
+
+    def _rightmost_noun(self, doc):
+        nouns = [t for t in doc if t.pos_ in ("NOUN", "PROPN")]
+        return nouns[-1] if nouns else None
+
     def extract_descriptor(self):
-        # --- front-end cleanup (match your class style) ---
-        frac_chars = "".join(self.unicode_fractions.keys())
-        re_noise   = re.compile(r"^\s*(?:plus|and|with|about|approximately|approx\.|around|roughly|nearly|another|extra|more)\b[\s,]*", re.IGNORECASE)
-        re_range   = re.compile(r"^\s*\d+(?:\.\d+)?\s*(?:-|–|to)\s*\d+(?:\.\d+)?\s*", re.IGNORECASE)
-        re_unicode = re.compile(rf"^\s*(?:(\d+)\s*)?[{re.escape(frac_chars)}]\s*")
-        re_ascii   = re.compile(r"^\s*(?:(\d+)\s+)?\d+\s*/\s*\d+\s*")
-        re_decimal = re.compile(r"^\s*\d+\.\d+\s*")
-        re_integer = re.compile(r"^\s*\d+\s*")
-        re_paren   = re.compile(r"\([^)]*\)")
-        units_pattern = "|".join(sorted((re.escape(k) for k in self.alias_to_canon.keys()), key=len, reverse=True))
-        re_leading_unit = re.compile(rf"^\s*(?:{units_pattern})\b\.?\s*", re.IGNORECASE)
-        re_of     = re.compile(r"^\s*of\b\s*", re.IGNORECASE)
+        stop_adj = {"other", "such", "additional", "more", "another"}
 
-        # words we don't want as descriptors
-        drop_adj = {"other", "another", "such", "several", "many", "few", "additional", "more"}
-
-        # allow prepositions in special hyphen forms like skin-on / bone-in / skin-off
-        hyphen_right_allow = {"on", "in", "off"}
-
-        descriptors_out = []
-
+        results = []
         for line in self.ingredients:
-            s = line
-
-            # strip leading noise
-            for _ in range(3):
-                m = re_noise.match(s)
-                if m: s = s[m.end():]
-                else: break
-
-            # strip a single leading quantity
-            m = re_range.match(s)
-            if m: s = s[m.end():]
-            else:
-                m = re_unicode.match(s)
-                if m: s = s[m.end():]
-                else:
-                    m = re_ascii.match(s)
-                    if m: s = s[m.end():]
-                    else:
-                        m = re_decimal.match(s)
-                        if m: s = s[m.end():]
-                        else:
-                            m = re_integer.match(s)
-                            if m: s = s[m.end():]
-
-            # remove all parentheticals anywhere
-            s = re_paren.sub(" ", s)
-
-            # remove a single leading unit if present
-            m = re_leading_unit.match(s)
-            if m: s = s[m.end():]
-
-            # optional "of" right after unit
-            m = re_of.match(s)
-            if m: s = s[m.end():]
-
-            s = re.sub(r"\s+", " ", s).strip()
-            if not s:
-                descriptors_out.append(None)
+            doc = self.nlp(line)
+            head = self._rightmost_noun(doc)
+            if head is None:
+                results.append([])
                 continue
 
-            # --- spaCy parse full line ---
-            doc = self.nlp(s)
+            # collect the noun chain pointing into the head: rice <- grain <- (mods)
+            chain = {head.i}
+            for tok in doc:
+                if tok.dep_ == "compound" and tok.head == head:
+                    chain.add(tok.i)
 
-            found = []
+            # adjectives directly modifying head
+            cand = []
+            for tok in doc:
+                # keep only adjectives (JJ/JJR/JJS) that modify the head or a noun in the chain
+                if tok.pos_ == "ADJ" and tok.dep_ == "amod" and (tok.head.i in chain):
+                    # exclude trivial adjectives like "other"
+                    if tok.lemma_.lower() not in stop_adj:
+                        cand.append(tok)
 
-            # 1) true adjectival modifiers ("amod") for any noun head
-            for token in doc:
-                if token.pos_ == "NOUN":
-                    for left in token.lefts:
-                        if left.dep_ == "amod" and left.pos_ == "ADJ":
-                            txt = left.text.lower()
-                            if txt not in drop_adj:
-                                found.append((left.i, txt))
+            # join hyphenated multi-token adj like "extra - virgin" if spaCy split it
+            cand = sorted(cand, key=lambda t: t.i)
+            out = []
+            i = 0
+            while i < len(cand):
+                j = i
+                phrase = cand[i].text
+                # grab immediate hyphen + next ADJ if present
+                while j + 1 < len(cand) and cand[j+1].i == cand[j].i + 2 and doc[cand[j].i + 1].text == "-":
+                    phrase += "-" + cand[j+1].text
+                    j += 1
+                out.append(phrase.lower().strip(",.;:"))
+                i = j + 1
 
-            # 2) hyphenated descriptors immediately left of a noun
-            #    Patterns we reconstruct:
-            #    ADJ '-' NOUN   -> "short-grain"
-            #    NOUN '-' ADP   -> "skin-on" (allow 'on'/'in'/'off')
-            for token in doc:
-                if token.pos_ == "NOUN":
-                    i = token.i
-                    # look two tokens to the left for "X - Y"
-                    if i - 2 >= 0:
-                        left = doc[i - 2]
-                        hyph = doc[i - 1]
-                        # ADJ '-' NOUN  (e.g., short-grain rice)
-                        if left.pos_ == "ADJ" and hyph.text == "-" and token.pos_ == "NOUN":
-                            span = f"{left.text.lower()}-{token.nbor(-1).text.lower()}"
-                            # but we used token itself, we need the noun after '-' which is at i-0 actually token; adjust:
-                            # For ADJ '-' NOUN "short - grain rice", the NOUN after '-' is doc[i-0]? It's token,
-                            # but we want the word at i-0? Safer: get the word just before current noun: doc[i-0] is current noun,
-                            # while doc[i-1] is '-' ; doc[i-2] is ADJ; so the NOUN in the pair is doc[i], not nbor(-1).
-                            # We'll recompute span below more robustly.
-                    # recompute robust hyphen patterns with indices
-            # re-run robust hyphen detection:
-            for i, tok in enumerate(doc):
-                # ADJ '-' NOUN before a head noun (e.g., "short - grain rice")
-                if tok.pos_ == "ADJ" and i + 2 < len(doc) and doc[i+1].text == "-" and doc[i+2].pos_ == "NOUN":
-                    span = f"{tok.text.lower()}-{doc[i+2].text.lower()}"
-                    found.append((i, span))
-                # NOUN '-' ADP (skin-on / bone-in / skin-off)
-                if tok.pos_ == "NOUN" and i + 2 < len(doc) and doc[i+1].text == "-" and doc[i+2].text.lower() in hyphen_right_allow:
-                    span = f"{tok.text.lower()}-{doc[i+2].text.lower()}"
-                    found.append((i, span))
+            results.append(out)
 
-            # dedupe/order
-            if found:
-                found.sort(key=lambda x: x[0])
-                dedup = []
-                seen = set()
-                for _, txt in found:
-                    if txt not in seen and txt not in drop_adj:
-                        seen.add(txt)
-                        dedup.append(txt)
-                descriptors_out.append(dedup or None)
-            else:
-                descriptors_out.append(None)
+        self.descriptors = results
+        return results
 
-        self.descriptors = descriptors_out
+    def extract_preparations(self):
+        """
+        Generic, no-preprocessing preparation extractor.
+        Anchors = VERB/VBN/VBG only.
+        - amod participles → [adjacent ADV]* + participle   (e.g., "thinly sliced")
+        - verbs/rel clauses/governing verbs → include right edge, clip at commas
+        - whitelisted serving PPs (short): "for drizzling/serving", "to taste", "at room temperature"
+        """
 
+        def rightmost_noun(doc):
+            ns = [t for t in doc if t.pos_ in ("NOUN","PROPN")]
+            return ns[-1] if ns else None
 
-    def extract_preparation(self):
-        pass
+        PP_WHITELIST = {
+            ("for", "drizzling"),
+            ("for", "serving"),
+            ("to", "taste"),
+            ("at", "room"),       
+            ("at", "temperature"),
+        }
 
-    def answers():
-        pass
+        results = []
+
+        for line in self.ingredients:
+            doc = self.nlp(line)
+            head = rightmost_noun(doc)
+            if head is None:
+                results.append([])
+                continue
+
+            anchors = []
+
+            # 1) amod participles directly on the head: "thinly sliced cucumbers"
+            for tok in head.children:
+                if tok.dep_ == "amod" and tok.tag_ in ("VBN", "VBG"):
+                    anchors.append(("amod_part", tok))
+
+            # 2) verbal/relative clauses attached to head: "fillet, cut into cubes"
+            for tok in head.children:
+                if tok.dep_ in ("acl", "acl:relcl") and (tok.pos_ == "VERB" or tok.tag_ in ("VBN","VBG")):
+                    anchors.append(("verb_span", tok))
+
+            # 3) verbs/participles governing the head (e.g., "cucumbers, thinly sliced")
+            for tok in doc:
+                if not (tok.pos_ == "VERB" or tok.tag_ in ("VBN","VBG")):
+                    continue
+                if head.i in {t.i for t in tok.subtree}:
+                    roles = {c.dep_ for c in tok.children}
+                    if roles & {"nsubj","nsubjpass","obj","dobj"}:
+                        anchors.append(("verb_span", tok))
+
+            # 4) include coordinated prep verbs (peeled, seeded, and diced)
+            expanded = list(anchors)
+            for typ, v in anchors:
+                for c in v.children:
+                    if c.dep_ == "conj" and (c.pos_ == "VERB" or c.tag_ in ("VBN","VBG")):
+                        expanded.append((typ, c))
+            anchors = expanded
+
+            spans = []
+
+            for typ, v in anchors:
+                if typ == "amod_part":
+                    # include ADVs immediately adjacent on the left (to keep "thinly")
+                    left = v.i
+                    i = v.i - 1
+                    while i >= 0 and doc[i].dep_ == "advmod" and not doc[i].is_punct and doc[i].i == left - 1:
+                        left = i
+                        i -= 1
+                    s, e = left, v.i
+                else:
+                    # verb span: allow adjacent left adverbs, but never jump over commas
+                    left = v.i
+                    i = v.i - 1
+                    while i >= 0 and doc[i].dep_ == "advmod" and not doc[i].is_punct and doc[i].i == left - 1:
+                        left = i
+                        i -= 1
+                    s = left
+                    # go to right edge, but clip at first comma after the verb
+                    right = v.right_edge.i
+                    # find first comma to the right of the verb token
+                    comma_i = None
+                    for j in range(v.i + 1, right + 1):
+                        if doc[j].text == ",":
+                            comma_i = j
+                            break
+                    e = (comma_i - 1) if comma_i is not None else right
+
+                # trim leading/trailing punctuation
+                while s <= e and doc[s].is_punct:
+                    s += 1
+                while e >= s and doc[e].is_punct:
+                    e -= 1
+                if s <= e:
+                    spans.append((s, e))
+
+            # 5) short serving PPs from the head: "for drizzling", "to taste", "at room temperature"
+            for child in head.children:
+                if child.dep_ == "prep":
+                    subtree = [t for t in child.subtree if not t.is_punct]
+                    if not subtree:
+                        continue
+                    words = [t.lemma_.lower() for t in subtree]
+                    pairs = set()
+                    if len(words) >= 2:
+                        pairs.add((words[0], words[1]))
+                    if len(words) >= 3:
+                        pairs.add((words[0], words[-1]))  # "at ... temperature"
+                    if PP_WHITELIST & pairs:
+                        # ensure "at room temperature" completes
+                        if words[0] == "at" and words[-1] != "temperature":
+                            continue
+                        s = min(t.i for t in subtree)
+                        e = max(t.i for t in subtree)
+                        spans.append((s, e))
+
+            # 6) merge only if spans actually overlap and NOT across commas
+            spans.sort()
+            merged = []
+            for s, e in spans:
+                if not merged or s > merged[-1][1]:
+                    merged.append([s, e])
+                else:
+                    merged[-1][1] = max(merged[-1][1], e)
+
+            # 7) render
+            out, seen = [], set()
+            for s, e in merged:
+                txt = " ".join(doc[s:e+1].text.split()).strip(" ,;")
+                if txt and txt not in seen:
+                    seen.add(txt)
+                    out.append(txt)
+
+            results.append(out)
+
+        self.preparations = results
+
+    def answers(self):
+        output = []
+        for i in range(len(self.ingredients)):
+            output.append({
+                "original_ingredient_sentence": self.ingredients[i],
+                "ingredient_quantity": self.ingredients_quantities_and_amounts[i],
+                "measurement_unit": self.ingredients_measurement_units[i],
+                "ingredient_preparation": self.preparations[i],
+                "ingredient_descriptors": self.descriptors[i]
+            })
+        return output
