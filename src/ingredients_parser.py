@@ -178,9 +178,15 @@ class IngredientsParser:
             results.append(preps)
         self.preparations = results
 
-    def parse(self):
+    def parse(self) -> list[dict[str, list[str] | str | int | float | None]]:
         """"
-        Executes all extraction methods to parse the ingredients.
+        Executes all extraction methods ingredients.
+        returns: A list of dictionaries, each containing the parsed components of an ingredient:
+            - original_ingredient_sentence: The original ingredient line.
+            - ingredient_quantity: The extracted quantity (int, float, or None).
+            - measurement_unit: The standardized measurement unit (str or None).
+            - ingredient_preparation: List of preparation phrases (list of str).
+            - ingredient_descriptors: List of adjective descriptors (list of str).
         """
         self.extract_ingredients_names()
         self.extract_quantities()
@@ -188,12 +194,6 @@ class IngredientsParser:
         self.extract_descriptors()
         self.extract_preparations()
 
-    def answers(self) -> list[dict]:
-        """"
-        Compiles the parsed components into a list of dictionaries for each ingredient.
-        returns: List[Dict]: A list where each dictionary contains the parsed components
-                      of an ingredient.
-        """
         output = []
         for i in range(len(self.ingredients)):
             output.append({
@@ -203,4 +203,5 @@ class IngredientsParser:
                 "ingredient_preparation": self.preparations[i],
                 "ingredient_descriptors": self.descriptors[i]
             })
+        
         return output
