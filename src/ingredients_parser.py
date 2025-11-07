@@ -208,7 +208,7 @@ class IngredientsParser:
         nouns = [t for t in doc if t.pos_ in ("NOUN", "PROPN")]
         return nouns[-1] if nouns else None
 
-    def extract_descriptor(self):
+    def extract_descriptors(self):
         stop_adj = {"other", "such", "additional", "more", "another"}
 
         results = []
@@ -254,141 +254,90 @@ class IngredientsParser:
         return results
 
     def extract_preparations(self):
-        """
-        Generic, no-preprocessing preparation extractor.
-        Anchors = VERB/VBN/VBG only.
-        - amod participles → [adjacent ADV]* + participle   (e.g., "thinly sliced")
-        - verbs/rel clauses/governing verbs → include right edge, clip at commas
-        - whitelisted serving PPs (short): "for drizzling/serving", "to taste", "at room temperature"
-        """
 
-        def rightmost_noun(doc):
-            ns = [t for t in doc if t.pos_ in ("NOUN","PROPN")]
+        def head_noun(doc):
+            ns = [t for t in doc if t.pos_ in ("NOUN", "PROPN")]
             return ns[-1] if ns else None
 
-        PP_WHITELIST = {
-            ("for", "drizzling"),
-            ("for", "serving"),
-            ("to", "taste"),
-            ("at", "room"),       
-            ("at", "temperature"),
-        }
+        PP = {("for","drizzling"),("for","serving"),("to","taste"),("at","room"),("at","temperature")}
 
-        results = []
-
+        out = []
         for line in self.ingredients:
             doc = self.nlp(line)
-            head = rightmost_noun(doc)
-            if head is None:
-                results.append([])
-                continue
+            head = head_noun(doc)
+            if not head:
+                out.append([]); continue
 
-            anchors = []
+            anchors = []  # (kind, token) where kind in {"amod","verb"}
 
-            # 1) amod participles directly on the head: "thinly sliced cucumbers"
-            for tok in head.children:
-                if tok.dep_ == "amod" and tok.tag_ in ("VBN", "VBG"):
-                    anchors.append(("amod_part", tok))
+            # amod participles on head (e.g., "thinly sliced cucumbers")
+            anchors += [("amod", c) for c in head.children if c.dep_=="amod" and c.tag_ in ("VBN","VBG")]
 
-            # 2) verbal/relative clauses attached to head: "fillet, cut into cubes"
-            for tok in head.children:
-                if tok.dep_ in ("acl", "acl:relcl") and (tok.pos_ == "VERB" or tok.tag_ in ("VBN","VBG")):
-                    anchors.append(("verb_span", tok))
+            # verbal/relative clauses on head
+            anchors += [("verb", c) for c in head.children
+                        if c.dep_ in ("acl","acl:relcl") and (c.pos_=="VERB" or c.tag_ in ("VBN","VBG"))]
 
-            # 3) verbs/participles governing the head (e.g., "cucumbers, thinly sliced")
+            # verbs/participles governing head as subj/obj (e.g., "cucumbers, thinly sliced")
             for tok in doc:
-                if not (tok.pos_ == "VERB" or tok.tag_ in ("VBN","VBG")):
+                if not (tok.pos_=="VERB" or tok.tag_ in ("VBN","VBG")): 
                     continue
-                if head.i in {t.i for t in tok.subtree}:
-                    roles = {c.dep_ for c in tok.children}
-                    if roles & {"nsubj","nsubjpass","obj","dobj"}:
-                        anchors.append(("verb_span", tok))
+                if head.i in {t.i for t in tok.subtree} and {c.dep_ for c in tok.children} & {"nsubj","nsubjpass","obj","dobj"}:
+                    anchors.append(("verb", tok))
 
-            # 4) include coordinated prep verbs (peeled, seeded, and diced)
-            expanded = list(anchors)
-            for typ, v in anchors:
-                for c in v.children:
-                    if c.dep_ == "conj" and (c.pos_ == "VERB" or c.tag_ in ("VBN","VBG")):
-                        expanded.append((typ, c))
-            anchors = expanded
+            # coordinated prep verbs
+            anchors += [(k, c) for k, v in list(anchors) for c in v.children
+                        if c.dep_=="conj" and (c.pos_=="VERB" or c.tag_ in ("VBN","VBG"))]
 
             spans = []
 
-            for typ, v in anchors:
-                if typ == "amod_part":
-                    # include ADVs immediately adjacent on the left (to keep "thinly")
-                    left = v.i
-                    i = v.i - 1
-                    while i >= 0 and doc[i].dep_ == "advmod" and not doc[i].is_punct and doc[i].i == left - 1:
-                        left = i
-                        i -= 1
-                    s, e = left, v.i
+            for kind, v in anchors:
+                # include adjacent left advmods (to keep "thinly")
+                left = v.i
+                i = v.i - 1
+                while i >= 0 and doc[i].dep_=="advmod" and not doc[i].is_punct and i == left - 1:
+                    left = i; i -= 1
+                if kind == "amod":
+                    s, e = left, v.i                       # don't include the noun
                 else:
-                    # verb span: allow adjacent left adverbs, but never jump over commas
-                    left = v.i
-                    i = v.i - 1
-                    while i >= 0 and doc[i].dep_ == "advmod" and not doc[i].is_punct and doc[i].i == left - 1:
-                        left = i
-                        i -= 1
                     s = left
-                    # go to right edge, but clip at first comma after the verb
+                    # go to right_edge, but stop at first comma after verb
                     right = v.right_edge.i
-                    # find first comma to the right of the verb token
-                    comma_i = None
-                    for j in range(v.i + 1, right + 1):
-                        if doc[j].text == ",":
-                            comma_i = j
-                            break
-                    e = (comma_i - 1) if comma_i is not None else right
+                    e = next((j-1 for j in range(v.i+1, right+1) if doc[j].text==","), right)
+                while s <= e and doc[s].is_punct: s += 1
+                while e >= s and doc[e].is_punct: e -= 1
+                if s <= e: spans.append((s, e))
 
-                # trim leading/trailing punctuation
-                while s <= e and doc[s].is_punct:
-                    s += 1
-                while e >= s and doc[e].is_punct:
-                    e -= 1
-                if s <= e:
+            # short serving PPs from head
+            for p in head.children:
+                if p.dep_ != "prep": 
+                    continue
+                subtree = [t for t in p.subtree if not t.is_punct]
+                if not subtree: 
+                    continue
+                words = [t.lemma_.lower() for t in subtree]
+                pairs = {(words[0], words[1])} if len(words)>=2 else set()
+                if len(words)>=3: pairs.add((words[0], words[-1]))
+                if PP & pairs and not (words[0]=="at" and words[-1]!="temperature"):
+                    s = min(t.i for t in subtree); e = max(t.i for t in subtree)
                     spans.append((s, e))
 
-            # 5) short serving PPs from the head: "for drizzling", "to taste", "at room temperature"
-            for child in head.children:
-                if child.dep_ == "prep":
-                    subtree = [t for t in child.subtree if not t.is_punct]
-                    if not subtree:
-                        continue
-                    words = [t.lemma_.lower() for t in subtree]
-                    pairs = set()
-                    if len(words) >= 2:
-                        pairs.add((words[0], words[1]))
-                    if len(words) >= 3:
-                        pairs.add((words[0], words[-1]))  # "at ... temperature"
-                    if PP_WHITELIST & pairs:
-                        # ensure "at room temperature" completes
-                        if words[0] == "at" and words[-1] != "temperature":
-                            continue
-                        s = min(t.i for t in subtree)
-                        e = max(t.i for t in subtree)
-                        spans.append((s, e))
-
-            # 6) merge only if spans actually overlap and NOT across commas
+            # merge overlaps (no cross-comma merging since we clip at commas)
             spans.sort()
             merged = []
             for s, e in spans:
-                if not merged or s > merged[-1][1]:
-                    merged.append([s, e])
-                else:
-                    merged[-1][1] = max(merged[-1][1], e)
+                if not merged or s > merged[-1][1]: merged.append([s, e])
+                else: merged[-1][1] = max(merged[-1][1], e)
 
-            # 7) render
-            out, seen = [], set()
+            # render unique phrases
+            seen, preps = set(), []
             for s, e in merged:
                 txt = " ".join(doc[s:e+1].text.split()).strip(" ,;")
                 if txt and txt not in seen:
-                    seen.add(txt)
-                    out.append(txt)
+                    seen.add(txt); preps.append(txt)
 
-            results.append(out)
+            out.append(preps)
 
-        self.preparations = results
+        self.preparations = out
 
     def answers(self):
         output = []
