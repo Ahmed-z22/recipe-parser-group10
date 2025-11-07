@@ -1,0 +1,58 @@
+[
+  {
+    "original_ingredient_sentence": "1.5 cups all-purpose flour",
+    "ingredient_name": "all-purpose flour",
+    "ingredient_quantity": 1.5,
+    "measurement_unit": "cup",
+    "ingredient_preparation": "",
+    "ingredient_descriptors": []
+  },
+  {
+    "original_ingredient_sentence": "3.5 teaspoons baking powder",
+    "ingredient_name": "baking powder",
+    "ingredient_quantity": 3.5,
+    "measurement_unit": "teaspoon",
+    "ingredient_preparation": "",
+    "ingredient_descriptors": []
+  },
+  {
+    "original_ingredient_sentence": "1 tablespoon white sugar",
+    "ingredient_name": "sugar",
+    "ingredient_quantity": 1,
+    "measurement_unit": "tablespoon",
+    "ingredient_preparation": "",
+    "ingredient_descriptors": ["white"]
+  },
+  {
+    "original_ingredient_sentence": "0.25 teaspoon salt, or more to taste",
+    "ingredient_name": "salt",
+    "ingredient_quantity": 0.25,
+    "measurement_unit": "teaspoon",
+    "ingredient_preparation": "",
+    "ingredient_descriptors": ["to taste"]
+  },
+  {
+    "original_ingredient_sentence": "1.25 cups milk",
+    "ingredient_name": "milk",
+    "ingredient_quantity": 1.25,
+    "measurement_unit": "cup",
+    "ingredient_preparation": "",
+    "ingredient_descriptors": []
+  },
+  {
+    "original_ingredient_sentence": "3 tablespoons butter, melted",
+    "ingredient_name": "butter",
+    "ingredient_quantity": 3,
+    "measurement_unit": "tablespoon",
+    "ingredient_preparation": "melted",
+    "ingredient_descriptors": []
+  },
+  {
+    "original_ingredient_sentence": "1 egg",
+    "ingredient_name": "egg",
+    "ingredient_quantity": 1,
+    "measurement_unit": "",
+    "ingredient_preparation": "",
+    "ingredient_descriptors": []
+  }
+]
