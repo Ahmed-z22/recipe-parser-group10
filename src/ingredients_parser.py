@@ -4,7 +4,7 @@ from pathlib import Path
 import spacy
 
 class IngredientsParser:
-    def __init__(self, ingredients):
+    def __init__(self, ingredients: dict[str, list[str]]):
         self.ingredients = ingredients['ingredients']
         self.ingredients_names = None
         self.ingredients_quantities_and_amounts = None
@@ -17,7 +17,7 @@ class IngredientsParser:
         self.unicode_fractions = self._load_json(self.path / "unicode_fractions.json")
         self.frac_chars = "".join(self.unicode_fractions.keys())
 
-    def _load_json(self, path):
+    def _load_json(self, path: Path) -> dict[str, str]:
         with path.open("r", encoding="utf-8") as f:
             return json.load(f)
 
@@ -188,7 +188,12 @@ class IngredientsParser:
         self.extract_descriptors()
         self.extract_preparations()
 
-    def answers(self):
+    def answers(self) -> list[dict]:
+        """"
+        Compiles the parsed components into a list of dictionaries for each ingredient.
+        returns: List[Dict]: A list where each dictionary contains the parsed components
+                      of an ingredient.
+        """
         output = []
         for i in range(len(self.ingredients)):
             output.append({
