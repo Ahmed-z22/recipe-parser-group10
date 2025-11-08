@@ -142,46 +142,26 @@ class IngredientsParser:
         """
         results = []
         for line in self.ingredients:
-            doc = self.nlp(line)
-            head = next((t for t in reversed(doc) if t.pos_ in ("NOUN","PROPN")), None)
-            if not head:
-                results.append([]); continue
+            # Take text after the last comma
+            parts = line.rsplit(",", 1)
+            tail = parts[1].strip() if len(parts) > 1 else ""
 
-            anchors = []
-            anchors += [("amod", c) for c in head.children if c.dep_=="amod" and c.tag_ in ("VBN","VBG")]
-            anchors += [("verb", c) for c in head.children if c.dep_ in ("acl","acl:relcl") and (c.pos_=="VERB" or c.tag_ in ("VBN","VBG"))]
-            for tok in doc:
-                if (tok.pos_=="VERB" or tok.tag_ in ("VBN","VBG")) and head.i in {t.i for t in tok.subtree} and {c.dep_ for c in tok.children} & {"nsubj","nsubjpass","obj","dobj"}:
-                    anchors.append(("verb", tok))
-            anchors += [(k, c) for k, v in list(anchors) for c in v.children if c.dep_=="conj" and (c.pos_=="VERB" or c.tag_ in ("VBN","VBG"))]
+            # Clean parentheses + whitespace
+            tail = re.sub(r"\([^)]*\)", "", tail)
+            tail = re.sub(r"\s+", " ", tail).strip()
 
-            spans = []
-            for kind, v in anchors:
-                left = v.i
-                i = v.i - 1
-                while i >= 0 and doc[i].dep_=="advmod" and not doc[i].is_punct and i == left - 1:
-                    left = i; i -= 1
-                if kind == "amod":
-                    s, e = left, v.i
-                else:
-                    right = v.right_edge.i
-                    e = next((j-1 for j in range(v.i+1, right+1) if doc[j].text==","), right)
-                    s = left
-                while s <= e and doc[s].is_punct: s += 1
-                while e >= s and doc[e].is_punct: e -= 1
-                if s <= e: spans.append((s, e))
+            # Run spaCy only on the tail
+            doc = self.nlp(tail) if tail else None
 
-            merged = []
-            for s, e in sorted(spans):
-                if not merged or s > merged[-1][1]: merged.append([s, e])
-                else: merged[-1][1] = max(merged[-1][1], e)
-
-            seen, preps = set(), []
-            for s, e in merged:
-                txt = " ".join(doc[s:e+1].text.split()).strip(" ,;")
-                if txt and txt not in seen:
-                    seen.add(txt); preps.append(txt)
-            results.append(preps)
+            # Decide if this tail is actually a preparation
+            # Simple rule: keep if it contains a VERB or participle (VBG or VBN)
+            keep = False
+            if doc:
+                for tok in doc:
+                    if tok.pos_ == "VERB" or tok.tag_ in ("VBG", "VBN"):
+                        keep = True
+                        break
+            results.append([tail] if keep and tail else [])
         self.preparations = results
 
     def parse(self) -> list[dict[str, list[str] | str | int | float | None]]:
