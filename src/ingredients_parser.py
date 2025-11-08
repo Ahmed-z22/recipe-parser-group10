@@ -71,7 +71,6 @@ class IngredientsParser:
             r"""^\s*(?:
                 (?P<r1>\d+(?:\.\d+)?)\s*(?:-|–|to)\s*(?P<r2>\d+(?:\.\d+)?) |
                 (?:(?P<uw>\d+)\s*)?(?P<uf>[{f}]) |
-                (?:(?P<aw>\d+)\s+)?(?P<num>\d+)\s*/\s*(?P<den>\d+) |
                 (?P<dec>\d+\.\d+) |
                 (?P<int>\d+)
             )""".format(f=re.escape(self.frac_chars)),
@@ -87,10 +86,6 @@ class IngredientsParser:
                     quantity = float(groups('r1'))
                 elif groups('uf'):
                     quantity = (float(groups('uw')) if groups('uw') else 0.0) + float(self.unicode_fractions.get(groups('uf'), 0.0))
-                elif groups('num'):
-                    denominator = int(groups('den'))
-                    if denominator:
-                        quantity = (float(groups('aw')) if groups('aw') else 0.0) + int(groups('num')) / denominator
                 elif groups('dec'):
                     quantity = float(groups('dec'))
                 elif groups('int'):
@@ -108,11 +103,11 @@ class IngredientsParser:
         """
         units_pattern = "|".join(sorted(map(re.escape, self.alias_to_canon), key=len, reverse=True))
         regex_units = re.compile(rf"\b({units_pattern})\b", re.IGNORECASE)
-        regex_parent = re.compile(r"\([^)]*\)")
+        regex_paren = re.compile(r"\([^)]*\)")
 
         out = []
         for line in self.ingredients:
-            match = regex_units.search(regex_parent.sub(" ", line)) or regex_units.search(line)
+            match = regex_units.search(regex_paren.sub(" ", line)) or regex_units.search(line)
             out.append(self.alias_to_canon.get(match.group(1).lower()) if match else None)
         self.ingredients_measurement_units = out
 
