@@ -1,7 +1,5 @@
-import json
-import re
+import json, re, spacy
 from pathlib import Path
-import spacy
 
 class IngredientsParser:
     def __init__(self, ingredients: dict[str, list[str]]):
@@ -16,6 +14,11 @@ class IngredientsParser:
         self.alias_to_canon = self._load_json(self.path / "units_map.json")
         self.unicode_fractions = self._load_json(self.path / "unicode_fractions.json")
         self.frac_chars = "".join(self.unicode_fractions.keys())
+        self.units_pattern = "|".join(sorted(map(re.escape, self.alias_to_canon.keys()), key=len, reverse=True))
+        self.qty = re.compile(
+            r"^\s*(?:\d+(?:\.\d+)?\s*(?:-|–|to)\s*\d+(?:\.\d+)?|(?:(\d+)\s*)?[" + re.escape(self.frac_chars) +
+            r"]|(?:(\d+)\s+)?\d+\s*/\s*\d+|\d+\.\d+|\d+)\s*", re.I)
+        self.unit = re.compile(r"^\s*(?:" + self.units_pattern + r")\b\.?\s*", re.I)
 
     def _load_json(self, path: Path) -> dict[str, str]:
         with path.open("r", encoding="utf-8") as f:
@@ -23,27 +26,33 @@ class IngredientsParser:
 
     def extract_ingredients_names(self):
         """
-        Extracts ingredient names by removing leading quantities, units, an optional
-        leading "of", and any text after a comma. Normalizes whitespace and stores
-        results in self.ingredients_names.
+        Extracts core ingredient names, and stores them in self.ingredients_names.
         """
-        qty = re.compile(
-            r"^\s*(?:\d+(?:\.\d+)?\s*(?:-|–|to)\s*\d+(?:\.\d+)?|(?:(\d+)\s*)?[" + re.escape(self.frac_chars) +
-            r"]|(?:(\d+)\s+)?\d+\s*/\s*\d+|\d+\.\d+|\d+)\s*", re.I)
-        unit = re.compile(
-            r"^\s*(?:" + "|".join(sorted(map(re.escape, self.alias_to_canon.keys()), key=len, reverse=True)) +
-            r")\b\.?\s*", re.I)
-        of = re.compile(r"^\s*of\b\.?\s*", re.I)
-
-        out = []
+        results = []
         for line in self.ingredients:
-            match = qty.search(line);  line = line[match.end():] if match else line
-            match = unit.search(line); line = line[match.end():] if match else line
-            match = of.search(line);   line = line[match.end():] if match else line
-            line = line.split(',', 1)[0]
+            match = self.qty.search(line)
+            line = line[match.end():] if match else line
+            match = self.unit.search(line)
+            line = line[match.end():] if match else line
+            line = re.sub(r"\([^)]*\)", "", line)
+            line = line.rsplit(",", 1)[0].strip()
             line = re.sub(r"\s+", " ", line).strip()
-            out.append(line)
-        self.ingredients_names = out
+
+            doc = self.nlp(line)
+            noun_chunks = list(doc.noun_chunks)
+            if noun_chunks:
+                chunk = noun_chunks[-1]
+                head = chunk.root
+
+                keep_tokens = []
+                for tok in chunk:
+                    if tok.dep_ == "compound":
+                        keep_tokens.append(tok.text)
+                    elif tok == head:
+                        keep_tokens.append(tok.text)
+                line = " ".join(keep_tokens).lower().strip()
+            results.append(line)
+        self.ingredients_names = results
 
     def extract_quantities(self):
         """
@@ -51,131 +60,94 @@ class IngredientsParser:
         Stores the numeric results (or None if no quantity found) in
         self.ingredients_quantities_and_amounts.
         """
-        qty_re = re.compile(
-            r"""^\s*(?:
-                (?P<r1>\d+(?:\.\d+)?)\s*(?:-|–|to)\s*(?P<r2>\d+(?:\.\d+)?) |
-                (?:(?P<uw>\d+)\s*)?(?P<uf>[{f}]) |
-                (?:(?P<aw>\d+)\s+)?(?P<num>\d+)\s*/\s*(?P<den>\d+) |
-                (?P<dec>\d+\.\d+) |
-                (?P<int>\d+)
-            )""".format(f=re.escape(self.frac_chars)),
-            re.VERBOSE | re.IGNORECASE)
+        amounts = re.compile(
+            r"^\s*(?:(?P<r1>\d+(?:\.\d+)?)\s*(?:-|–|to)\s*(?P<r2>\d+(?:\.\d+)?)|(?:(?P<uw>\d+)\s*)?(?P<uf>["
+            + re.escape(self.frac_chars) + r"])|(?P<dec>\d+\.\d+)|(?P<int>\d+))", re.I)
 
-        out = []
+        results = []
         for line in self.ingredients:
             quantity = None
-            match = qty_re.search(line)
+            match = amounts.search(line)
             if match:
                 groups = match.group
                 if groups('r1'):
                     quantity = float(groups('r1'))
                 elif groups('uf'):
                     quantity = (float(groups('uw')) if groups('uw') else 0.0) + float(self.unicode_fractions.get(groups('uf'), 0.0))
-                elif groups('num'):
-                    denominator = int(groups('den'))
-                    if denominator:
-                        quantity = (float(groups('aw')) if groups('aw') else 0.0) + int(groups('num')) / denominator
                 elif groups('dec'):
                     quantity = float(groups('dec'))
                 elif groups('int'):
                     quantity = float(groups('int'))
 
-            if quantity is not None and float(quantity).is_integer():
+            if quantity is not None and quantity.is_integer():
                 quantity = int(quantity)
-            out.append(quantity)
-        self.ingredients_quantities_and_amounts = out
+            results.append(quantity)
+        self.ingredients_quantities_and_amounts = results
 
     def extract_measurement_units(self):
         """
         Detects the measurement unit in each ingredient line.
         Stores the unit name (or None if no unit found) in self.ingredients_measurement_units.
         """
-        units_pattern = "|".join(sorted(map(re.escape, self.alias_to_canon), key=len, reverse=True))
-        regex_units = re.compile(rf"\b({units_pattern})\b", re.IGNORECASE)
-        regex_parent = re.compile(r"\([^)]*\)")
+        regex_units = re.compile(rf"\b({self.units_pattern})\b", re.IGNORECASE)
+        regex_paren = re.compile(r"\([^)]*\)")
 
-        out = []
+        results = []
         for line in self.ingredients:
-            match = regex_units.search(regex_parent.sub(" ", line)) or regex_units.search(line)
-            out.append(self.alias_to_canon.get(match.group(1).lower()) if match else None)
-        self.ingredients_measurement_units = out
+            match = regex_units.search(regex_paren.sub(" ", line)) or regex_units.search(line)
+            results.append(self.alias_to_canon.get(match.group(1).lower()) if match else None)
+        self.ingredients_measurement_units = results
 
     def extract_descriptors(self):
         """
-        Extracts adjective descriptors that modify the main ingredient noun in each line.
-        Hyphenated adjective sequences are merged, and results are stored in `self.descriptors`.
+        Extracts descriptive modifiers of the ingredient (adjectives, compounds, and participial adjectives) 
+        after removing quantities, units, and preparation phrases. And stores them in self.descriptors.
         """
         results = []
         for line in self.ingredients:
+            match = self.qty.search(line);  line = line[match.end():] if match else line
+            match = self.unit.search(line); line = line[match.end():] if match else line
+            line = re.sub(r"\([^)]*\)", "", line)
+            line = line.rsplit(",", 1)[0].strip()
+            line = re.sub(r"\s+", " ", line).strip()
+
             doc = self.nlp(line)
             head = next((t for t in reversed(doc) if t.pos_ in ("NOUN", "PROPN")), None)
             if not head:
                 results.append([])
                 continue
 
-            chain = {head.i} | {t.i for t in doc if t.dep_ == "compound" and t.head == head}
-            cand = [t for t in doc if t.pos_ == "ADJ" and t.dep_ == "amod" and t.head.i in chain]
-            cand.sort(key=lambda t: t.i)
-
-            out, i = [], 0
-            while i < len(cand):
-                j, phrase = i, cand[i].text
-                while j + 1 < len(cand) and cand[j+1].i == cand[j].i + 2 and doc[cand[j].i + 1].text == "-":
-                    phrase += "-" + cand[j+1].text
-                    j += 1
-                out.append(phrase.lower().strip(",.;:"))
-                i = j + 1
-            results.append(out)
+            descriptors = []
+            for tok in doc:
+                if tok.dep_ == "amod" and tok.head == head:
+                    descriptors.append(tok.text.lower())
+                elif tok.dep_ == "compound" and tok.head == head:
+                    descriptors.append(tok.text.lower())
+                elif tok.tag_ in ("VBN", "VBG") and tok.dep_ == "amod" and tok.head == head:
+                    descriptors.append(tok.text.lower())
+            results.append(descriptors)
         self.descriptors = results
 
     def extract_preparations(self):
         """
-        Extracts preparation phrases (e.g., “thinly sliced”, “finely chopped”) associated
-        with each ingredient by identifying participles and verbal modifiers linked to the
-        ingredient’s main noun. Results are stored in `self.preparations`.
+        Extract preparation notes by taking the text after the last comma, keeping it only if it contains a verb or participle.
+        Stores the results in self.preparations.
         """
         results = []
         for line in self.ingredients:
-            doc = self.nlp(line)
-            head = next((t for t in reversed(doc) if t.pos_ in ("NOUN","PROPN")), None)
-            if not head:
-                results.append([]); continue
+            parts = line.rsplit(",", 1)
+            tail = parts[1].strip() if len(parts) > 1 else ""
+            tail = re.sub(r"\([^)]*\)", "", tail)
+            tail = re.sub(r"\s+", " ", tail).strip()
 
-            anchors = []
-            anchors += [("amod", c) for c in head.children if c.dep_=="amod" and c.tag_ in ("VBN","VBG")]
-            anchors += [("verb", c) for c in head.children if c.dep_ in ("acl","acl:relcl") and (c.pos_=="VERB" or c.tag_ in ("VBN","VBG"))]
-            for tok in doc:
-                if (tok.pos_=="VERB" or tok.tag_ in ("VBN","VBG")) and head.i in {t.i for t in tok.subtree} and {c.dep_ for c in tok.children} & {"nsubj","nsubjpass","obj","dobj"}:
-                    anchors.append(("verb", tok))
-            anchors += [(k, c) for k, v in list(anchors) for c in v.children if c.dep_=="conj" and (c.pos_=="VERB" or c.tag_ in ("VBN","VBG"))]
-
-            spans = []
-            for kind, v in anchors:
-                left = v.i
-                i = v.i - 1
-                while i >= 0 and doc[i].dep_=="advmod" and not doc[i].is_punct and i == left - 1:
-                    left = i; i -= 1
-                if kind == "amod":
-                    s, e = left, v.i
-                else:
-                    right = v.right_edge.i
-                    e = next((j-1 for j in range(v.i+1, right+1) if doc[j].text==","), right)
-                    s = left
-                while s <= e and doc[s].is_punct: s += 1
-                while e >= s and doc[e].is_punct: e -= 1
-                if s <= e: spans.append((s, e))
-
-            merged = []
-            for s, e in sorted(spans):
-                if not merged or s > merged[-1][1]: merged.append([s, e])
-                else: merged[-1][1] = max(merged[-1][1], e)
-
-            seen, preps = set(), []
-            for s, e in merged:
-                txt = " ".join(doc[s:e+1].text.split()).strip(" ,;")
-                if txt and txt not in seen:
-                    seen.add(txt); preps.append(txt)
-            results.append(preps)
+            doc = self.nlp(tail) if tail else None
+            keep = False
+            if doc:
+                for tok in doc:
+                    if tok.pos_ == "VERB" or tok.tag_ in ("VBG", "VBN"):
+                        keep = True
+                        break
+            results.append([tail] if keep and tail else [])
         self.preparations = results
 
     def parse(self) -> list[dict[str, list[str] | str | int | float | None]]:
@@ -202,8 +174,8 @@ class IngredientsParser:
                 "ingredient_name": self.ingredients_names[i],
                 "ingredient_quantity": self.ingredients_quantities_and_amounts[i],
                 "measurement_unit": self.ingredients_measurement_units[i],
+                "ingredient_descriptors": self.descriptors[i],
                 "ingredient_preparation": self.preparations[i],
-                "ingredient_descriptors": self.descriptors[i]
             })
-        
+
         return output
