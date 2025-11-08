@@ -19,6 +19,7 @@ class IngredientsParser:
             r"^\s*(?:\d+(?:\.\d+)?\s*(?:-|–|to)\s*\d+(?:\.\d+)?|(?:(\d+)\s*)?[" + re.escape(self.frac_chars) +
             r"]|(?:(\d+)\s+)?\d+\s*/\s*\d+|\d+\.\d+|\d+)\s*", re.I)
         self.unit = re.compile(r"^\s*(?:" + self.units_pattern + r")\b\.?\s*", re.I)
+        self.re_paren = re.compile(r"\([^)]*\)")
 
     def _load_json(self, path: Path) -> dict[str, str]:
         with path.open("r", encoding="utf-8") as f:
@@ -34,7 +35,7 @@ class IngredientsParser:
             line = line[match.end():] if match else line
             match = self.unit.search(line)
             line = line[match.end():] if match else line
-            line = re.sub(r"\([^)]*\)", "", line)
+            line = self.re_paren.sub("", line)
             line = line.rsplit(",", 1)[0].strip()
             line = re.sub(r"\s+", " ", line).strip()
 
@@ -89,12 +90,12 @@ class IngredientsParser:
         Detects the measurement unit in each ingredient line.
         Stores the unit name (or None if no unit found) in self.ingredients_measurement_units.
         """
-        regex_units = re.compile(rf"\b({self.units_pattern})\b", re.IGNORECASE)
-        regex_paren = re.compile(r"\([^)]*\)")
+        re_units = re.compile(rf"\b({self.units_pattern})\b", re.IGNORECASE)
+        
 
         results = []
         for line in self.ingredients:
-            match = regex_units.search(regex_paren.sub(" ", line)) or regex_units.search(line)
+            match = re_units.search(self.re_paren.sub(" ", line)) or re_units.search(line)
             results.append(self.alias_to_canon.get(match.group(1).lower()) if match else None)
         self.ingredients_measurement_units = results
 
@@ -107,7 +108,7 @@ class IngredientsParser:
         for line in self.ingredients:
             match = self.qty.search(line);  line = line[match.end():] if match else line
             match = self.unit.search(line); line = line[match.end():] if match else line
-            line = re.sub(r"\([^)]*\)", "", line)
+            line = self.re_paren.sub("", line)
             line = line.rsplit(",", 1)[0].strip()
             line = re.sub(r"\s+", " ", line).strip()
 
@@ -136,18 +137,18 @@ class IngredientsParser:
         results = []
         for line in self.ingredients:
             parts = line.rsplit(",", 1)
-            tail = parts[1].strip() if len(parts) > 1 else ""
-            tail = re.sub(r"\([^)]*\)", "", tail)
-            tail = re.sub(r"\s+", " ", tail).strip()
+            line = parts[1].strip() if len(parts) > 1 else ""
+            line = self.re_paren.sub("", line)
+            line = re.sub(r"\s+", " ", line).strip()
 
-            doc = self.nlp(tail) if tail else None
+            doc = self.nlp(line) if line else None
             keep = False
             if doc:
                 for tok in doc:
                     if tok.pos_ == "VERB" or tok.tag_ in ("VBG", "VBN"):
                         keep = True
                         break
-            results.append([tail] if keep and tail else [])
+            results.append([line] if keep and line else [])
         self.preparations = results
 
     def parse(self) -> list[dict[str, list[str] | str | int | float | None]]:
