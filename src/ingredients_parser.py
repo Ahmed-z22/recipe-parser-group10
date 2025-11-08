@@ -20,23 +20,24 @@ class IngredientsParser:
             r"]|(?:(\d+)\s+)?\d+\s*/\s*\d+|\d+\.\d+|\d+)\s*", re.I)
         self.unit = re.compile(r"^\s*(?:" + self.units_pattern + r")\b\.?\s*", re.I)
 
-
     def _load_json(self, path: Path) -> dict[str, str]:
         with path.open("r", encoding="utf-8") as f:
             return json.load(f)
 
     def extract_ingredients_names(self):
         """
-        Extracts the core ingredient names from raw ingredient lines by removing
-        quantities, units, parentheses, preparation notes, and descriptive modifiers,
-        keeping only the compound noun that represents the ingredient itself.
+        Extracts the core ingredient noun (and any compound noun modifiers)
+        while removing quantities, units, parentheses, descriptive adjectives,
+        participles, and preparation instructions.
         """
         results = []
         for line in self.ingredients:
-            match = self.qty.search(line);  line = line[match.end():] if match else line
-            match = self.unit.search(line); line = line[match.end():] if match else line
+            match = self.qty.search(line)
+            line = line[match.end():] if match else line
+            match = self.unit.search(line)
+            line = line[match.end():] if match else line
             line = re.sub(r"\([^)]*\)", "", line)
-            line = line.split(",", 1)[0]
+            line = line.rsplit(",", 1)[0].strip()
             line = re.sub(r"\s+", " ", line).strip()
 
             doc = self.nlp(line)
@@ -49,12 +50,9 @@ class IngredientsParser:
                 for tok in chunk:
                     if tok.dep_ == "compound":
                         keep_tokens.append(tok.text)
-                    elif tok.dep_ == "amod" and tok.tag_ not in {"VBN", "VBG"}:
-                        keep_tokens.append(tok.text)
                     elif tok == head:
                         keep_tokens.append(tok.text)
-
-                line = " ".join(keep_tokens).strip()
+                line = " ".join(keep_tokens).lower().strip()
             results.append(line)
         self.ingredients_names = results
 
@@ -181,5 +179,5 @@ class IngredientsParser:
                 "ingredient_descriptors": self.descriptors[i],
                 "ingredient_preparation": self.preparations[i],
             })
-        
+
         return output
