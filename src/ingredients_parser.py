@@ -23,9 +23,9 @@ class IngredientsParser:
 
     def extract_ingredients_names(self):
         """
-        Extracts ingredient names by removing leading quantities, units, an optional
-        leading "of", and any text after a comma. Normalizes whitespace and stores
-        results in self.ingredients_names.
+        Extracts the core ingredient names from raw ingredient lines by removing
+        quantities, units, parentheses, preparation notes, and descriptive modifiers,
+        keeping only the compound noun that represents the ingredient itself.
         """
         qty = re.compile(
             r"^\s*(?:\d+(?:\.\d+)?\s*(?:-|–|to)\s*\d+(?:\.\d+)?|(?:(\d+)\s*)?[" + re.escape(self.frac_chars) +
@@ -33,15 +33,31 @@ class IngredientsParser:
         unit = re.compile(
             r"^\s*(?:" + "|".join(sorted(map(re.escape, self.alias_to_canon.keys()), key=len, reverse=True)) +
             r")\b\.?\s*", re.I)
-        of = re.compile(r"^\s*of\b\.?\s*", re.I)
 
         out = []
         for line in self.ingredients:
             match = qty.search(line);  line = line[match.end():] if match else line
             match = unit.search(line); line = line[match.end():] if match else line
-            match = of.search(line);   line = line[match.end():] if match else line
-            line = line.split(',', 1)[0]
+            line = re.sub(r"\([^)]*\)", "", line)
+            line = line.split(",", 1)[0]
             line = re.sub(r"\s+", " ", line).strip()
+
+            doc = self.nlp(line)
+            noun_chunks = list(doc.noun_chunks)
+            if noun_chunks:
+                chunk = noun_chunks[-1]
+                head = chunk.root
+
+                keep_tokens = []
+                for tok in chunk:
+                    if tok.dep_ == "compound":
+                        keep_tokens.append(tok.text)
+                    elif tok.dep_ == "amod" and tok.tag_ not in {"VBN", "VBG"}:
+                        keep_tokens.append(tok.text)
+                    elif tok == head:
+                        keep_tokens.append(tok.text)
+
+                line = " ".join(keep_tokens).strip()
             out.append(line)
         self.ingredients_names = out
 
