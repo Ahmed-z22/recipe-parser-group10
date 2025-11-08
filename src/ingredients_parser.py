@@ -136,25 +136,17 @@ class IngredientsParser:
 
     def extract_preparations(self):
         """
-        Extracts preparation phrases (e.g., “thinly sliced”, “finely chopped”) associated
-        with each ingredient by identifying participles and verbal modifiers linked to the
-        ingredient’s main noun. Results are stored in `self.preparations`.
+        Extract preparation notes by taking the text after the last comma, keeping it only if it contains a verb or participle.
+        Stores the results in self.preparations.
         """
         results = []
         for line in self.ingredients:
-            # Take text after the last comma
             parts = line.rsplit(",", 1)
             tail = parts[1].strip() if len(parts) > 1 else ""
-
-            # Clean parentheses + whitespace
             tail = re.sub(r"\([^)]*\)", "", tail)
             tail = re.sub(r"\s+", " ", tail).strip()
 
-            # Run spaCy only on the tail
             doc = self.nlp(tail) if tail else None
-
-            # Decide if this tail is actually a preparation
-            # Simple rule: keep if it contains a VERB or participle (VBG or VBN)
             keep = False
             if doc:
                 for tok in doc:
