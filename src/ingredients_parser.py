@@ -1,7 +1,5 @@
-import json
-import re
+import json, re, spacy
 from pathlib import Path
-import spacy
 
 class IngredientsParser:
     def __init__(self, ingredients: dict[str, list[str]]):
