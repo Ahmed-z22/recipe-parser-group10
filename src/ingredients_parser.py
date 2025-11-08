@@ -68,13 +68,8 @@ class IngredientsParser:
         self.ingredients_quantities_and_amounts.
         """
         qty_re = re.compile(
-            r"""^\s*(?:
-                (?P<r1>\d+(?:\.\d+)?)\s*(?:-|–|to)\s*(?P<r2>\d+(?:\.\d+)?) |
-                (?:(?P<uw>\d+)\s*)?(?P<uf>[{f}]) |
-                (?P<dec>\d+\.\d+) |
-                (?P<int>\d+)
-            )""".format(f=re.escape(self.frac_chars)),
-            re.VERBOSE | re.IGNORECASE)
+            r"^\s*(?:(?P<r1>\d+(?:\.\d+)?)\s*(?:-|–|to)\s*(?P<r2>\d+(?:\.\d+)?)|(?:(?P<uw>\d+)\s*)?(?P<uf>["
+            + re.escape(self.frac_chars) + r"])|(?P<dec>\d+\.\d+)|(?P<int>\d+))", re.I)
 
         out = []
         for line in self.ingredients:
