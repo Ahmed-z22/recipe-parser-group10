@@ -16,6 +16,8 @@ class IngredientsParser:
         self.alias_to_canon = self._load_json(self.path / "units_map.json")
         self.unicode_fractions = self._load_json(self.path / "unicode_fractions.json")
         self.frac_chars = "".join(self.unicode_fractions.keys())
+        self.units_pattern = "|".join(sorted(map(re.escape, self.alias_to_canon.keys()), key=len, reverse=True))
+
 
     def _load_json(self, path: Path) -> dict[str, str]:
         with path.open("r", encoding="utf-8") as f:
@@ -31,8 +33,7 @@ class IngredientsParser:
             r"^\s*(?:\d+(?:\.\d+)?\s*(?:-|–|to)\s*\d+(?:\.\d+)?|(?:(\d+)\s*)?[" + re.escape(self.frac_chars) +
             r"]|(?:(\d+)\s+)?\d+\s*/\s*\d+|\d+\.\d+|\d+)\s*", re.I)
         unit = re.compile(
-            r"^\s*(?:" + "|".join(sorted(map(re.escape, self.alias_to_canon.keys()), key=len, reverse=True)) +
-            r")\b\.?\s*", re.I)
+            r"^\s*(?:" + self.units_pattern + r")\b\.?\s*", re.I)
 
         out = []
         for line in self.ingredients:
@@ -67,14 +68,14 @@ class IngredientsParser:
         Stores the numeric results (or None if no quantity found) in
         self.ingredients_quantities_and_amounts.
         """
-        qty_re = re.compile(
+        qty = re.compile(
             r"^\s*(?:(?P<r1>\d+(?:\.\d+)?)\s*(?:-|–|to)\s*(?P<r2>\d+(?:\.\d+)?)|(?:(?P<uw>\d+)\s*)?(?P<uf>["
             + re.escape(self.frac_chars) + r"])|(?P<dec>\d+\.\d+)|(?P<int>\d+))", re.I)
 
         out = []
         for line in self.ingredients:
             quantity = None
-            match = qty_re.search(line)
+            match = qty.search(line)
             if match:
                 groups = match.group
                 if groups('r1'):
@@ -86,7 +87,7 @@ class IngredientsParser:
                 elif groups('int'):
                     quantity = float(groups('int'))
 
-            if quantity is not None and float(quantity).is_integer():
+            if quantity is not None and quantity.is_integer():
                 quantity = int(quantity)
             out.append(quantity)
         self.ingredients_quantities_and_amounts = out
@@ -96,8 +97,7 @@ class IngredientsParser:
         Detects the measurement unit in each ingredient line.
         Stores the unit name (or None if no unit found) in self.ingredients_measurement_units.
         """
-        units_pattern = "|".join(sorted(map(re.escape, self.alias_to_canon), key=len, reverse=True))
-        regex_units = re.compile(rf"\b({units_pattern})\b", re.IGNORECASE)
+        regex_units = re.compile(rf"\b({self.units_pattern})\b", re.IGNORECASE)
         regex_paren = re.compile(r"\([^)]*\)")
 
         out = []
