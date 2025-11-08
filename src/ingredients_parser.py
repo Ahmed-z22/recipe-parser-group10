@@ -26,9 +26,7 @@ class IngredientsParser:
 
     def extract_ingredients_names(self):
         """
-        Extracts the core ingredient noun (and any compound noun modifiers)
-        while removing quantities, units, parentheses, descriptive adjectives,
-        participles, and preparation instructions.
+        Extracts core ingredient names, and stores them in self.ingredients_names.
         """
         results = []
         for line in self.ingredients:
