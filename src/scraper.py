@@ -12,21 +12,17 @@ SUPPORTED_WEBSITES = [
 def get_recipe_data(url: str):
     """
     Extracts recipe data (title, ingredients, and directions) from a supported recipe URL.
-
     Supported domains:
         - allrecipes.com
         - epicurious.com
         - bonappetit.com
-
     Args:
         url (str): The full URL of the recipe page.
-
     Returns:
         tuple[dict, dict, dict]: A tuple containing:
             - {"title": str}: The recipe title (name).
             - {"ingredients": list[str]}: A list of ingredients.
             - {"directions": list[str]}: A list of cooking directions.
-
     Raises:
         ValueError: If the URL domain is unsupported or recipe data cannot be extracted.
     """
@@ -45,13 +41,10 @@ def get_recipe_data(url: str):
 def _http_get_soup(url: str) -> BeautifulSoup:
     """
     Sends an HTTP GET request and parses the response into a BeautifulSoup object.
-
     Args:
         url (str): The target URL (recipe page).
-
     Returns:
         BeautifulSoup: Parsed HTML content of the page.
-
     Raises:
         requests.HTTPError: If the HTTP request fails (e.g., 404, 500).
     """
@@ -63,18 +56,15 @@ def _extract_json_ld_recipe(soup: BeautifulSoup, url: str, domain: str) -> tuple
     """
     Extracts recipe information (title, ingredients, and directions)
     from JSON-LD <script> blocks embedded in the HTML.
-
     Args:
         soup (BeautifulSoup): Parsed HTML content.
         url (str): The recipe page URL (used for error context).
         domain (str): The website domain (used for error context).
-
     Returns:
         tuple[str, list[str], list[str]]: A tuple containing:
             - The recipe title.
             - A list of ingredients.
             - A list of directions.
-
     Raises:
         ValueError: If no valid recipe data (title, ingredients, or directions) can be extracted.
     """
@@ -146,7 +136,7 @@ def _extract_json_ld_recipe(soup: BeautifulSoup, url: str, domain: str) -> tuple
             if ingredients or directions:
                 break
 
-    # Final validation: ensure we non-empty title, ingredients, and directions
+    # Final validation: ensure we have non-empty title, ingredients, and directions
     if not title or not ingredients or not directions:
         raise ValueError(
             f"Failed to extract recipe data from this website: {domain}.\n"
