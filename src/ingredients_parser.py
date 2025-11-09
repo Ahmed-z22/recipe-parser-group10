@@ -44,7 +44,6 @@ class IngredientsParser:
             if noun_chunks:
                 chunk = noun_chunks[-1]
                 head = chunk.root
-
                 keep_tokens = []
                 for tok in chunk:
                     if tok.dep_ == "compound":
@@ -91,7 +90,6 @@ class IngredientsParser:
         Stores the unit name (or None if no unit found) in self.ingredients_measurement_units.
         """
         units = re.compile(rf"\b({self.units_pattern})\b", re.I)
-        
 
         results = []
         for line in self.ingredients:
