@@ -11,8 +11,12 @@ class ToolsParser:
         self.tool_keywords = {"pot","pan","skillet","bowl","oven","lid","sheet","saucepan",
                                 "colander","knife","spoon","fork","blender","mixer","grill","tray",
                                 "griddle", "scoop", "whisk", "peeler", "rolling pin", "measuring cup",
-                                "measuring spoon", "strainer", "cutting board", "tongs", "spatula"
-                            }
+                                "measuring spoon", "strainer", "cutting board", "tongs", "spatula", "bag",
+                                "tablespoon", "teaspoon", "cup", "thermometer", "baster", "fryer", "steamer",
+                                "crockpot", "slow cooker", "air fryer", "microwave", "food processor", "microplane",
+                                "pastry brush", "can opener", "zester", "ladle", "grater", "sieve", "spatula",
+                                "towel", "cloth", "foil", "wrap", "paper", "parchment", "basket", "rack", "mold", 
+                                "dish", "platter", "jar", "baster", "pan"}
         # words that might indicate a tool is being used
         self.prep_word = {"in","into","on","over","using","with","onto"}
         # verbs that often imply tool usage
