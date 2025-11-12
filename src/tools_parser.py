@@ -20,37 +20,25 @@ class ToolsParser:
         # verbs that often imply tool usage
         self.tool_verb_list = data.get('tool_verb_list')
 
-        # small list — can be expanded with common kitchen tools
-        # self.tool_keywords = {"pot","pan","skillet","bowl","oven","lid","sheet","saucepan",
-        #                         "colander","knife","spoon","fork","blender","mixer","grill","tray",
-        #                         "griddle", "scoop", "whisk", "peeler", "rolling pin", "measuring cup",
-        #                         "measuring spoon", "strainer", "cutting board", "tongs", "spatula", "bag",
-        #                         "tablespoon", "teaspoon", "cup", "thermometer", "baster", "fryer", "steamer",
-        #                         "crockpot", "slow cooker", "air fryer", "microwave", "food processor", "microplane",
-        #                         "pastry brush", "can opener", "zester", "ladle", "grater", "sieve", "spatula",
-        #                         "towel", "cloth", "foil", "wrap", "paper", "parchment", "basket", "rack", "mold", 
-        #                         "dish", "platter", "jar", "baster", "pan"}
-        # # words that might indicate a tool is being used
-        # self.prep_word = {"in","into","on","over","using","with","onto"}
-        # # verbs that often imply tool usage
-        # self.tool_verb_list = {"use","place","put","heat","preheat","cook","bake","stir","whisk","pour","simmer"}
-
     # can maybe add this to the Steps section
     def split_directions_into_steps(self):
         """
         Split recipe directions into individual sentence steps.
         
         Processes each direction entry, breaks down each direction into 
-        individual sentences, creating a list of discrete cooking steps.
+        individual sentences, creating a dictionary mapping original 
+        directions to their constituent sentence steps.
         
         Returns:
-            list[str]: A list of individual sentence steps extracted from all directions.
+            dict: A dictionary where keys are original direction entries 
+             and values are lists of individual sentence steps.
         """
-        split_dirs = []
+        split_dirs = {}
         for entry in self.directions:
             doc = self.nlp(entry)
             sents = [sent.text.strip() for sent in doc.sents if sent.text.strip()]
-            split_dirs.extend(sents)
+            # split_dirs.extend(sents)
+            split_dirs[entry] = sents
         return split_dirs
 
 
@@ -115,12 +103,13 @@ class ToolsParser:
         Returns: A list of dictionaries with extracted tools for each step.
         """
         output = []
-        for step in self.directions_split:
-            # print("Processing step:", step)
-            tools_in_step = self.extract_tools(step)
-            output.append({
-                "step": step,
-                "tools": tools_in_step
-            })
 
+        for direction, steps in self.directions_split.items():
+            output_dict = {"direction": direction, "steps": steps, "tools": ()}
+            for step in steps:
+                tools_in_step = self.extract_tools(step)
+                # output_dict["tools"].append(tools_in_step)
+                output_dict["tools"] = list(set(output_dict["tools"]) | set(tools_in_step))
+            output.append(output_dict)
+                
         return output

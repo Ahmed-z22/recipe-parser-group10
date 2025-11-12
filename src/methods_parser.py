@@ -7,12 +7,6 @@ class MethodsParser:
         self.tools = None
         self.nlp = spacy.load("en_core_web_sm")
         self.directions_split = self.split_directions_into_steps()
-        # small list — can be expanded with common kitchen tools
-        # self.method_keywords = {"bake", "boil", "drain", "chop", "fry", "grill", "mix", "roast", "saute", "steam", "whisk", "blend",
-        #                         "slice", "dice", "knead", "marinate","poach", "broil", "simmer", "stir", "toast", "peel", "pour","sift","gather",
-        #                         "sift","mix","stir","add", "whisk","sprinkle", "cook","bake","preheat","whisk","fold","sear", 
-        #                    "chop","slice","dice","fry","saute","boil","simmer","roast","blend","layer", "cover", "uncover"
-        #                    "knead","marinate","grill","steam","toast","pour","beat","season", "flip", "cook","scoop","heat", "cool", "cover"}
         # Load method keywords from JSON file
         method_keywords_path = 'src/helper_files/method_keywords.json'
         with open(method_keywords_path, 'r') as f:
@@ -27,16 +21,20 @@ class MethodsParser:
         Split recipe directions into individual sentence steps.
         
         Processes each direction entry, breaks down each direction into 
-        individual sentences, creating a list of discrete cooking steps.
+        individual sentences, creating a dictionary mapping original 
+        directions to their constituent sentence steps.
         
         Returns:
-            list[str]: A list of individual sentence steps extracted from all directions.
+            dict: A dictionary where keys are original direction entries 
+             and values are lists of individual sentence steps.
         """
-        split_dirs = []
+        # split_dirs = []
+        split_dirs = {}
         for entry in self.directions:
             doc = self.nlp(entry)
             sents = [sent.text.strip() for sent in doc.sents if sent.text.strip()]
-            split_dirs.extend(sents)
+            # split_dirs.extend(sents)
+            split_dirs[entry] = sents
         return split_dirs
 
     def extract_methods(self, step):
@@ -97,12 +95,13 @@ class MethodsParser:
         Returns: A list of dictionaries with extracted tools for each step.
         """
         output = []
-        for step in self.directions_split:
-            # print("Processing step:", step)
-            tools_in_step = self.extract_methods(step)
-            output.append({
-                "step": step,
-                "tools": tools_in_step
-            })
 
+        for direction, steps in self.directions_split.items():
+            output_dict = {"direction": direction, "steps": steps, "methods": ()}
+            for step in steps:
+                methods_in_step = self.extract_methods(step)
+                # output_dict["methods"].append(methods_in_step)
+                output_dict["methods"] = list(set(output_dict["methods"]) | set(methods_in_step))
+            output.append(output_dict)
+                
         return output
