@@ -7,7 +7,8 @@ class ToolsParser:
         self.tools = None
         self.nlp = spacy.load("en_core_web_sm")
         self.directions_split = self.split_directions_into_steps()
-        tools_keywords_path = 'src/helper_files/tools_keywords.json'
+        self.path = Path(__file__).resolve().parent / "helper_files"
+        tools_keywords_path = self.path / "tools_keywords.json"
         with open(tools_keywords_path, 'r') as f:
             data = json.load(f) 
 
@@ -99,9 +100,17 @@ class ToolsParser:
         return tools
 
     def parse(self): 
-        """Parses the directions to extract tools used in the recipe.
-        Returns: A list of dictionaries with extracted tools for each step.
         """
+        Parse directions and extract tools used in each direction's steps.
+        Relies on the extract_tools() method to identify tools from step text.
+
+        Returns:
+            list: A list of dictionaries, each containing:
+                - 'direction' (str): The original direction identifier or name
+                - 'steps' (list): List of step descriptions for this direction
+                - 'tools' (list): Unique tools extracted from all steps in this direction
+        """
+        
         output = []
 
         for direction, steps in self.directions_split.items():

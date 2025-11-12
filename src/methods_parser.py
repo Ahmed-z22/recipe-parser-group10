@@ -8,7 +8,8 @@ class MethodsParser:
         self.nlp = spacy.load("en_core_web_sm")
         self.directions_split = self.split_directions_into_steps()
         # Load method keywords from JSON file
-        method_keywords_path = 'src/helper_files/method_keywords.json'
+        self.path = Path(__file__).resolve().parent / "helper_files"
+        method_keywords_path = self.path / "method_keywords.json"
         with open(method_keywords_path, 'r') as f:
             data = json.load(f) 
 
@@ -91,9 +92,17 @@ class MethodsParser:
     
 
     def parse(self): 
-        """Parses the directions to extract tools used in the recipe.
-        Returns: A list of dictionaries with extracted tools for each step.
         """
+        Parse cooking directions and extract cooking methods from each step.
+        Uses self.extract_methods() to identify cooking methods in each step.
+        
+        Returns:
+            list[dict]: A list of dictionaries where each dictionary contains:
+                - "direction" (str): The original direction text
+                - "steps" (list): List of individual steps for this direction
+                - "methods" (list): Unique cooking methods extracted from all steps in this direction
+        """
+        
         output = []
 
         for direction, steps in self.directions_split.items():
