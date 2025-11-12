@@ -8,16 +8,30 @@ class MethodsParser:
         self.nlp = spacy.load("en_core_web_sm")
         self.directions_split = self.split_directions_into_steps()
         # small list — can be expanded with common kitchen tools
-        self.method_keywords = method_keywords = {"bake", "boil", "drain", "chop", "fry", "grill", "mix", "roast", "saute", "steam", "whisk", "blend",
-                                "slice", "dice", "knead", "marinate","poach", "broil", "simmer", "stir", "toast", "peel", "pour","sift","gather",
-                                "sift","mix","stir","add", "whisk","sprinkle", "cook","bake","preheat","whisk","fold","sear", 
-                           "chop","slice","dice","fry","saute","boil","simmer","roast","blend","layer", "cover", "uncover"
-                           "knead","marinate","grill","steam","toast","pour","beat","season", "flip", "cook","scoop","heat", "cool", "cover"}
+        # self.method_keywords = {"bake", "boil", "drain", "chop", "fry", "grill", "mix", "roast", "saute", "steam", "whisk", "blend",
+        #                         "slice", "dice", "knead", "marinate","poach", "broil", "simmer", "stir", "toast", "peel", "pour","sift","gather",
+        #                         "sift","mix","stir","add", "whisk","sprinkle", "cook","bake","preheat","whisk","fold","sear", 
+        #                    "chop","slice","dice","fry","saute","boil","simmer","roast","blend","layer", "cover", "uncover"
+        #                    "knead","marinate","grill","steam","toast","pour","beat","season", "flip", "cook","scoop","heat", "cool", "cover"}
+        # Load method keywords from JSON file
+        method_keywords_path = 'src/helper_files/method_keywords.json'
+        with open(method_keywords_path, 'r') as f:
+            data = json.load(f) 
 
+        self.method_keywords = data.get('method_keywords')
+    
 
     # can maybe add this to the Steps section
-    # this function splits directions into single steps based on sentences. So each sentence is a step.
     def split_directions_into_steps(self):
+        """
+        Split recipe directions into individual sentence steps.
+        
+        Processes each direction entry, breaks down each direction into 
+        individual sentences, creating a list of discrete cooking steps.
+        
+        Returns:
+            list[str]: A list of individual sentence steps extracted from all directions.
+        """
         split_dirs = []
         for entry in self.directions:
             doc = self.nlp(entry)

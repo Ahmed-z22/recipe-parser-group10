@@ -7,25 +7,45 @@ class ToolsParser:
         self.tools = None
         self.nlp = spacy.load("en_core_web_sm")
         self.directions_split = self.split_directions_into_steps()
-        # small list — can be expanded with common kitchen tools
-        self.tool_keywords = {"pot","pan","skillet","bowl","oven","lid","sheet","saucepan",
-                                "colander","knife","spoon","fork","blender","mixer","grill","tray",
-                                "griddle", "scoop", "whisk", "peeler", "rolling pin", "measuring cup",
-                                "measuring spoon", "strainer", "cutting board", "tongs", "spatula", "bag",
-                                "tablespoon", "teaspoon", "cup", "thermometer", "baster", "fryer", "steamer",
-                                "crockpot", "slow cooker", "air fryer", "microwave", "food processor", "microplane",
-                                "pastry brush", "can opener", "zester", "ladle", "grater", "sieve", "spatula",
-                                "towel", "cloth", "foil", "wrap", "paper", "parchment", "basket", "rack", "mold", 
-                                "dish", "platter", "jar", "baster", "pan"}
-        # words that might indicate a tool is being used
-        self.prep_word = {"in","into","on","over","using","with","onto"}
-        # verbs that often imply tool usage
-        self.tool_verb_list = {"use","place","put","heat","preheat","cook","bake","stir","whisk","pour","simmer"}
+        tools_keywords_path = 'src/helper_files/tools_keywords.json'
+        with open(tools_keywords_path, 'r') as f:
+            data = json.load(f) 
 
+        # small list — can be expanded with common kitchen tools
+        self.tool_keywords = data.get('tools_keywords')
+
+        # words that might indicate a tool is being used
+        self.prep_word = data.get('prep_words')
+
+        # verbs that often imply tool usage
+        self.tool_verb_list = data.get('tool_verb_list')
+
+        # small list — can be expanded with common kitchen tools
+        # self.tool_keywords = {"pot","pan","skillet","bowl","oven","lid","sheet","saucepan",
+        #                         "colander","knife","spoon","fork","blender","mixer","grill","tray",
+        #                         "griddle", "scoop", "whisk", "peeler", "rolling pin", "measuring cup",
+        #                         "measuring spoon", "strainer", "cutting board", "tongs", "spatula", "bag",
+        #                         "tablespoon", "teaspoon", "cup", "thermometer", "baster", "fryer", "steamer",
+        #                         "crockpot", "slow cooker", "air fryer", "microwave", "food processor", "microplane",
+        #                         "pastry brush", "can opener", "zester", "ladle", "grater", "sieve", "spatula",
+        #                         "towel", "cloth", "foil", "wrap", "paper", "parchment", "basket", "rack", "mold", 
+        #                         "dish", "platter", "jar", "baster", "pan"}
+        # # words that might indicate a tool is being used
+        # self.prep_word = {"in","into","on","over","using","with","onto"}
+        # # verbs that often imply tool usage
+        # self.tool_verb_list = {"use","place","put","heat","preheat","cook","bake","stir","whisk","pour","simmer"}
 
     # can maybe add this to the Steps section
-    # this function splits directions into single steps based on sentences. So each sentence is a step.
     def split_directions_into_steps(self):
+        """
+        Split recipe directions into individual sentence steps.
+        
+        Processes each direction entry, breaks down each direction into 
+        individual sentences, creating a list of discrete cooking steps.
+        
+        Returns:
+            list[str]: A list of individual sentence steps extracted from all directions.
+        """
         split_dirs = []
         for entry in self.directions:
             doc = self.nlp(entry)
@@ -36,8 +56,18 @@ class ToolsParser:
 
     def extract_tools(self, text: str) -> list[str]:
         """
-        Extracts kitchen tools from a given direction text.
+        Extract cooking tools and equipment from recipe text using natural language processing.
+        Args:
+            text (str): The recipe text
+        Returns:
+            list[str]: A sorted list of normalized tool names found in the text.
+                       Duplicates are removed and articles (a, an, the) are stripped
+                       from the beginning of tool names.
+        Example:
+            >>> parser.extract_tools("Heat oil in a large skillet and use a wooden spoon to stir")
+            ['large skillet', 'wooden spoon']
         """
+        
 
         doc = self.nlp(text)
         candidates = set()
