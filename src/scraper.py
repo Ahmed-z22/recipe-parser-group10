@@ -144,7 +144,7 @@ def _extract_json_ld_recipe(soup: BeautifulSoup, url: str, domain: str) -> tuple
         )
 
     # make sure to strip any leading/trailing whitespace, and make all strings small case
-    title = title.strip().lower()
+    title = title.strip()
     ingredients = [ing.strip().lower() for ing in ingredients]
     directions = [dir.strip().lower() for dir in directions]
 
