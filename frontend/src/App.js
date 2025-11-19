@@ -72,13 +72,13 @@ function App() {
     }
   };
 
-  const sendMessage = async (e) => {
-    e.preventDefault();
-    if (!input.trim() || loading) return;
+  const sendMessage = async (e, overrideText) => {
+    if (e) e.preventDefault();
+    const text = overrideText !== undefined ? overrideText : input;
+    if (!text.trim() || loading) return;
 
-    const msg = input.trim();
     setInput('');
-    setMessages((prev) => [...prev, { type: 'user', text: msg }]);
+    setMessages((prev) => [...prev, { type: 'user', text: text }]);
     setLoading(true);
 
     try {
@@ -88,7 +88,7 @@ function App() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          question: msg,
+          question: text,
           session_id: 'default',
         }),
       });
@@ -144,14 +144,13 @@ function App() {
       setListening(false);
     };
 
-    recognition.onerror = (event) => {
-      console.error("Speech recognition error:", event.error);
+    recognition.onerror = () => {
       setListening(false);
     };
 
     recognition.onresult = (event) => {
       const transcript = event.results[0][0].transcript;
-      setInput((prev) => (prev ? prev + " " + transcript : transcript));
+      sendMessage(null, transcript);
     };
 
     recognition.start();
@@ -260,6 +259,7 @@ function App() {
                 className="message-input"
                 disabled={loading}
               />
+
               <button
                 type="button"
                 onClick={toggleListening}
