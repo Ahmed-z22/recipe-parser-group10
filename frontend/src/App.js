@@ -36,6 +36,7 @@ function App() {
   const messagesEndRef = useRef(null);
   const [listening, setListening] = useState(false);
   const recognitionRef = useRef(null);
+  const [autoSpeak, setAutoSpeak] = useState(false);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -99,6 +100,9 @@ function App() {
         setMessages((prev) => [...prev, { type: 'bot', text: data.response }]);
         setCurrentStep(data.current_step || 0);
         setTotalSteps(data.total_steps || 0);
+        if (autoSpeak) {
+          speak(data.response);
+        }
       } else {
         setMessages((prev) => [...prev, { type: 'bot', text: `Error: ${data.error}` }]);
       }
@@ -176,6 +180,31 @@ function App() {
               </button>
             </div>
           )}
+        </div>
+
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            marginBottom: "20px",
+            marginTop: "10px"
+          }}
+        >
+          <button
+            onClick={() => setAutoSpeak((prev) => !prev)}
+            style={{
+              padding: "14px 28px",
+              fontSize: "18px",
+              borderRadius: "12px",
+              cursor: "pointer",
+              backgroundColor: autoSpeak ? "#4caf50" : "#888",
+              color: "white",
+              border: "none",
+              minWidth: "260px"
+            }}
+          >
+            {autoSpeak ? "🔊 Auto Speak: On" : "🔇 Auto Speak: Off"}
+          </button>
         </div>
 
         {!initialized ? (
