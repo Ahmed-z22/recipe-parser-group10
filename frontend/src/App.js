@@ -3,6 +3,18 @@ import './App.css';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001';
 
+function speak(text) {
+  if (!window.speechSynthesis) {
+    console.error("Text-to-Speech not supported in this browser.");
+    return;
+  }
+
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.lang = "en-US";
+  window.speechSynthesis.cancel();
+  window.speechSynthesis.speak(utterance);
+}
+
 function App() {
   const [url, setUrl] = useState('');
   const [messages, setMessages] = useState([]);
@@ -160,6 +172,16 @@ function App() {
                     {msg.text.split('\n').map((line, i) => (
                       <p key={i}>{line}</p>
                     ))}
+
+                    {msg.type === 'bot' && (
+                      <button
+                        className="speak-btn"
+                        onClick={() => speak(msg.text)}
+                        style={{ marginTop: '4px' }}
+                      >
+                        🔊 Speak
+                      </button>
+                    )}
                   </div>
                 </div>
               ))}
