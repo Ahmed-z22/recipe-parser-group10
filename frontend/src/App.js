@@ -4,24 +4,23 @@ import './App.css';
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001';
 
 function speak(text) {
-  if (!window.speechSynthesis) {
-    console.error("Text-to-Speech not supported in this browser.");
-    return;
-  }
-
+  if (!window.speechSynthesis) return;
   const utterance = new SpeechSynthesisUtterance(text);
   utterance.lang = "en-US";
   window.speechSynthesis.cancel();
   window.speechSynthesis.speak(utterance);
 }
 
+function stopSpeaking() {
+  if (window.speechSynthesis) {
+    window.speechSynthesis.cancel();
+  }
+}
+
 function getSpeechRecognition() {
   const SpeechRecognition =
     window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SpeechRecognition) {
-    console.error("SpeechRecognition not supported in this browser.");
-    return null;
-  }
+  if (!SpeechRecognition) return null;
   return SpeechRecognition;
 }
 
@@ -43,18 +42,13 @@ function App() {
   }, [messages]);
 
   const initializeRecipe = async () => {
-    if (!url.trim()) {
-      alert('Please enter a recipe URL');
-      return;
-    }
+    if (!url.trim()) return alert('Please enter a recipe URL');
 
     setLoading(true);
     try {
       const res = await fetch(`${API_URL}/api/initialize`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ url: url.trim(), session_id: 'default' }),
       });
 
@@ -85,13 +79,8 @@ function App() {
     try {
       const res = await fetch(`${API_URL}/api/chat`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          question: text,
-          session_id: 'default',
-        }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ question: text, session_id: 'default' }),
       });
 
       const data = await res.json();
@@ -100,9 +89,8 @@ function App() {
         setMessages((prev) => [...prev, { type: 'bot', text: data.response }]);
         setCurrentStep(data.current_step || 0);
         setTotalSteps(data.total_steps || 0);
-        if (autoSpeak) {
-          speak(data.response);
-        }
+
+        if (autoSpeak) speak(data.response);
       } else {
         setMessages((prev) => [...prev, { type: 'bot', text: `Error: ${data.error}` }]);
       }
@@ -129,7 +117,7 @@ function App() {
 
     const SpeechRecognition = getSpeechRecognition();
     if (!SpeechRecognition) {
-      alert("Speech recognition is not supported in this browser. Try Chrome.");
+      alert("Speech recognition is not supported in this browser.");
       return;
     }
 
@@ -140,17 +128,9 @@ function App() {
     recognition.continuous = false;
     recognition.interimResults = false;
 
-    recognition.onstart = () => {
-      setListening(true);
-    };
-
-    recognition.onend = () => {
-      setListening(false);
-    };
-
-    recognition.onerror = () => {
-      setListening(false);
-    };
+    recognition.onstart = () => setListening(true);
+    recognition.onend = () => setListening(false);
+    recognition.onerror = () => setListening(false);
 
     recognition.onresult = (event) => {
       const transcript = event.results[0][0].transcript;
@@ -175,9 +155,7 @@ function App() {
                   Step {currentStep + 1} of {totalSteps}
                 </span>
               )}
-              <button onClick={resetChat} className="reset-btn">
-                New Recipe
-              </button>
+              <button onClick={resetChat} className="reset-btn">New Recipe</button>
             </div>
           )}
         </div>
@@ -213,6 +191,7 @@ function App() {
               <h2>Recipe Chatbot</h2>
               <p className="course-info">CS 337 - Group 10</p>
               <p>Enter a recipe URL to get started</p>
+
               <div className="url-input-container">
                 <input
                   type="text"
@@ -222,14 +201,11 @@ function App() {
                   className="url-input"
                   onKeyPress={(e) => e.key === 'Enter' && initializeRecipe()}
                 />
-                <button
-                  onClick={initializeRecipe}
-                  disabled={loading}
-                  className="load-btn"
-                >
+                <button onClick={initializeRecipe} disabled={loading} className="load-btn">
                   {loading ? 'Loading...' : 'Load Recipe'}
                 </button>
               </div>
+
               <div className="supported-sites">
                 <p>Supported sites:</p>
                 <ul>
@@ -249,33 +225,39 @@ function App() {
                   className={`message ${msg.type === 'user' ? 'user-message' : 'bot-message'}`}
                 >
                   <div className="message-content">
-                    {msg.text.split('\n').map((line, i) => (
-                      <p key={i}>{line}</p>
-                    ))}
+                    {msg.text.split('\n').map((line, i) => <p key={i}>{line}</p>)}
 
                     {msg.type === 'bot' && (
-                      <button
-                        className="speak-btn"
-                        onClick={() => speak(msg.text)}
-                        style={{ marginTop: '4px' }}
-                      >
-                        🔊 Speak
-                      </button>
+                      <div style={{ display: "flex", gap: "10px", marginTop: "6px" }}>
+                        <button
+                          className="speak-btn"
+                          onClick={() => speak(msg.text)}
+                        >
+                          🔊 Speak
+                        </button>
+
+                        <button
+                          className="stop-btn"
+                          onClick={stopSpeaking}
+                        >
+                          🛑 Stop
+                        </button>
+                      </div>
                     )}
                   </div>
                 </div>
               ))}
+
               {loading && (
                 <div className="message bot-message">
                   <div className="message-content">
                     <div className="typing-indicator">
-                      <span></span>
-                      <span></span>
-                      <span></span>
+                      <span></span><span></span><span></span>
                     </div>
                   </div>
                 </div>
               )}
+
               <div ref={messagesEndRef} />
             </div>
 
