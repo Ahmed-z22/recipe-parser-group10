@@ -21,7 +21,6 @@ class StepsParser:
         self.parsed_ingredients = parsed_ingredients
         self.nlp = spacy.load("en_core_web_sm")
         
-        # reuse existing parsers so we don't duplicate code
         self.tools_parser = ToolsParser(directions)
         self.methods_parser = MethodsParser(directions)
         
@@ -123,12 +122,15 @@ class StepsParser:
                 if ingredient_name_lower in step_lower:
                     mentioned_ingredients.append(original_name)
                 else:
-                    # fallback: match by main noun (last word usually)
-                    main_word = words[-1]
-                    if len(main_word) > 3:  # skip short words
-                        main_pattern = r'\b' + re.escape(main_word) + r'\b'
-                        if re.search(main_pattern, step_lower):
+                    # filter out common words like "and", "or", "the"
+                    significant_words = [w for w in words if len(w) > 3 and w not in ['and', 'or', 'the', 'for']]
+                    
+                    # check if any significant word matches
+                    for word in significant_words:
+                        word_pattern = r'\b' + re.escape(word) + r'\b'
+                        if re.search(word_pattern, step_lower):
                             mentioned_ingredients.append(original_name)
+                            break
         
         # remove duplicates, keep order
         seen = set()

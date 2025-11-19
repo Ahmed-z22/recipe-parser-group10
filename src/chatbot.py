@@ -193,13 +193,13 @@ class Chatbot:
             self._print_steps()
 
     def _print_title(self):
-        print(f' --- {self.title['title']} --- ')
+        print(f' --- {self.title["title"]} --- ')
         print()
 
     def _print_steps(self):
         print(' --- Steps --- ')
         for step in self.steps:
-            print(f'{step['step_number']}: {step['description']}')
+            print(f'{step["step_number"]}: {step["description"]}')
         print()
 
     def _print_ingredients(self):
@@ -325,7 +325,7 @@ class Chatbot:
                 print('No time available for this step.')
                 return
 
-            print(f'{step['time']['duration']}.')
+            print(f'{step["time"]["duration"]}.')
 
         elif idx == 2: # substitute
             print('Substitutes currently unavailble.')
@@ -335,7 +335,7 @@ class Chatbot:
                 print('No temperature available for this step.')
                 return
 
-            print(f'{step['temperature']['value']} {step['temperature']['unit']}.')
+            print(f'{step["temperature"]["value"]} {step["temperature"]["unit"]}.')
 
     def _get_ingredient_quantity(self, query):
         quantity = -1
