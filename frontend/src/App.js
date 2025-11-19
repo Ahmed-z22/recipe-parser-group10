@@ -15,6 +15,16 @@ function speak(text) {
   window.speechSynthesis.speak(utterance);
 }
 
+function getSpeechRecognition() {
+  const SpeechRecognition =
+    window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRecognition) {
+    console.error("SpeechRecognition not supported in this browser.");
+    return null;
+  }
+  return SpeechRecognition;
+}
+
 function App() {
   const [url, setUrl] = useState('');
   const [messages, setMessages] = useState([]);
@@ -24,6 +34,8 @@ function App() {
   const [currentStep, setCurrentStep] = useState(0);
   const [totalSteps, setTotalSteps] = useState(0);
   const messagesEndRef = useRef(null);
+  const [listening, setListening] = useState(false);
+  const recognitionRef = useRef(null);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -103,6 +115,46 @@ function App() {
     setUrl('');
     setCurrentStep(0);
     setTotalSteps(0);
+  };
+
+  const toggleListening = () => {
+    if (listening && recognitionRef.current) {
+      recognitionRef.current.stop();
+      return;
+    }
+
+    const SpeechRecognition = getSpeechRecognition();
+    if (!SpeechRecognition) {
+      alert("Speech recognition is not supported in this browser. Try Chrome.");
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognitionRef.current = recognition;
+
+    recognition.lang = "en-US";
+    recognition.continuous = false;
+    recognition.interimResults = false;
+
+    recognition.onstart = () => {
+      setListening(true);
+    };
+
+    recognition.onend = () => {
+      setListening(false);
+    };
+
+    recognition.onerror = (event) => {
+      console.error("Speech recognition error:", event.error);
+      setListening(false);
+    };
+
+    recognition.onresult = (event) => {
+      const transcript = event.results[0][0].transcript;
+      setInput((prev) => (prev ? prev + " " + transcript : transcript));
+    };
+
+    recognition.start();
   };
 
   return (
@@ -208,6 +260,16 @@ function App() {
                 className="message-input"
                 disabled={loading}
               />
+              <button
+                type="button"
+                onClick={toggleListening}
+                className="mic-btn"
+                style={{ marginLeft: '8px', marginRight: '8px' }}
+                disabled={loading}
+              >
+                {listening ? '🛑 Stop' : '🎤 Record'}
+              </button>
+
               <button
                 type="submit"
                 disabled={loading || !input.trim()}
