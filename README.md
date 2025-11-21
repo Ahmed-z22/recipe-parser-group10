@@ -5,10 +5,10 @@ A recipe parsing project — developed as part of **COMP SCI 337** at **Northwes
 
 ## Conda environment
 
-```
-conda env create -f environment.yml
-conda activate recipe-parser-group10
-```
+>> conda env create -f environment.yml
+
+>> conda activate recipe-parser-group10
+
 
 ## Running the recipe parser
 
@@ -16,9 +16,9 @@ conda activate recipe-parser-group10
 
 Run the backend:
 
-```
-python backend/api.py
-```
+
+>> python backend/api.py
+
 
 Runs on **[http://localhost:5001](http://localhost:5001)**.
 
@@ -26,10 +26,13 @@ Runs on **[http://localhost:5001](http://localhost:5001)**.
 
 Setup and run:
 
-```
-npm install
-npm start
-```
+
+>> cd frontend/ 
+
+>> npm install
+
+>> npm start
+
 
 Opens at **[http://localhost:3000](http://localhost:3000)**.
 Backend must be running on port **5001**.
