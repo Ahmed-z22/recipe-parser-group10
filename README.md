@@ -68,5 +68,14 @@ TODO
 
 &nbsp;
 
-## Note
-For a detailed overview of the project structure (folders, scripts, and classes), see README.txt.
+## Where to Find Things
+
+- **Parsers and Chatbot** `src/` folder
+- **Backend** `backend/` folder
+- **Frontend** `frontend/` folder
+- **Function Descriptions:** `README.txt`
+
+&nbsp;
+
+**For a detailed overview of the project structure (folders, scripts, and classes), and source code description see** `README.txt`.
+
