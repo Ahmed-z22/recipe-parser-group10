@@ -23,7 +23,6 @@ Run the backend in separate terminal:
 
 Runs on **[http://localhost:5001](http://localhost:5001)**.
 
-&nbsp;
 
 ### Frontend
 
@@ -41,7 +40,6 @@ Open new terminal window
 Opens at **[http://localhost:3000](http://localhost:3000)**.
 Backend must be running on port **5001**.
 
-&nbsp;
 
 ### Usage (UI)
 
@@ -55,8 +53,6 @@ Backend must be running on port **5001**.
 In the CLI run the following command:
 >> python -m src.chatbot
 
-&nbsp;
-
 ### Usage (CLI)
 1. Enter a supported recipe URL (allrecipes.com, epicurious.com, bonappetit.com)
 2. Ask questions
@@ -69,7 +65,7 @@ TODO
 &nbsp;
 
 ## Project structure
-```
+```bash
 .
 ├── backend
 │   └── api.py
