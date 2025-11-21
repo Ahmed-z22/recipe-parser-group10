@@ -3,8 +3,8 @@ import re
 import spacy
 from pathlib import Path
 from typing import List, Dict, Any, Optional
-from tools_parser import ToolsParser
-from methods_parser import MethodsParser
+from src.tools_parser import ToolsParser
+from src.methods_parser import MethodsParser
 
 
 class StepsParser:

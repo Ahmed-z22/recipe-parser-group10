@@ -1,8 +1,8 @@
-from scraper import get_recipe_data
-from ingredients_parser import IngredientsParser
-from steps_parser import StepsParser
-from methods_parser import MethodsParser
-from tools_parser import ToolsParser
+from src.scraper import get_recipe_data
+from src.ingredients_parser import IngredientsParser
+from src.steps_parser import StepsParser
+from src.methods_parser import MethodsParser
+from src.tools_parser import ToolsParser
 import re
 from collections import Counter
 
