@@ -17,11 +17,9 @@ A recipe parsing project — developed as part of **COMP SCI 337** at **Northwes
 
 ### Backend
 
-Run the backend:
-
+Run the backend in separate terminal:
 
 >> python backend/api.py
-
 
 Runs on **[http://localhost:5001](http://localhost:5001)**.
 
@@ -31,6 +29,7 @@ Runs on **[http://localhost:5001](http://localhost:5001)**.
 
 Setup and run:
 
+Open new terminal window
 
 >> cd frontend/ 
 
@@ -58,7 +57,7 @@ In the CLI run the following command:
 
 &nbsp;
 
-### Usage (UI)
+### Usage (CLI)
 1. Enter a supported recipe URL (allrecipes.com, epicurious.com, bonappetit.com)
 2. Ask questions
 
