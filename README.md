@@ -68,14 +68,42 @@ TODO
 
 &nbsp;
 
-## Where to Find Things
-
-- **Parsers and Chatbot** `src/` folder
-- **Backend** `backend/` folder
-- **Frontend** `frontend/` folder
-- **Function Descriptions:** `README.txt`
+## Project structure
+```
+.
+├── backend
+│   └── api.py
+├── frontend
+│   ├── public
+│   │   └── index.html
+│   ├── src
+│   │   ├── App.css
+│   │   ├── App.js
+│   │   ├── index.css
+│   │   └── index.js
+│   ├── package-lock.json
+│   └── package.json
+├── src
+│   ├── helper_files
+│   │   ├── method_keywords.json
+│   │   ├── tools_keywords.json
+│   │   ├── unicode_fractions.json
+│   │   └── units_map.json
+│   ├── __init__.py
+│   ├── chatbot.py
+│   ├── ingredients_parser.py
+│   ├── methods_parser.py
+│   ├── scraper.py
+│   ├── steps_parser.py
+│   └── tools_parser.py
+├── .gitignore
+├── environment.yml
+├── pyproject.toml
+├── README.md
+└── README.txt
+```
 
 &nbsp;
 
-**For a detailed overview of the project structure (folders, scripts, and classes), and source code description see** `README.txt`.
-
+## Note
+**For a detailed overview of the project structure and source code descriptions, see** `README.txt`.
