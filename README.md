@@ -17,7 +17,7 @@ A recipe parsing project — developed as part of **COMP SCI 337** at **Northwes
 
 ### Backend
 
-Run the backend in separate terminal:
+Run the backend api in separate terminal:
 
 >> python backend/api.py
 
@@ -26,9 +26,7 @@ Runs on **[http://localhost:5001](http://localhost:5001)**.
 
 ### Frontend
 
-Setup and run:
-
-Open new terminal window
+To setup and run the UI, open new terminal window and run the following commands
 
 >> cd frontend/ 
 
@@ -46,6 +44,8 @@ Backend must be running on port **5001**.
 1. Enter a supported recipe URL (allrecipes.com, epicurious.com, bonappetit.com)
 2. Click **Load Recipe**
 3. Ask questions about the recipe
+4. Explore the TTS feature!
+5. Explore talking to the agent using the record button! (STT)
 
 &nbsp;
 
@@ -55,7 +55,7 @@ In the CLI run the following command:
 
 ### Usage (CLI)
 1. Enter a supported recipe URL (allrecipes.com, epicurious.com, bonappetit.com)
-2. Ask questions
+2. Ask questions about the recipe
 
 &nbsp;
 
