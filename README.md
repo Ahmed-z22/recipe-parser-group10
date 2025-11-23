@@ -23,7 +23,6 @@ Run the backend api in separate terminal:
 
 Runs on **[http://localhost:5001](http://localhost:5001)**.
 
-
 ### Frontend
 
 To setup and run the UI, open new terminal window and run the following commands
@@ -34,18 +33,24 @@ To setup and run the UI, open new terminal window and run the following commands
 
 >> npm start
 
-
 Opens at **[http://localhost:3000](http://localhost:3000)**.
 Backend must be running on port **5001**.
 
-
 ### Usage (UI)
-
 1. Enter a supported recipe URL (allrecipes.com, epicurious.com, bonappetit.com)
 2. Click **Load Recipe**
 3. Ask questions about the recipe
 4. Explore the TTS feature!
 5. Explore talking to the agent using the record button! (STT)
+
+### Supported websites
+1. `Google Chroom`
+2. `Safari`
+3. `Firefox` (Only TTS)
+
+### Recommended version
+node: >= `22.16.0`
+npm: >= `10.9.2`
 
 &nbsp;
 
