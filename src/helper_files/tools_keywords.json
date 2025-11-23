@@ -1,14 +1,78 @@
 {
     "tools_keywords": [
-        "pot","pan","skillet","bowl","oven","lid","sheet","saucepan",
-        "colander","knife","spoon","fork","blender","mixer","grill","tray",
-        "griddle", "scoop", "whisk", "peeler", "rolling pin", "measuring cup",
-        "measuring spoon", "strainer", "cutting board", "tongs", "spatula", "bag",
-        "tablespoon", "teaspoon", "cup", "thermometer", "baster", "fryer", "steamer",
-        "crockpot", "slow cooker", "air fryer", "microwave", "food processor", "microplane",
-        "pastry brush", "can opener", "zester", "ladle", "grater", "sieve", "spatula",
-        "towel", "cloth", "foil", "wrap", "paper", "parchment", "basket", "rack", "mold", 
-        "dish", "platter", "jar", "baster", "pan", "item"
+    "pot", "pan", "skillet", "saucepan", "stockpot", "dutch oven", "dutch_oven",
+    "baking sheet", "baking_sheet", "sheet pan", "sheet_pan", "tray", "roasting pan",
+    "broiler pan", "griddle", "wok", "pressure cooker", "pressure_cooker",
+    "slow cooker", "slow_cooker", "crockpot", "air fryer", "air_fryer",
+    "steamer", "rice cooker", "rice_cooker",
+
+    "oven", "microwave", "toaster", "toaster oven", "toaster_oven",
+    "fryer", "deep fryer", "deep_fryer", "grill", "broiler",
+
+    "bowl", "mixing bowl", "mixing_bowl", "measuring cup", "measuring spoon",
+    "measuring_cup", "measuring_spoon", "cup", "teaspoon", "tablespoon",
+
+    "colander", "strainer", "sieve", "fine mesh strainer", "fine_mesh_strainer",
+    "ladle", "spoon", "slotted spoon", "slotted_spoon", "fork", "tongs", "spatula",
+    "rubber spatula", "rubber_spatula", "turner", "whisk",
+
+    "knife", "chef knife", "chef_knife", "paring knife", "paring_knife",
+    "bread knife", "bread_knife", "cleaver", "peeler", "zester", "grater",
+    "microplane", "mandoline",
+
+    "cutting board", "cutting_board", "board", "rolling pin", "rolling_pin",
+
+    "blender", "hand blender", "hand_blender", "immersion blender", "immersion_blender",
+    "food processor", "food_processor", "mixer", "stand mixer", "stand_mixer",
+    "hand mixer", "hand_mixer", "juicer",
+
+    "thermometer", "meat thermometer", "meat_thermometer", "probe",
+    "timer", "scale", "kitchen scale", "kitchen_scale",
+
+    "pastry brush", "pastry_brush", "bench scraper", "bench_scraper",
+    "dough scraper", "dough_scraper", "piping bag", "piping_bag",
+    "cookie cutter", "cookie_cutter", "biscuit cutter", "biscuit_cutter",
+    "mold", "ring mold", "ring_mold",
+
+    "can opener", "can_opener", "bottle opener", "bottle_opener",
+    "corkscrew", "jar", "jar opener", "jar_opener",
+
+    "dish", "plate", "platter", "baking dish", "baking_dish", "pie pan",
+    "pie dish", "cake pan", "loaf pan", "loaf_pan", "muffin tin", "muffin_tin",
+    "ramekin", "casserole dish", "casserole_dish",
+
+    "funnel", "scoop", "server", "pizza cutter", "pizza_cutter",
+    "brush", "spreader", "masher", "potato masher", "potato_masher",
+
+    "basket", "rack", "cooling rack", "cooling_rack", "wire rack", "wire_rack",
+
+    "foil", "plastic wrap", "plastic_wrap", "parchment", "parchment paper",
+    "parchment_paper", "wax paper", "wax_paper", "paper towel",
+    "paper_towel", "wrap", "cloth", "towel", "bag",
+
+    "container", "box", "jar", "bottle", "canister", "tin",
+
+    "spice grinder", "spice_grinder", "mortar", "pestle", "mortar and pestle",
+    "mortar_and_pestle",
+
+    "torch", "blowtorch", "butane torch",
+    
+    "skimmer", "slotted turner", "slotted_turner", "fish spatula", "fish_spatula",
+    "ladle", "server spoon", "server_spoon",
+
+    "steam basket", "steam_basket", "bamboo steamer", "bamboo_steamer",
+
+    "pastry wheel", "pastry_wheel", "dough hook", "dough_hook",
+
+    "whisk", "egg separator", "egg_separator", "baster",
+    "tenderizer", "meat tenderizer", "meat_tenderizer",
+
+    "grill pan", "grill_pan", "roasting rack", "roasting_rack",
+
+    "separator", "fat separator", "fat_separator", "oil sprayer",
+    "oil_sprayer", "sifter", "stirrer", "tamper",
+
+    "skewer", "toothpick", "spigot", "pipette"
     ],
     "prep_words": ["in","into","on","over","using","with","onto"],
     "tool_verb_list": ["use","place","put","heat","preheat","cook","bake","stir","whisk","pour","simmer"]
