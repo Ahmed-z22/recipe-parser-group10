@@ -1,4 +1,6 @@
-import json, re, spacy
+import json
+import re
+import spacy
 from pathlib import Path
 
 class ToolsParser:
