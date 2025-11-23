@@ -46,11 +46,11 @@ Backend must be running on port **5001**.
 ### Supported websites
 1. `Google Chroom`
 2. `Safari`
-3. `Firefox` (Only TTS)
+3. `Firefox (only TTS is supported)`
 
 ### Recommended version
-node: >= `22.16.0`
-npm: >= `10.9.2`
+- node: >= `22.16.0`
+- npm: >= `10.9.2`
 
 &nbsp;
 
