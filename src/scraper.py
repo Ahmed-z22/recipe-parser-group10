@@ -2,6 +2,7 @@ import json
 from urllib.parse import urlparse
 import requests
 from bs4 import BeautifulSoup
+import html
 
 SUPPORTED_WEBSITES = [
     "allrecipes.com",
@@ -145,7 +146,7 @@ def _extract_json_ld_recipe(soup: BeautifulSoup, url: str, domain: str) -> tuple
 
     # make sure to strip any leading/trailing whitespace, and make all strings small case
     title = title.strip()
-    ingredients = [ing.strip().lower() for ing in ingredients]
-    directions = [dir.strip().lower() for dir in directions]
+    ingredients = [html.unescape(ing.strip().lower()) for ing in ingredients]
+    directions = [html.unescape(dir.strip().lower()) for dir in directions]
 
     return title, ingredients, directions

@@ -1,0 +1,338 @@
+{
+    "whisk": {
+        "description": "A utensil with a handle and multiple wire loops or tines",
+        "usage": "Used for beating, whipping, and incorporating air into ingredients like eggs, cream, and sauces. Essential for making smooth batters and emulsions."
+    },
+    "spatula": {
+        "description": "A flat, flexible utensil with a broad blade and handle",
+        "usage": "Used for flipping foods like pancakes and burgers, spreading frosting, and scraping bowls. Can be made of silicone, metal, or plastic."
+    },
+    "chef knife": {
+        "description": "A large, all-purpose knife with a broad blade that tapers to a point",
+        "usage": "The primary knife for chopping, slicing, dicing, and mincing vegetables, meat, and other ingredients. Typically 8-10 inches long."
+    },
+    "paring knife": {
+        "description": "A small knife with a short blade, typically 3-4 inches long",
+        "usage": "Used for precise tasks like peeling, trimming, and detailed cutting work with fruits and vegetables."
+    },
+    "serrated knife": {
+        "description": "A knife with a saw-like blade featuring pointed teeth",
+        "usage": "Ideal for cutting bread, tomatoes, and other foods with tough exteriors and soft interiors without crushing them."
+    },
+    "colander": {
+        "description": "A bowl-shaped container with perforated holes throughout",
+        "usage": "Used for draining liquids from solid foods, especially pasta, vegetables, and grains. Also useful for rinsing produce."
+    },
+    "measuring cups": {
+        "description": "Cups with graduated markings for precise volume measurements",
+        "usage": "Used to measure both dry and liquid ingredients accurately. Dry measuring cups are filled to the brim, while liquid cups have a pouring spout."
+    },
+    "measuring spoons": {
+        "description": "Small spoons in standardized sizes for precise measurements",
+        "usage": "Used to measure small quantities of ingredients like spices, baking powder, and extracts. Typically include tablespoon, teaspoon, and fractions thereof."
+    },
+    "cutting board": {
+        "description": "A flat, sturdy surface for cutting and preparing food",
+        "usage": "Protects countertops while providing a stable surface for chopping, slicing, and dicing. Available in wood, plastic, or bamboo."
+    },
+    "peeler": {
+        "description": "A handheld tool with a sharp blade for removing outer layers",
+        "usage": "Used to peel the skin off vegetables and fruits like potatoes, carrots, and apples quickly and efficiently."
+    },
+    "tongs": {
+        "description": "A scissor-like tool with two arms joined at one end",
+        "usage": "Used for gripping and lifting hot foods, turning meat while cooking, and serving salads. Provides safe distance from heat."
+    },
+    "ladle": {
+        "description": "A long-handled spoon with a deep, cup-shaped bowl",
+        "usage": "Used for serving soups, stews, sauces, and punch. The deep bowl holds liquids without spilling."
+    },
+    "grater": {
+        "description": "A tool with rough, sharp-edged surfaces for shredding food",
+        "usage": "Used to shred or grate cheese, vegetables, citrus zest, and other foods into fine pieces. Various sizes create different textures."
+    },
+    "rolling pin": {
+        "description": "A cylindrical tool used to flatten and shape dough",
+        "usage": "Used to roll out dough for pastries, cookies, pie crusts, and pasta. Applies even pressure to create uniform thickness."
+    },
+    "strainer": {
+        "description": "A mesh or perforated bowl attached to a handle",
+        "usage": "Used to separate solids from liquids, sift dry ingredients, and rinse small items. Finer mesh than a colander."
+    },
+    "mixing bowl": {
+        "description": "A deep, round bowl designed for combining ingredients",
+        "usage": "Used for mixing, whisking, and storing ingredients during food preparation. Available in various sizes and materials."
+    },
+    "can opener": {
+        "description": "A device for cutting open metal cans",
+        "usage": "Used to safely open canned goods by cutting through the lid. Can be manual or electric."
+    },
+    "garlic press": {
+        "description": "A handheld tool that crushes garlic cloves through small holes",
+        "usage": "Used to mince garlic quickly without a knife. Produces fine, uniform pieces and extracts more flavor than chopping."
+    },
+    "dutch oven": {
+        "description": "A heavy, thick-walled pot with a tight-fitting lid, typically made of cast iron",
+        "usage": "Used for braising, stewing, slow-cooking, and baking bread. Excellent heat retention and distribution makes it ideal for long-cooking recipes."
+    },
+    "mandoline": {
+        "description": "A slicing tool with adjustable blades for cutting uniform slices",
+        "usage": "Used to create perfectly uniform slices of vegetables and fruits. Ideal for gratins, chips, and salads requiring consistent thickness."
+    },
+    "aluminum foil": {
+        "description": "Thin, flexible sheets of aluminum metal",
+        "usage": "Used for wrapping foods, covering dishes during cooking, lining baking sheets, and creating packets for grilling or steaming."
+    },
+    "baking sheet": {
+        "description": "A flat, rectangular metal pan with shallow sides",
+        "usage": "Used for baking cookies, roasting vegetables, and cooking sheet pan meals. Also called a cookie sheet or sheet pan."
+    },
+    "cast iron skillet": {
+        "description": "A heavy frying pan made from cast iron",
+        "usage": "Provides excellent heat retention and even cooking. Ideal for searing, frying, and can go from stovetop to oven. Develops natural non-stick surface over time."
+    },
+    "non-stick pan": {
+        "description": "A frying pan with a coating that prevents food from sticking",
+        "usage": "Used for cooking eggs, pancakes, and delicate fish with minimal oil. Requires gentle care to preserve the coating."
+    },
+    "saucepan": {
+        "description": "A deep cooking pot with a long handle and lid",
+        "usage": "Used for making sauces, boiling vegetables, cooking rice, and heating liquids. Typically ranges from 1 to 4 quarts."
+    },
+    "stockpot": {
+        "description": "A large, deep pot with two handles and a lid",
+        "usage": "Used for making stocks, soups, boiling pasta, and cooking large quantities. Typically 8 quarts or larger."
+    },
+    "parchment paper": {
+        "description": "Non-stick, heat-resistant paper used in baking",
+        "usage": "Lines baking sheets to prevent sticking and makes cleanup easier. Can also be used to create packets for cooking en papillote."
+    },
+    "plastic wrap": {
+        "description": "Thin, clingy plastic film for covering food",
+        "usage": "Used to wrap and store food, cover bowls, and keep items fresh in the refrigerator. Creates an airtight seal."
+    },
+    "kitchen shears": {
+        "description": "Heavy-duty scissors designed for kitchen tasks",
+        "usage": "Used for cutting herbs, trimming fat from meat, opening packages, and even breaking down poultry."
+    },
+    "meat thermometer": {
+        "description": "A device that measures the internal temperature of food",
+        "usage": "Ensures meat and poultry are cooked to safe temperatures and desired doneness. Essential for food safety and quality."
+    },
+    "oven mitts": {
+        "description": "Insulated gloves for handling hot cookware",
+        "usage": "Protects hands from burns when removing items from the oven or handling hot pots and pans."
+    },
+    "pot holders": {
+        "description": "Square or round insulated pads for handling hot items",
+        "usage": "Used to grip hot pot handles, trivets for setting down hot dishes, and protecting surfaces from heat."
+    },
+    "kitchen timer": {
+        "description": "A device that counts down time and alerts when complete",
+        "usage": "Helps track cooking times to prevent overcooking or burning. Essential for precise baking and multitasking."
+    },
+    "food processor": {
+        "description": "An electric appliance with interchangeable blades for chopping and mixing",
+        "usage": "Quickly chops, slices, shreds, and purees ingredients. Ideal for making dough, sauces, and processing large quantities."
+    },
+    "blender": {
+        "description": "An electric appliance with rotating blades for liquefying ingredients",
+        "usage": "Used for making smoothies, pureeing soups, crushing ice, and blending sauces. Creates smooth, liquid textures."
+    },
+    "stand mixer": {
+        "description": "A stationary electric mixer with various attachments",
+        "usage": "Mixes, kneads, and whips ingredients hands-free. Essential for baking bread, cakes, and making meringues or whipped cream."
+    },
+    "hand mixer": {
+        "description": "A handheld electric mixer with rotating beaters",
+        "usage": "Used for mixing batters, whipping cream, and beating eggs. More portable and easier to store than a stand mixer."
+    },
+    "sieve": {
+        "description": "A fine-mesh tool for sifting and straining",
+        "usage": "Used to sift flour, remove lumps, strain sauces, and dust powdered sugar over desserts."
+    },
+    "pastry brush": {
+        "description": "A brush with soft bristles for applying liquids to food",
+        "usage": "Used to brush butter, egg wash, marinades, or glazes onto pastries, bread, and meats."
+    },
+    "basting brush": {
+        "description": "A brush for applying liquids during cooking",
+        "usage": "Used to baste meats with their juices, marinades, or sauces while roasting or grilling."
+    },
+    "mortar and pestle": {
+        "description": "A bowl and club-shaped tool for grinding and crushing",
+        "usage": "Used to grind spices, make pastes, crush garlic, and blend herbs. Releases essential oils for maximum flavor."
+    },
+    "kitchen scale": {
+        "description": "A device for weighing ingredients by mass",
+        "usage": "Provides precise measurements for baking and portion control. More accurate than volume measurements for many ingredients."
+    },
+    "vegetable brush": {
+        "description": "A stiff-bristled brush for cleaning produce",
+        "usage": "Used to scrub dirt and debris from potatoes, carrots, and other root vegetables without peeling."
+    },
+    "pizza cutter": {
+        "description": "A circular blade mounted on a handle",
+        "usage": "Used to cut pizza, flatbreads, quesadillas, and dough into portions. Provides clean cuts without dragging toppings."
+    },
+    "ice cream scoop": {
+        "description": "A spoon-like utensil with a curved bowl and release mechanism",
+        "usage": "Used to portion ice cream, cookie dough, muffin batter, and mashed potatoes into uniform servings."
+    },
+    "slotted spoon": {
+        "description": "A large spoon with holes or slots for draining",
+        "usage": "Used to remove solid foods from liquids, skim foam, and serve foods while leaving excess liquid behind."
+    },
+    "wooden spoon": {
+        "description": "A spoon made from wood, typically with a long handle",
+        "usage": "Used for stirring, mixing, and scraping. Won't scratch cookware and doesn't conduct heat. Gentle on non-stick surfaces."
+    },
+    "spider skimmer": {
+        "description": "A wide, shallow wire-mesh basket with a long handle",
+        "usage": "Used to remove foods from hot oil, boiling water, or broth. Allows liquids to drain quickly while lifting delicate items."
+    },
+    "potato masher": {
+        "description": "A tool with a handle and perforated mashing plate",
+        "usage": "Used to mash cooked potatoes, beans, and other soft foods into a chunky puree."
+    },
+    "meat tenderizer": {
+        "description": "A mallet-like tool with a textured striking surface",
+        "usage": "Used to pound meat to break down fibers and ensure even thickness for uniform cooking."
+    },
+    "bench scraper": {
+        "description": "A flat, rectangular blade with a handle along one edge",
+        "usage": "Used to divide dough, scrape work surfaces clean, and transfer chopped ingredients from cutting board to pot."
+    },
+    "cooling rack": {
+        "description": "A wire grid elevated on short legs",
+        "usage": "Used to cool baked goods by allowing air circulation underneath. Prevents sogginess and condensation."
+    },
+    "muffin tin": {
+        "description": "A baking pan with multiple cup-shaped indentations",
+        "usage": "Used for baking muffins, cupcakes, and individual portions. Typically comes in 6 or 12-cup configurations."
+    },
+    "loaf pan": {
+        "description": "A rectangular baking pan with high sides",
+        "usage": "Used for baking bread, meatloaf, and pound cakes. Creates the classic loaf shape."
+    },
+    "cake pan": {
+        "description": "A round or square pan with straight sides for baking cakes",
+        "usage": "Used to bake layer cakes, brownies, and bars. Common sizes include 8-inch and 9-inch rounds or squares."
+    },
+    "pie dish": {
+        "description": "A shallow, round dish with sloped sides",
+        "usage": "Used for baking pies, quiches, and tarts. Glass or ceramic allows for even browning of crusts."
+    },
+    "roasting pan": {
+        "description": "A large, deep rectangular pan with handles",
+        "usage": "Used for roasting large cuts of meat, whole poultry, and vegetables. Often comes with a rack for elevating food."
+    },
+    "casserole dish": {
+        "description": "A deep baking dish, typically ceramic or glass",
+        "usage": "Used for baking casseroles, lasagna, and gratins. Retains heat well and can go from oven to table."
+    },
+    "ramekin": {
+        "description": "A small, individual-sized ceramic dish",
+        "usage": "Used for baking soufflés, crème brûlée, individual desserts, and holding ingredients during prep."
+    },
+    "zester": {
+        "description": "A small tool with fine holes or blades for removing citrus peel",
+        "usage": "Used to remove the flavorful outer layer of citrus fruits without the bitter white pith."
+    },
+    "citrus juicer": {
+        "description": "A tool with ridges for extracting juice from citrus fruits",
+        "usage": "Used to squeeze lemons, limes, and oranges efficiently while straining out seeds and pulp."
+    },
+    "kitchen towels": {
+        "description": "Absorbent cloth towels for kitchen use",
+        "usage": "Used for drying dishes, wiping surfaces, handling hot items, and covering rising dough. Essential for cleanliness and safety."
+    },
+    "apron": {
+        "description": "A protective garment worn over clothes while cooking",
+        "usage": "Protects clothing from spills, splatters, and stains during food preparation and cooking."
+    },
+    "salad spinner": {
+        "description": "A container with a rotating basket for removing water from greens",
+        "usage": "Used to dry lettuce and herbs after washing. Removes excess water for crisp salads and better dressing adhesion."
+    },
+    "funnel": {
+        "description": "A cone-shaped tool for transferring liquids into containers",
+        "usage": "Used to pour liquids into bottles, jars, and narrow-necked containers without spilling."
+    },
+    "egg separator": {
+        "description": "A small tool that separates egg whites from yolks",
+        "usage": "Used when recipes call for only whites or yolks. Allows clean separation without breaking yolks."
+    },
+    "biscuit cutter": {
+        "description": "A cylindrical cutting tool with a sharp edge",
+        "usage": "Used to cut uniform circles from rolled dough for biscuits, cookies, and scones."
+    },
+    "cookie cutters": {
+        "description": "Shaped cutters in various designs for cutting dough",
+        "usage": "Used to create decorative shapes from rolled cookie, biscuit, or sandwich dough."
+    },
+    "pastry blender": {
+        "description": "A tool with multiple curved wires or blades attached to a handle",
+        "usage": "Used to cut cold butter into flour for making pastry, biscuits, and crumb toppings."
+    },
+    "kitchen torch": {
+        "description": "A handheld culinary torch for applying direct flame",
+        "usage": "Used to caramelize sugar on crème brûlée, char peppers, brown meringue, and add finishing touches."
+    },
+    "wok": {
+        "description": "A round-bottomed cooking vessel with high, sloping sides",
+        "usage": "Used for stir-frying, steaming, deep-frying, and making Asian dishes. Distributes heat efficiently for quick cooking."
+    },
+    "steamer basket": {
+        "description": "A perforated insert that sits above boiling water",
+        "usage": "Used to steam vegetables, dumplings, and fish. Cooks food gently while preserving nutrients and texture."
+    },
+    "splatter screen": {
+        "description": "A fine-mesh screen with a handle",
+        "usage": "Placed over frying pans to prevent oil splatter while allowing steam to escape. Keeps stovetop cleaner."
+    },
+    "trivet": {
+        "description": "A heat-resistant stand for hot dishes",
+        "usage": "Protects countertops and tables from heat damage when placing hot pots, pans, and dishes."
+    },
+    "bread knife": {
+        "description": "A long knife with a serrated edge",
+        "usage": "Specifically designed for slicing bread without crushing it. Also excellent for cakes and other baked goods."
+    },
+    "butcher's twine": {
+        "description": "Heat-resistant cotton string for cooking",
+        "usage": "Used to truss poultry, tie roasts, secure stuffed meats, and bundle herbs for easy removal."
+    },
+    "cheesecloth": {
+        "description": "Loose-woven cotton gauze fabric",
+        "usage": "Used for straining stocks, making cheese, bundling herbs for bouquet garni, and wrapping items for steaming."
+    },
+    "baster": {
+        "description": "A squeeze bulb attached to a long tube",
+        "usage": "Used to draw up and dispense pan juices over roasting meats to keep them moist and flavorful."
+    },
+    "silicone baking mat": {
+        "description": "A reusable non-stick mat for baking",
+        "usage": "Provides a non-stick surface for baking without oil or parchment. Easy to clean and environmentally friendly."
+    },
+    "food storage containers": {
+        "description": "Sealable containers for storing prepared food",
+        "usage": "Used to store leftovers, meal prep, organize pantry items, and keep food fresh. Available in various sizes and materials."
+    },
+    "wax paper": {
+        "description": "Paper coated with a thin layer of wax",
+        "usage": "Used for wrapping sandwiches, separating baked goods, and as a non-stick surface for rolling dough. Not oven-safe."
+    },
+    "knife sharpener": {
+        "description": "A tool for maintaining and restoring knife blade edges",
+        "usage": "Keeps knives sharp for safer, more efficient cutting. Can be manual, electric, or a sharpening stone."
+    },
+    "immersion blender": {
+        "description": "A handheld blending tool with a motorized blade at one end",
+        "usage": "Used to blend soups, sauces, and smoothies directly in the pot or container. More convenient than transferring to a blender."
+    },
+    "sous vide device": {
+        "description": "A precision cooking device that circulates water at controlled temperatures",
+        "usage": "Used for cooking food in vacuum-sealed bags at precise temperatures. Produces restaurant-quality results with perfect doneness."
+    }
+}

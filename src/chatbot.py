@@ -1,17 +1,18 @@
-from src.scraper import get_recipe_data
-from src.ingredients_parser import IngredientsParser
-from src.steps_parser import StepsParser
-from src.methods_parser import MethodsParser
-from src.tools_parser import ToolsParser
+from scraper import get_recipe_data
+from ingredients_parser import IngredientsParser
+from steps_parser import StepsParser
+from methods_parser import MethodsParser
+from tools_parser import ToolsParser
 import re
 from collections import Counter
+import spacy
+from urllib.parse import quote
+from pathlib import Path
+import json
 
 class Chatbot:
-    """
-    Answers user's questions about recipes in conversational manner
-    """
-    
-    def __init__(self, test=False):
+    """Initialize Chatbot"""
+    def __init__(self, test=False, backend=False):
         self.responses = [
             self._retrieval_query,
             self._navigation_query,
@@ -21,100 +22,34 @@ class Chatbot:
             self._quantity_query,
         ]
 
-        self.test = test
+        self.identification = [
+            self._is_retrieval,
+            self._is_navigation,
+            self._is_parameter,
+            self._is_clarification,
+            self._is_procedure,
+            self._is_quantity,
+        ]
+        self.path = Path(__file__).resolve().parent / "helper_files"
+        method_keywords_path = self.path / "usages.json"
+        with open(method_keywords_path, 'r') as f:
+            self.usages = json.load(f) 
 
-        self._get_url()
-        self._parse_metadata()
+        self.nlp = spacy.load('en_core_web_sm')
 
-        self.current_step = 0
+        self.step_words = ['first', 'second', 'third', 'fourth', 'fifth', 'sixth', 'seventh', 'eigth', 'ninth', 'tenth', 'eleventh', 'twelfth', 'thirteenth', 'fourteenth', 'fifteenth', 'sixteenth', 'seventeenth', 'eighteenth', 'nineteenth', 'twentieth' ]
+        self.number_words = [ 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen', 'twenty']
 
-    def _get_url(self):
-        while True:
-            if self.test:
-                url = "https://www.allrecipes.com/amish-beef-and-noodles-recipe-8712456"
-            else:
-                url = input('Please input the recipe URL: ')
+        self.query_types = [
+            'retrieval_query',
+            'navigation_query',
+            'parameter_query',
+            'clarification_query',
+            'procedure_query',
+            'quantity_query',
+        ]
 
-            try:
-                self.url = url
-                self.title, self.raw_ingredients, self.raw_steps = get_recipe_data(url)
-                break
-            except:
-                pass
-
-    def _parse_metadata(self):
-        ingredients = IngredientsParser(self.raw_ingredients)
-        self.ingredients = ingredients.parse()
-
-        methods = MethodsParser(self.raw_steps)
-        self.methods = methods.parse()
-
-        steps = StepsParser(self.raw_steps, self.ingredients)
-        self.steps = steps.parse()
-
-        tools = ToolsParser(self.raw_steps)
-        self.tools = tools.parse()
-
-        if self.test:
-            self._print_metadata()
-
-    def _print_metadata(self):
-        print('Ingredients')
-        for ingredient in self.ingredients:
-            print(ingredient)
-        print()
-
-        print('Methods')
-        for method in self.methods:
-            print(method)
-        print()
-
-        print('Steps')
-        for step in self.steps:
-            print(step)
-        print()
-
-        print('Tools')
-        for tool in self.tools:
-            print(tool)
-        print()
-
-    def converse(self):
-        """
-        Maintains continual loop of conversation while updating internal state
-        """
-
-        while True:
-            question = input('Please input a question: ')
-            question = self._clean_question(question)
-            question_type = self._identify_query(question)
-
-            if question_type == -1:
-                print('Unclear question type.')
-                print()
-                continue
-
-            self.responses[question_type](question)
-            print()
-
-    def _clean_question(self, question):
-        """
-        Cleans a question for further processing
-        """
-
-        question = question.lower().strip()
-        question = question.rstrip('?')
-        question = question.rstrip('.')
-        question = ' ' .join(question.split())
-
-        return question
-
-    def _identify_query(self, question: str) -> int:
-        """
-        Identifies which of six questions the provided question is
-        """
-
-        patterns = [
+        self.query_patterns = [
             [ # retrieval_patterns 
                 r'\b(show|display|list|give|tell)\s+(me\s+)?(the\s+)?(recipe|ingredients?|directions?|steps?|instructions?)',
                 r'\b(what|which)\s+(are\s+)?(the\s+)?(ingredients?|steps?)',
@@ -130,9 +65,15 @@ class Chatbot:
                 r'\bwhat\s+was\s+that(\s+again)?\b',
                 r'\bagain\b',
                 r'\bstart\s+over\b',
+                r'\bwhat\s+is\s+(the\s+)?current\s+step\b',
+                r'\bwhat\s+step\s+am\s+I\s+on\b',
+                r'\bwhat\s+step\s+are\s+(we|you|they)\s+on\b',
+                r'\bwhat\s+step\s+is\s+this\b',
+                r'\bwhich\s+step\s+am\s+I\s+on\b',
+                r'\bwhere\s+are\s+we\s+(in\s+the\s+recipe)?\b',
+                r'\bwhat\s+step\s+are\s+we\s+at\b',
             ],
             [ # parameter_patterns 
-                r'\b(how\s+much|how\s+many|what\s+amount)',
                 r'\b(what|how\s+long|how\s+much)\s+time\b',
                 r'\b(what|how\s+hot)\s+(temperature|temp)\b',
                 r'\bhow\s+long\s+(do\s+I|to|should)',
@@ -157,69 +98,305 @@ class Chatbot:
                 r'\bcan\s+you\s+(show|tell|explain)\s+me\s+how\b',
             ],
             [ # quantity_patterns 
+                r'\b(how\s+much|how\s+many|what\s+amount)',
                 r'\bhow\s+much\s+(\w+\s+)?(do\s+I\s+need|should\s+I|is\s+needed)\b',
                 r'\bhow\s+many\s+(\w+\s+)?(do\s+I\s+need|should\s+I|is\s+needed)\b',
                 r'\bhow\s+much\s+of\s+(that|this|it)\b',
             ],
         ]
 
-        for i in range(len(patterns)):
-            if any(re.search(pattern, question) for pattern in patterns[i]):
+        self.test = test
+
+        if not backend:
+            self._get_url()
+
+        self.current_step = 0
+
+    def process_url(self, url):
+        """
+        Parses metadata related to URL and stores in chatbot
+        """
+
+        if self.test:
+            self.url = url
+            self.title, self.raw_ingredients, self.raw_steps = get_recipe_data(url)
+            self._process_metadata()
+            return True
+
+        try:
+            self.url = url
+            self.title, self.raw_ingredients, self.raw_steps = get_recipe_data(url)
+            self._process_metadata()
+            return True
+        except:
+            return False
+
+    def _get_url(self):
+        while True:
+            if self.test:
+                url = "https://www.allrecipes.com/recipe/219491/to-die-for-chicken-pot-pie/"
+            else:
+                url = input('Please input the recipe URL: ')
+            
+            if self.process_url(url):
+                break
+
+    def _fix_step_grammar(self, step: str):
+        """
+        Corrects the grammar in each step
+        """
+
+        tokens = step.split()
+        result = []
+
+        if not tokens:
+            return ""
+        
+        if tokens[0][0].isalpha():
+            tokens[0] = tokens[0][0].upper() + tokens[0][1:]
+
+        for i, token in enumerate(tokens):
+            count = 0
+            for c in token:
+                if not c.isalnum():
+                    count += 1
+
+            if (token[0] == 'f' or token[0] == 'c') and count == len(token) - 1:
+                token = token.upper()
+
+            if len(result) > 0 and result[-1][-1] == '-':
+                result[-1] += token
+                continue
+
+
+            if i > 0 and len(token) == 1 and not token.isalnum():
+                result[-1] += token
+
+            else:
+                result.append(token)
+
+        result = ' '.join(result)
+
+        if result[-1] == '.':
+            return result
+
+        if result[-1].isalnum() or result[-1] in [']', ')', '}']:
+            return result + '.'
+        
+        return result[:-1] + '.'
+
+    def _process_metadata(self):
+        """
+        Parses all metadata related to URL
+        """
+
+        ingredients = IngredientsParser(self.raw_ingredients)
+        self.ingredients = ingredients.parse()
+        if self.test:
+            print('Ingredients parsed')
+
+        methods = MethodsParser(self.raw_steps)
+        self.methods = methods.parse()
+        if self.test:
+            print('Methods parsed')
+
+        steps = StepsParser(self.raw_steps, self.ingredients)
+        self.steps = steps.parse()
+
+        for step in self.steps:
+            step['description'] = self._fix_step_grammar(step['description'])
+
+        if self.test:
+            print('Steps parsed')
+
+        tools = ToolsParser(self.raw_steps)
+        self.tools = tools.parse()
+        if self.test:
+            print('Tools parsed')
+
+        if self.test:
+            self._debug_metadata()
+
+        # supplement information between steps
+
+    def _debug_metadata(self):
+        print('Ingredients')
+        for ingredient in self.ingredients:
+            print(ingredient)
+        print()
+
+        print('Methods')
+        for method in self.methods:
+            print(method)
+        print()
+
+        print('Steps')
+        for step in self.steps:
+            print(step)
+        print()
+
+        print('Tools')
+        for tool in self.tools:
+            print(tool)
+        print()
+
+
+
+    """Answer Questions"""
+    def converse(self):
+        """
+        Maintains continual loop of conversation while updating internal state
+        """
+
+        while True:
+            query = input('Please input a question: ')
+            print(self.respond(query))
+
+    def respond(self, query):
+        query = self._clean_query(query)
+        question_type = self._identify_query(query)
+
+        if question_type == -1:
+            return 'Unclear question type.\n'
+
+        if self.test:
+            print(self.query_types[question_type])
+
+        return self.responses[question_type](query)
+
+    def _clean_query(self, query):
+        """
+        Cleans a question for further processing
+        """
+
+        query = query.lower().strip()
+        query = query.rstrip('?')
+        query = query.rstrip('.')
+        query = ' ' .join(query.split())
+
+        return query
+
+    def _identify_query(self, query: str) -> int:
+        """
+        Identifies which of six questions the provided question is
+        """
+
+        if self.test and query[-1].isdigit():
+            return int(query.split()[-1])
+
+        # First check for regex matches
+        for i in range(len(self.query_patterns)):
+            if any(re.search(pattern, query) for pattern in self.query_patterns[i]):
+                return i
+
+        doc = self.nlp(query)
+        
+        # Use spaCy for more flexible matching
+        for i, identifier in enumerate(self.identification):
+            if identifier(doc):
                 return i
 
         return -1
 
-    def _retrieval_query(self, question: str):
-        """
-        Requests to show a recipe or its components.
-        Examples:
-            "Show me the ingredients list."
-            "Display the recipe."
-        """
-        
-        if 'recipe' in question:
-            self._print_title()
-            self._print_ingredients()
-            self._print_steps()
-            return
 
+
+    """
+    Retrieval Queries
+    Requests to show a recipe or its components.
+    Examples:
+        "Show me the ingredients list."
+        "Display the recipe."
+    """
+    def _is_retrieval(self, doc):
+        root = doc[:].root
+        lemmas = {token.lemma_.lower() for token in doc}
+        retrieval_verbs = {"show", "display", "list", "give"}
+        if root.lemma_ in retrieval_verbs:
+            return True
+        if lemmas & retrieval_verbs:
+            return True
+        return False
+
+    def _get_title(self):
+        return f' --- {self.title["title"]} --- \n'
+
+    def _get_steps(self):
+        result = ' --- Steps --- \n'
+        for i, step in enumerate(self.steps, start=1):
+            result += f'{i}: {step["description"]}\n'
+        result += '\n'
+
+        return result
+
+    def _get_ingredients(self):
+        result = ' --- Ingredients --- \n'
+        for ingredient in self.raw_ingredients['ingredients']:
+            result += ' - ' + ingredient + '\n'
+        result += '\n'
+
+        return result
+
+    def _get_step(self, idx):
+        """
+        Prints a specific atomic step based on 0-based index
+        """
+
+        if idx < 0 or idx == len(self.steps):
+            return 'No such step exists.\n'
+
+        return self.steps[idx]['description']
+
+    def _retrieve_step_index(self, question):
+        if 'last' in question:
+            return len(self.steps) - 1
+
+
+        for i in range(20):
+            if self.step_words[i] in question or self.number_words[i] in question:
+                return i
+
+        numbers = re.findall(r'\d+', question)
+        if len(numbers) == 0:
+            return -1
+
+        freq = Counter()
+        for number in numbers:
+            freq[int(number)] += 1
+        
+        return freq.most_common(1)[0][0]
+
+    def _retrieval_query(self, question: str):
         if 'name' in question or 'title' in question:
-            self._print_title()
+            return self._get_title()
 
         if 'ingredient' in question:
-            self._print_ingredients()
+            return self._get_ingredients()
 
         if 'step' in question or 'direction' in question:
-            self._print_steps()
+            return self._get_steps()
 
-    def _print_title(self):
-        print(f' --- {self.title["title"]} --- ')
-        print()
+        if 'recipe' in question:
+            return self._get_title() + self._get_ingredients() + self._get_steps()
 
-    def _print_steps(self):
-        print(' --- Steps --- ')
-        for step in self.steps:
-            print(f'{step["step_number"]}: {step["description"]}')
-        print()
+        return 'Unclear question.'
 
-    def _print_ingredients(self):
-        print(' --- Ingredients --- ')
-        for ingredient in self.raw_ingredients['ingredients']:
-            print(' -', ingredient)
-        print()
+
+
+    """
+    Navigation Queries
+    Moving between, repeating, or revisiting recipe steps.
+    Examples:
+        "Go back one step."
+        "Go to the next step."
+        "Repeat please."
+        "Take me to the first step."
+        "What’s next?"
+        "What was that again?"
+    """
+    def _is_navigation(self, doc):
+        pass
 
     def _navigation_query(self, question: str):
-        """
-        Moving between, repeating, or revisiting recipe steps.
-        Examples:
-            "Go back one step."
-            "Go to the next step."
-            "Repeat please."
-            "Take me to the first step."
-            "What’s next?"
-            "What was that again?"
-        """
-
         prev_keywords = ['back', 'prior', 'before', 'prev']
         cur_keywords = ['repeat', 'again', 'current']
         next_keywords = ['next', 'after']
@@ -235,62 +412,32 @@ class Chatbot:
             next_step = self._retrieve_step_index(question)
 
         if next_step < 0 or next_step >= len(self.steps):
-            print('No such step exists.')
-            return
+            return 'No such step exists.'
 
         self.current_step = next_step
-        self._print_step(self.current_step)
+        return self._get_step(self.current_step)
 
-    def _print_step(self, idx):
-        """
-        Prints a specific atomic step based on 0-based index
-        """
 
-        if idx < 0 or idx == len(self.steps):
-            print('No such step exists.')
-            return
 
-        print(self.steps[idx]['description'])
-
-    def _retrieve_step_index(self, question):
-        if 'last' in question:
-            return len(self.steps) - 1
-
-        step = ['first', 'second', 'third', 'fourth', 'fifth', 'sixth', 'seventh', 'eigth', 'ninth', 'tenth', 'eleventh', 'twelfth', 'thirteenth', 'fourteenth', 'fifteenth', 'sixteenth', 'seventeenth', 'eighteenth', 'nineteenth', 'twentieth' ]
-        words = [ 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen', 'twenty']
-
-        for i in range(20):
-            if step[i] in question or words[i] in question:
-                return i
-
-        numbers = re.findall(r'\d+', question)
-        if len(numbers) == 0:
-            return -1
-
-        freq = Counter()
-        for number in numbers:
-            freq[int(number)] += 1
-        
-        return freq.most_common(1)[0][0]
+    """
+    Parameter Queries
+    Asking about quantities, times, temperatures, or substitutes within the current step.
+    Examples:
+        "How much salt do I need?"
+        "What temperature should the oven be?"
+        "How long do I bake it?"
+        "When is it done?"
+        "What can I use instead of butter?"
+    """
+    def _is_parameter(self, doc):
+        pass
 
     def _parameter_query(self, question):
-        """
-        Asking about quantities, times, temperatures, or substitutes within the current step.
-        Examples:
-            "How much salt do I need?"
-            "What temperature should the oven be?"
-            "How long do I bake it?"
-            "When is it done?"
-            "What can I use instead of butter?"
-        """
-
-        quantity_keywords = ['much', 'how', 'quant']
-        time_keywords = ['long', 'time', 'when']
+        time_keywords = ['long', 'time', 'when', 'done', 'finished', 'complete']
         substitute_keywords = ['instead', 'use', 'replace', 'what']
-        temperature_keywords = ['temperature', 'what', 'heat', 'cold']
+        temperature_keywords = ['temperature', 'what', 'heat', 'cold', 'warm', 'hot', 'lukewarm']
 
         counts = [
-            sum([question.count(keyword) for keyword in quantity_keywords]),
             sum([question.count(keyword) for keyword in time_keywords]),
             sum([question.count(keyword) for keyword in substitute_keywords]),
             sum([question.count(keyword) for keyword in temperature_keywords]),
@@ -301,77 +448,39 @@ class Chatbot:
         idx = counts.index(max(counts))
 
         if counts[idx] == 0:
-            print('Unclear query.')
-            return
+            return 'Can you please elaborate on your query?\n'
 
-        if idx == 0: # quantity
-            ingredient = step['ingredients']
-
-            if ingredient == None:
-                print('No ingredients mentioned')
-                return
-
-            ingredient = ingredient[0]
-            quantity = self._get_ingredient_quantity(ingredient)
-
-            if quantity == '':
-                print(f'No quantity is available for the ingredient {ingredient}')
-                return
-
-            print(f'{quantity} of {ingredient}.')
-
-        elif idx == 1: # time
+        elif idx == 0: # time
             if step['time'] == None:
-                print('No time available for this step.')
-                return
+                return 'No time available for this step.\n'
 
-            print(f'{step["time"]["duration"]}.')
+            return f'{step["time"]["duration"]}.\n'
 
-        elif idx == 2: # substitute
-            print('Substitutes currently unavailble.')
+        elif idx == 1: # substitute
+            return 'Substitutes currently unavailble.\n'
 
-        elif idx == 3: # temperature
+        elif idx == 2: # temperature
             if step['temperature'] == None:
-                print('No temperature available for this step.')
-                return
+                return 'No temperature available for this step.\n'
 
-            print(f'{step["temperature"]["value"]} {step["temperature"]["unit"]}.')
-
-    def _get_ingredient_quantity(self, query):
-        quantity = -1
-        unit = ''
-        for ingredient in self.ingredients:
-            if query in ingredient['ingredient_name']:
-                quantity = ingredient['ingredient_quantity']
-                unit = ingredient['measurement_unit']
-                break
-
-        if quantity == '':
-            return None
-
-        return f'{quantity} {unit}'
+            return f'{step["temperature"]["value"]} {step["temperature"]["unit"]}.\n'
 
 
-    def _clarification_query(self, question):
-        """
-        Asking for definitions or explanations of terms or tools.
-        Examples:
-            "What is a whisk?"
-        """
 
-        keyword = self._extract_keyword(question)
+    """
+    Clarification Queries
+    Asking for definitions or explanations of terms or tools.
+    Examples:
+        "What is a whisk?"
+    """
+    def _is_clarification(self, doc):
+        pass
 
-        for tool in self.tools:
-            if keyword in tool['direction']:
-                print('Usage not yet supported.')
-                return
-
-        for method in self.methods:
-            if keyword in method['direction']:
-                print('Clarification not yet supported')
-                return
-    
     def _extract_keyword(self, question):
+        """
+        Extracts keywords for clarification
+        """
+
         cleaned = question.rstrip('?')
         cleaned = question.rstrip('.')
 
@@ -379,7 +488,6 @@ class Chatbot:
             r'^what\s+is\s+(a\s+|an\s+)?', # "what is a/an"
             r'^what\s+does\s+', # "what does"
             r'^what\s+are\s+', # "what are"
-            r'^who\s+is\s+', # "who is"
             r'^how\s+do\s+you\s+', # "how do you"
             r'^what\'s\s+(a\s+|an\s+)?', # "what's a/an"
         ]
@@ -402,46 +510,552 @@ class Chatbot:
 
         return keyword
 
-    def _procedure_query(self, question):
-        """
-        Asking how to perform an action or technique.
-        Specific: "How do I knead the dough?"
-        Vague (step-dependent): "How do I do that?" — referring to the current step’s action.
-        """
+    def _get_youtube_link(self, query):
+        encoded_query = quote(query)
+        return f"https://www.youtube.com/results?search_query={encoded_query}"
 
+    def _clarification_query(self, query):
+        keyword = self._extract_keyword(query)
+
+        tokens = keyword.split()
+        counter = Counter()
+
+        usage = ''
+        definition = ''
+        for tool in self.usages:
+            for token in tokens:
+                if token in tool:
+                    counter[tool] += 1
+        
+        result = ''
+        if len(counter) > 0:
+            tool = counter.most_common(1)[0][0]
+            usage = self.usages[tool]['usage']
+            definition = self.usages[tool]['description']
+            result = f'{tool[0].upper() + tool[1:]} refers to {definition[0].lower() + definition[1:]}. {usage}\n'
+
+        result += f'Here is a YouTube search which may help further clarify your query: {self._get_youtube_link(query)}'
+        return result
+
+    """
+    Procedure Queries
+    Asking how to perform an action or technique.
+    Specific: "How do I knead the dough?"
+    Vague (step-dependent): "How do I do that?" — referring to the current step’s action.
+    """
+    def _is_procedure(self, doc):
+        pass
+
+    def _procedure_query(self, question):
         step = self.steps[self.current_step]
         methods = step['methods']
 
         if methods == None:
-            print('No methods corresponding to this step.')
-            return
+            return 'No methods corresponding to this step.\n'
 
-        print('Procedure not yet supported.')
+        return 'Procedure not yet supported.\n'
+
+
+    
+    """
+    Quantity Queries
+    Asking about ingredient amounts.
+    Specific: "How much flour do I need?"
+    Vague (step-dependent): "How much of that do I need?" — referring to an ingredient mentioned in the current step.
+    """
+    def _is_quantity(self, doc):
+        pass
+
+    def _get_ingredient_quantity(self, query):
+        quantity = -1
+        unit = ''
+        for ingredient in self.ingredients:
+            if query in ingredient['ingredient_name']:
+                quantity = ingredient['ingredient_quantity']
+                unit = ingredient['measurement_unit']
+                break
+
+        if quantity == '':
+            return None, None
+
+        if unit == None:
+            return quantity, False
+
+        return f'{quantity} {unit}', True
 
     def _quantity_query(self, question):
-        """
-        Asking about ingredient amounts.
-        Specific: "How much flour do I need?"
-        Vague (step-dependent): "How much of that do I need?" — referring to an ingredient mentioned in the current step.
-        """
-
         step = self.steps[self.current_step]
         ingredient = step['ingredients']
 
         if ingredient == None:
-            print('No ingredients mentioned')
-            return
+            return 'No ingredients mentioned\n'
 
         ingredient = ingredient[0]
-        quantity = self._get_ingredient_quantity(ingredient)
+        quantity, unit = self._get_ingredient_quantity(ingredient)
 
         if quantity == '':
-            print(f'No quantity is available for the ingredient {ingredient}')
-            return
+            return f'No quantity is available for the ingredient {ingredient}\n'
 
-        print(f'{quantity} of {ingredient}.')
+        if unit:
+            return f'{quantity} of {ingredient}.\n'
+        else:
+            return f'{quantity} {ingredient}.\n'
+
+
 
 if __name__ == '__main__':
-    chatbot = Chatbot()
+    chatbot = Chatbot(test=True)
+    # while True:
+    #     print(chatbot._extract_keyword(input('give query')))
     chatbot.converse()
 
+
+
+
+# from src.scraper import get_recipe_data
+# from src.ingredients_parser import IngredientsParser
+# from src.steps_parser import StepsParser
+# from src.methods_parser import MethodsParser
+# from src.tools_parser import ToolsParser
+# import re
+# from collections import Counter
+#
+# class Chatbot:
+#     """
+#     Answers user's questions about recipes in conversational manner
+#     """
+#     
+#     def __init__(self, test=False):
+#         self.responses = [
+#             self._retrieval_query,
+#             self._navigation_query,
+#             self._parameter_query,
+#             self._clarification_query,
+#             self._procedure_query,
+#             self._quantity_query,
+#         ]
+#
+#         self.test = test
+#
+#         self._get_url()
+#         self._parse_metadata()
+#
+#         self.current_step = 0
+#
+#     def _get_url(self):
+#         while True:
+#             if self.test:
+#                 url = "https://www.allrecipes.com/amish-beef-and-noodles-recipe-8712456"
+#             else:
+#                 url = input('Please input the recipe URL: ')
+#
+#             try:
+#                 self.url = url
+#                 self.title, self.raw_ingredients, self.raw_steps = get_recipe_data(url)
+#                 break
+#             except:
+#                 pass
+#
+#     def _parse_metadata(self):
+#         ingredients = IngredientsParser(self.raw_ingredients)
+#         self.ingredients = ingredients.parse()
+#
+#         methods = MethodsParser(self.raw_steps)
+#         self.methods = methods.parse()
+#
+#         steps = StepsParser(self.raw_steps, self.ingredients)
+#         self.steps = steps.parse()
+#
+#         tools = ToolsParser(self.raw_steps)
+#         self.tools = tools.parse()
+#
+#         if self.test:
+#             self._print_metadata()
+#
+#     def _print_metadata(self):
+#         print('Ingredients')
+#         for ingredient in self.ingredients:
+#             print(ingredient)
+#         print()
+#
+#         print('Methods')
+#         for method in self.methods:
+#             print(method)
+#         print()
+#
+#         print('Steps')
+#         for step in self.steps:
+#             print(step)
+#         print()
+#
+#         print('Tools')
+#         for tool in self.tools:
+#             print(tool)
+#         print()
+#
+#     def converse(self):
+#         """
+#         Maintains continual loop of conversation while updating internal state
+#         """
+#
+#         while True:
+#             question = input('Please input a question: ')
+#             question = self._clean_question(question)
+#             question_type = self._identify_query(question)
+#
+#             if question_type == -1:
+#                 print('Unclear question type.')
+#                 print()
+#                 continue
+#
+#             self.responses[question_type](question)
+#             print()
+#
+#     def _clean_question(self, question):
+#         """
+#         Cleans a question for further processing
+#         """
+#
+#         question = question.lower().strip()
+#         question = question.rstrip('?')
+#         question = question.rstrip('.')
+#         question = ' ' .join(question.split())
+#
+#         return question
+#
+#     def _identify_query(self, question: str) -> int:
+#         """
+#         Identifies which of six questions the provided question is
+#         """
+#
+#         patterns = [
+#             [ # retrieval_patterns 
+#                 r'\b(show|display|list|give|tell)\s+(me\s+)?(the\s+)?(recipe|ingredients?|directions?|steps?|instructions?)',
+#                 r'\b(what|which)\s+(are\s+)?(the\s+)?(ingredients?|steps?)',
+#                 r'\brecipe\b',
+#                 r'\bingredients?\s+list\b',
+#             ],
+#             [ # navigation_patterns 
+#                 r'\b(go|move|jump|skip|take\s+me)\s+(to\s+)?(the\s+)?(next|previous|back|forward|first|last)',
+#                 r'\b(next|previous|prior|back|first|last)\s+(step|one)',
+#                 r'\bgo\s+back\b',
+#                 r'\bwhat\'?s?\s+next\b',
+#                 r'\brepeat(\s+please|\s+that|\s+step)?\b',
+#                 r'\bwhat\s+was\s+that(\s+again)?\b',
+#                 r'\bagain\b',
+#                 r'\bstart\s+over\b',
+#             ],
+#             [ # parameter_patterns 
+#                 r'\b(how\s+much|how\s+many|what\s+amount)',
+#                 r'\b(what|how\s+long|how\s+much)\s+time\b',
+#                 r'\b(what|how\s+hot)\s+(temperature|temp)\b',
+#                 r'\bhow\s+long\s+(do\s+I|to|should)',
+#                 r'\bwhen\s+is\s+it\s+done\b',
+#                 r'\bwhat\s+can\s+I\s+use\s+instead\b',
+#                 r'\bsubstitute\b',
+#                 r'\breplace\b',
+#                 r'\bhow\s+(hot|warm|cold)\b',
+#             ],
+#             [ # clarification_patterns 
+#                 r'\bwhat\s+is\s+(a\s+|an\s+)?',
+#                 r'\bwhat\s+does\s+\w+\s+mean\b',
+#                 r'\bwhat\'?s\s+(a\s+|an\s+)?',
+#                 r'\bdefine\b',
+#                 r'\bexplain\b',
+#                 r'\bwhat\s+are\s+\w+\b(?!.*\bingredients?\b)',
+#             ],
+#             [ # procedure_patterns 
+#                 r'\bhow\s+do\s+(I|you)',
+#                 r'\bhow\s+to\b',
+#                 r'\bwhat\'?s\s+the\s+(way|method|process)\b',
+#                 r'\bcan\s+you\s+(show|tell|explain)\s+me\s+how\b',
+#             ],
+#             [ # quantity_patterns 
+#                 r'\bhow\s+much\s+(\w+\s+)?(do\s+I\s+need|should\s+I|is\s+needed)\b',
+#                 r'\bhow\s+many\s+(\w+\s+)?(do\s+I\s+need|should\s+I|is\s+needed)\b',
+#                 r'\bhow\s+much\s+of\s+(that|this|it)\b',
+#             ],
+#         ]
+#
+#         for i in range(len(patterns)):
+#             if any(re.search(pattern, question) for pattern in patterns[i]):
+#                 return i
+#
+#         return -1
+#
+#     def _retrieval_query(self, question: str):
+#         """
+#         Requests to show a recipe or its components.
+#         Examples:
+#             "Show me the ingredients list."
+#             "Display the recipe."
+#         """
+#         
+#         if 'recipe' in question:
+#             self._print_title()
+#             self._print_ingredients()
+#             self._print_steps()
+#             return
+#
+#         if 'name' in question or 'title' in question:
+#             self._print_title()
+#
+#         if 'ingredient' in question:
+#             self._print_ingredients()
+#
+#         if 'step' in question or 'direction' in question:
+#             self._print_steps()
+#
+#     def _print_title(self):
+#         print(f' --- {self.title["title"]} --- ')
+#         print()
+#
+#     def _print_steps(self):
+#         print(' --- Steps --- ')
+#         for step in self.steps:
+#             print(f'{step["step_number"]}: {step["description"]}')
+#         print()
+#
+#     def _print_ingredients(self):
+#         print(' --- Ingredients --- ')
+#         for ingredient in self.raw_ingredients['ingredients']:
+#             print(' -', ingredient)
+#         print()
+#
+#     def _navigation_query(self, question: str):
+#         """
+#         Moving between, repeating, or revisiting recipe steps.
+#         Examples:
+#             "Go back one step."
+#             "Go to the next step."
+#             "Repeat please."
+#             "Take me to the first step."
+#             "What’s next?"
+#             "What was that again?"
+#         """
+#
+#         prev_keywords = ['back', 'prior', 'before', 'prev']
+#         cur_keywords = ['repeat', 'again', 'current']
+#         next_keywords = ['next', 'after']
+#
+#         next_step = -1
+#         if any([keyword in question for keyword in prev_keywords]):
+#             next_step = self.current_step - 1
+#         elif any([keyword in question for keyword in next_keywords]):
+#             next_step = self.current_step + 1
+#         elif any([keyword in question for keyword in cur_keywords]):
+#             next_step = self.current_step
+#         else:
+#             next_step = self._retrieve_step_index(question)
+#
+#         if next_step < 0 or next_step >= len(self.steps):
+#             print('No such step exists.')
+#             return
+#
+#         self.current_step = next_step
+#         self._print_step(self.current_step)
+#
+#     def _print_step(self, idx):
+#         """
+#         Prints a specific atomic step based on 0-based index
+#         """
+#
+#         if idx < 0 or idx == len(self.steps):
+#             print('No such step exists.')
+#             return
+#
+#         print(self.steps[idx]['description'])
+#
+#     def _retrieve_step_index(self, question):
+#         if 'last' in question:
+#             return len(self.steps) - 1
+#
+#         step = ['first', 'second', 'third', 'fourth', 'fifth', 'sixth', 'seventh', 'eigth', 'ninth', 'tenth', 'eleventh', 'twelfth', 'thirteenth', 'fourteenth', 'fifteenth', 'sixteenth', 'seventeenth', 'eighteenth', 'nineteenth', 'twentieth' ]
+#         words = [ 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen', 'twenty']
+#
+#         for i in range(20):
+#             if step[i] in question or words[i] in question:
+#                 return i
+#
+#         numbers = re.findall(r'\d+', question)
+#         if len(numbers) == 0:
+#             return -1
+#
+#         freq = Counter()
+#         for number in numbers:
+#             freq[int(number)] += 1
+#         
+#         return freq.most_common(1)[0][0]
+#
+#     def _parameter_query(self, question):
+#         """
+#         Asking about quantities, times, temperatures, or substitutes within the current step.
+#         Examples:
+#             "How much salt do I need?"
+#             "What temperature should the oven be?"
+#             "How long do I bake it?"
+#             "When is it done?"
+#             "What can I use instead of butter?"
+#         """
+#
+#         quantity_keywords = ['much', 'how', 'quant']
+#         time_keywords = ['long', 'time', 'when']
+#         substitute_keywords = ['instead', 'use', 'replace', 'what']
+#         temperature_keywords = ['temperature', 'what', 'heat', 'cold']
+#
+#         counts = [
+#             sum([question.count(keyword) for keyword in quantity_keywords]),
+#             sum([question.count(keyword) for keyword in time_keywords]),
+#             sum([question.count(keyword) for keyword in substitute_keywords]),
+#             sum([question.count(keyword) for keyword in temperature_keywords]),
+#         ]
+#
+#         step = self.steps[self.current_step]
+#
+#         idx = counts.index(max(counts))
+#
+#         if counts[idx] == 0:
+#             print('Unclear query.')
+#             return
+#
+#         if idx == 0: # quantity
+#             ingredient = step['ingredients']
+#
+#             if ingredient == None:
+#                 print('No ingredients mentioned')
+#                 return
+#
+#             ingredient = ingredient[0]
+#             quantity = self._get_ingredient_quantity(ingredient)
+#
+#             if quantity == '':
+#                 print(f'No quantity is available for the ingredient {ingredient}')
+#                 return
+#
+#             print(f'{quantity} of {ingredient}.')
+#
+#         elif idx == 1: # time
+#             if step['time'] == None:
+#                 print('No time available for this step.')
+#                 return
+#
+#             print(f'{step["time"]["duration"]}.')
+#
+#         elif idx == 2: # substitute
+#             print('Substitutes currently unavailble.')
+#
+#         elif idx == 3: # temperature
+#             if step['temperature'] == None:
+#                 print('No temperature available for this step.')
+#                 return
+#
+#             print(f'{step["temperature"]["value"]} {step["temperature"]["unit"]}.')
+#
+#     def _get_ingredient_quantity(self, query):
+#         quantity = -1
+#         unit = ''
+#         for ingredient in self.ingredients:
+#             if query in ingredient['ingredient_name']:
+#                 quantity = ingredient['ingredient_quantity']
+#                 unit = ingredient['measurement_unit']
+#                 break
+#
+#         if quantity == '':
+#             return None
+#
+#         return f'{quantity} {unit}'
+#
+#
+#     def _clarification_query(self, question):
+#         """
+#         Asking for definitions or explanations of terms or tools.
+#         Examples:
+#             "What is a whisk?"
+#         """
+#
+#         keyword = self._extract_keyword(question)
+#
+#         for tool in self.tools:
+#             if keyword in tool['direction']:
+#                 print('Usage not yet supported.')
+#                 return
+#
+#         for method in self.methods:
+#             if keyword in method['direction']:
+#                 print('Clarification not yet supported')
+#                 return
+#     
+#     def _extract_keyword(self, question):
+#         cleaned = question.rstrip('?')
+#         cleaned = question.rstrip('.')
+#
+#         patterns = [
+#             r'^what\s+is\s+(a\s+|an\s+)?', # "what is a/an"
+#             r'^what\s+does\s+', # "what does"
+#             r'^what\s+are\s+', # "what are"
+#             r'^who\s+is\s+', # "who is"
+#             r'^how\s+do\s+you\s+', # "how do you"
+#             r'^what\'s\s+(a\s+|an\s+)?', # "what's a/an"
+#         ]
+#         
+#         keyword = cleaned
+#
+#         for pattern in patterns:
+#             keyword = re.sub(pattern, '', keyword)
+#
+#         trailing_patterns = [
+#             r'\s+mean$',
+#             r'\s+used\s+for$',
+#             r'\s+do$',
+#         ]
+#
+#         for pattern in trailing_patterns:
+#             keyword = re.sub(pattern, '', keyword)
+#
+#         keyword = ' '.join(keyword.split())
+#
+#         return keyword
+#
+#     def _procedure_query(self, question):
+#         """
+#         Asking how to perform an action or technique.
+#         Specific: "How do I knead the dough?"
+#         Vague (step-dependent): "How do I do that?" — referring to the current step’s action.
+#         """
+#
+#         step = self.steps[self.current_step]
+#         methods = step['methods']
+#
+#         if methods == None:
+#             print('No methods corresponding to this step.')
+#             return
+#
+#         print('Procedure not yet supported.')
+#
+#     def _quantity_query(self, question):
+#         """
+#         Asking about ingredient amounts.
+#         Specific: "How much flour do I need?"
+#         Vague (step-dependent): "How much of that do I need?" — referring to an ingredient mentioned in the current step.
+#         """
+#
+#         step = self.steps[self.current_step]
+#         ingredient = step['ingredients']
+#
+#         if ingredient == None:
+#             print('No ingredients mentioned')
+#             return
+#
+#         ingredient = ingredient[0]
+#         quantity = self._get_ingredient_quantity(ingredient)
+#
+#         if quantity == '':
+#             print(f'No quantity is available for the ingredient {ingredient}')
+#             return
+#
+#         print(f'{quantity} of {ingredient}.')
+#
+# if __name__ == '__main__':
+#     chatbot = Chatbot()
+#     chatbot.converse()
+#
