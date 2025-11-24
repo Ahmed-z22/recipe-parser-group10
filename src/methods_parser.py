@@ -2,32 +2,32 @@ import json
 import spacy
 from pathlib import Path
 
+
 class MethodsParser:
     def __init__(self, directions):
-        self.directions = directions['directions']
+        self.directions = directions["directions"]
         self.tools = None
         self.nlp = spacy.load("en_core_web_sm")
         self.directions_split = self.split_directions_into_steps()
         # Load method keywords from JSON file
         self.path = Path(__file__).resolve().parent / "helper_files"
         method_keywords_path = self.path / "method_keywords.json"
-        with open(method_keywords_path, 'r') as f:
-            data = json.load(f) 
+        with open(method_keywords_path, "r") as f:
+            data = json.load(f)
 
-        self.method_keywords = data.get('method_keywords')
-    
+        self.method_keywords = data.get("method_keywords")
 
     # can maybe add this to the Steps section
     def split_directions_into_steps(self):
         """
         Split recipe directions into individual sentence steps.
-        
-        Processes each direction entry, breaks down each direction into 
-        individual sentences, creating a dictionary mapping original 
+
+        Processes each direction entry, breaks down each direction into
+        individual sentences, creating a dictionary mapping original
         directions to their constituent sentence steps.
-        
+
         Returns:
-            dict: A dictionary where keys are original direction entries 
+            dict: A dictionary where keys are original direction entries
              and values are lists of individual sentence steps.
         """
         # split_dirs = []
@@ -56,16 +56,33 @@ class MethodsParser:
                 continue
             if tok.lemma_.lower() in {"be", "have", "do", "get", "make"}:
                 continue
-            particle = " ".join(child.text for child in tok.children if child.dep_ == "prt")
-            verb_norm = (tok.lemma_.lower() + (" " + particle if particle else "")).strip()
+            particle = " ".join(
+                child.text for child in tok.children if child.dep_ == "prt"
+            )
+            verb_norm = (
+                tok.lemma_.lower() + (" " + particle if particle else "")
+            ).strip()
 
             if tok.dep_ == "ROOT":
                 # add root verb
                 methods.insert(0, verb_norm)
                 # also add any conjoined verbs (e.g. "cook and stir")
-                for conj in (c for c in doc if c.head is tok and c.dep_ == "conj" and (c.pos_ == "VERB" or c.tag_.startswith("VB"))):
-                    particle_c = " ".join(child.text for child in conj.children if child.dep_ == "prt")
-                    methods.append((conj.lemma_.lower() + (" " + particle_c if particle_c else "")).strip())
+                for conj in (
+                    c
+                    for c in doc
+                    if c.head is tok
+                    and c.dep_ == "conj"
+                    and (c.pos_ == "VERB" or c.tag_.startswith("VB"))
+                ):
+                    particle_c = " ".join(
+                        child.text for child in conj.children if child.dep_ == "prt"
+                    )
+                    methods.append(
+                        (
+                            conj.lemma_.lower()
+                            + (" " + particle_c if particle_c else "")
+                        ).strip()
+                    )
                 # don't break — allow other heuristics to collect verbs before/after
                 continue
 
@@ -73,12 +90,29 @@ class MethodsParser:
             if tok.i == 0 or tok.lemma_.lower() in self.method_keywords:
                 methods.append(verb_norm)
                 # also include any conjoined verbs of this token
-                for conj in (c for c in doc if c.head is tok and c.dep_ == "conj" and (c.pos_ == "VERB" or c.tag_.startswith("VB"))):
-                    particle_c = " ".join(child.text for child in conj.children if child.dep_ == "prt")
-                    methods.append((conj.lemma_.lower() + (" " + particle_c if particle_c else "")).strip())
+                for conj in (
+                    c
+                    for c in doc
+                    if c.head is tok
+                    and c.dep_ == "conj"
+                    and (c.pos_ == "VERB" or c.tag_.startswith("VB"))
+                ):
+                    particle_c = " ".join(
+                        child.text for child in conj.children if child.dep_ == "prt"
+                    )
+                    methods.append(
+                        (
+                            conj.lemma_.lower()
+                            + (" " + particle_c if particle_c else "")
+                        ).strip()
+                    )
 
         # fallback: if nothing found, try first token if verb-like
-        if not methods and len(doc) and (doc[0].pos_ == "VERB" or doc[0].tag_.startswith("VB")):
+        if (
+            not methods
+            and len(doc)
+            and (doc[0].pos_ == "VERB" or doc[0].tag_.startswith("VB"))
+        ):
             methods.append(doc[0].lemma_.lower())
 
         # keep order, unique
@@ -86,24 +120,26 @@ class MethodsParser:
 
         # apply whitelist filter if provided
         if self.method_keywords:
-            methods = [m for m in methods if any(m == k or m.startswith(k + " ") for k in self.method_keywords)]
+            methods = [
+                m
+                for m in methods
+                if any(m == k or m.startswith(k + " ") for k in self.method_keywords)
+            ]
 
         return methods
 
-    
-
-    def parse(self): 
+    def parse(self):
         """
         Parse cooking directions and extract cooking methods from each step.
         Uses self.extract_methods() to identify cooking methods in each step.
-        
+
         Returns:
             list[dict]: A list of dictionaries where each dictionary contains:
                 - "direction" (str): The original direction text
                 - "steps" (list): List of individual steps for this direction
                 - "methods" (list): Unique cooking methods extracted from all steps in this direction
         """
-        
+
         output = []
 
         for direction, steps in self.directions_split.items():
@@ -111,7 +147,9 @@ class MethodsParser:
             for step in steps:
                 methods_in_step = self.extract_methods(step)
                 # output_dict["methods"].append(methods_in_step)
-                output_dict["methods"] = list(set(output_dict["methods"]) | set(methods_in_step))
+                output_dict["methods"] = list(
+                    set(output_dict["methods"]) | set(methods_in_step)
+                )
             output.append(output_dict)
-                
+
         return output

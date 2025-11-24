@@ -4,11 +4,8 @@ import requests
 from bs4 import BeautifulSoup
 import html
 
-SUPPORTED_WEBSITES = [
-    "allrecipes.com",
-    "epicurious.com",
-    "bonappetit.com"
-]
+SUPPORTED_WEBSITES = ["allrecipes.com", "epicurious.com", "bonappetit.com"]
+
 
 def get_recipe_data(url: str):
     """
@@ -34,10 +31,11 @@ def get_recipe_data(url: str):
             f"Unsupported website domain: {domain}. "
             "Currently supported: allrecipes.com, epicurious.com, bonappetit.com"
         )
-    
+
     soup = _http_get_soup(url)
     title, ingredients, directions = _extract_json_ld_recipe(soup, url, domain)
     return {"title": title}, {"ingredients": ingredients}, {"directions": directions}
+
 
 def _http_get_soup(url: str) -> BeautifulSoup:
     """
@@ -53,7 +51,10 @@ def _http_get_soup(url: str) -> BeautifulSoup:
     response.raise_for_status()
     return BeautifulSoup(response.text, "lxml")
 
-def _extract_json_ld_recipe(soup: BeautifulSoup, url: str, domain: str) -> tuple[str | None, list[str], list[str]]:
+
+def _extract_json_ld_recipe(
+    soup: BeautifulSoup, url: str, domain: str
+) -> tuple[str | None, list[str], list[str]]:
     """
     Extracts recipe information (title, ingredients, and directions)
     from JSON-LD <script> blocks embedded in the HTML.
@@ -97,8 +98,10 @@ def _extract_json_ld_recipe(soup: BeautifulSoup, url: str, domain: str) -> tuple
 
             # Check if this JSON block is of type "Recipe" (can be string, list, or nested object)
             is_recipe = (
-                isinstance(block_type, str) and block_type == "Recipe"
-            ) or (isinstance(block_type, list) and "Recipe" in block_type) or ("Recipe" in str(block_type))
+                (isinstance(block_type, str) and block_type == "Recipe")
+                or (isinstance(block_type, list) and "Recipe" in block_type)
+                or ("Recipe" in str(block_type))
+            )
 
             if not is_recipe:
                 continue
@@ -112,7 +115,9 @@ def _extract_json_ld_recipe(soup: BeautifulSoup, url: str, domain: str) -> tuple
             # Extract ingredients usually as a list of strings
             recipe_ingredients = block.get("recipeIngredient")
             if isinstance(recipe_ingredients, list):
-                ingredients = [str(s).strip() for s in recipe_ingredients if str(s).strip()]
+                ingredients = [
+                    str(s).strip() for s in recipe_ingredients if str(s).strip()
+                ]
 
             # Extract cooking directions, can be a list of dicts or plain strings
             instructions = block.get("recipeInstructions")
