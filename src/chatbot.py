@@ -10,6 +10,7 @@ from urllib.parse import quote
 from pathlib import Path
 import json
 
+
 class Chatbot:
     """Initialize Chatbot"""
 
@@ -290,28 +291,32 @@ class Chatbot:
     def respond(self, query):
         try:
             query = self._clean_query(query)
-            
-            if 'what kind of' in query:
+
+            if "what kind of" in query:
                 query = query.split()
                 keyword = query[3]
-                
+
                 result = []
                 for ing in self.ingredients:
-                    if keyword in ing['ingredient_name']:
-                        if ing['ingredient_descriptors'] is not None:
-                            result.append(' '.join(ing['ingredient_descriptors']))
+                    if keyword in ing["ingredient_name"]:
+                        if ing["ingredient_descriptors"] is not None:
+                            result.append(" ".join(ing["ingredient_descriptors"]))
 
-                        if ing['ingredient_preparation'] is not None:
-                            result.append(' '.join(ing['ingredient_preparation']))
+                        if ing["ingredient_preparation"] is not None:
+                            result.append(" ".join(ing["ingredient_preparation"]))
                         break
 
                 if len(result) == 0:
-                    return 'Unclear ingredient.\n'
+                    return "Unclear ingredient.\n"
                 result.append(keyword)
 
-                result = [val for i, val in enumerate(result) if not (i > 0 and val == result[i - 1])]
-                result = ' '.join(result)
-                result = result[0].upper() + result[1:] + '.\n'
+                result = [
+                    val
+                    for i, val in enumerate(result)
+                    if not (i > 0 and val == result[i - 1])
+                ]
+                result = " ".join(result)
+                result = result[0].upper() + result[1:] + ".\n"
 
                 return result
 
@@ -347,7 +352,7 @@ class Chatbot:
         if self.test and query[-1].isdigit():
             return int(query.split()[-1])
 
-        if 'define' in query:
+        if "define" in query:
             return 3
 
         # First check for regex matches
@@ -364,6 +369,7 @@ class Chatbot:
         "Show me the ingredients list."
         "Display the recipe."
     """
+
     def _get_title(self):
         return f' --- {self.title["title"]} --- \n'
 
@@ -408,7 +414,6 @@ class Chatbot:
 
         return "Unclear question."
 
-
     """
     Navigation Queries
     Moving between, repeating, or revisiting recipe steps.
@@ -420,6 +425,7 @@ class Chatbot:
         "What’s next?"
         "What was that again?"
     """
+
     def _retrieve_step_index(self, question):
         if "last" in question:
             return len(self.steps) - 1
@@ -469,6 +475,7 @@ class Chatbot:
         "When is it done?"
         "What can I use instead of butter?"
     """
+
     def _parameter_query(self, question):
         time_keywords = ["long", "time", "when", "done", "finished", "complete"]
         substitute_keywords = ["instead", "use", "replace", "what"]
@@ -516,6 +523,7 @@ class Chatbot:
     Examples:
         "What is a whisk?"
     """
+
     def _extract_keyword(self, question):
         """
         Extracts keywords for clarification
@@ -588,6 +596,7 @@ class Chatbot:
     Specific: "How do I knead the dough?"
     Vague (step-dependent): "How do I do that?" — referring to the current step’s action.
     """
+
     def _procedure_query(self, query):
         tokens = query.split()
         keyword = tokens[-1]
@@ -602,10 +611,10 @@ class Chatbot:
                     if token == proc_tok:
                         counter[procedure] += 1
 
-        result = ''
+        result = ""
         if len(counter) > 0:
             mx = counter.most_common(1)[0][0]
-            result += f'{mx[0].upper() + mx[1:]} means {self.procedures[mx][0].lower() + self.procedures[mx][1:]}\n'
+            result += f"{mx[0].upper() + mx[1:]} means {self.procedures[mx][0].lower() + self.procedures[mx][1:]}\n"
 
         result += f"Here is a YouTube search which may help further clarify your query: {self._get_youtube_link(query)}\n"
 
@@ -617,6 +626,7 @@ class Chatbot:
     Specific: "How much flour do I need?"
     Vague (step-dependent): "How much of that do I need?" — referring to an ingredient mentioned in the current step.
     """
+
     def _get_ingredient_quantity(self, query):
         quantity = -1
         unit = ""
@@ -640,7 +650,7 @@ class Chatbot:
         counter = Counter()
         for idx, ing in enumerate(self.ingredients):
             for tok in tokens:
-                if tok in ing['ingredient_name']:
+                if tok in ing["ingredient_name"]:
                     counter[idx] += 1
 
         if len(counter) == 0:
@@ -652,7 +662,7 @@ class Chatbot:
             ingredient = ingredient[0]
         else:
             idx = counter.most_common(1)[0][0]
-            ingredient = self.ingredients[idx]['ingredient_name']
+            ingredient = self.ingredients[idx]["ingredient_name"]
 
         quantity, unit = self._get_ingredient_quantity(ingredient)
 
@@ -663,6 +673,7 @@ class Chatbot:
             return f"{quantity} of {ingredient}.\n"
         else:
             return f"{quantity} {ingredient}.\n"
+
 
 if __name__ == "__main__":
     chatbot = Chatbot(test=True)
