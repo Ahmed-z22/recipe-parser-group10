@@ -181,7 +181,7 @@ function App() {
               minWidth: "260px"
             }}
           >
-            {autoSpeak ? "🔊 Auto Speak: On" : "🔇 Auto Speak: Off"}
+            {autoSpeak ? "Auto Speak: On" : "Auto Speak: Off"}
           </button>
         </div>
 

@@ -1,9 +1,12 @@
-import json, re, spacy
+import json
+import re
+import spacy
 from pathlib import Path
+
 
 class IngredientsParser:
     def __init__(self, ingredients: dict[str, list[str]]):
-        self.ingredients = ingredients['ingredients']
+        self.ingredients = ingredients["ingredients"]
         self.ingredients_names = None
         self.ingredients_quantities_and_amounts = None
         self.ingredients_measurement_units = None
@@ -14,10 +17,15 @@ class IngredientsParser:
         self.alias_to_canon = self._load_json(self.path / "units_map.json")
         self.unicode_fractions = self._load_json(self.path / "unicode_fractions.json")
         self.frac_chars = "".join(self.unicode_fractions.keys())
-        self.units_pattern = "|".join(sorted(map(re.escape, self.alias_to_canon.keys()), key=len, reverse=True))
+        self.units_pattern = "|".join(
+            sorted(map(re.escape, self.alias_to_canon.keys()), key=len, reverse=True)
+        )
         self.qty = re.compile(
-            r"^\s*(?:\d+(?:\.\d+)?\s*(?:-|–|to)\s*\d+(?:\.\d+)?|(?:(\d+)\s*)?[" + re.escape(self.frac_chars) +
-            r"]|(?:(\d+)\s+)?\d+\s*/\s*\d+|\d+\.\d+|\d+)\s*", re.I)
+            r"^\s*(?:\d+(?:\.\d+)?\s*(?:-|–|to)\s*\d+(?:\.\d+)?|(?:(\d+)\s*)?["
+            + re.escape(self.frac_chars)
+            + r"]|(?:(\d+)\s+)?\d+\s*/\s*\d+|\d+\.\d+|\d+)\s*",
+            re.I,
+        )
         self.unit = re.compile(r"^\s*(?:" + self.units_pattern + r")\b\.?\s*", re.I)
         self.paren = re.compile(r"\([^)]*\)")
 
@@ -32,9 +40,9 @@ class IngredientsParser:
         results = []
         for line in self.ingredients:
             match = self.qty.search(line)
-            line = line[match.end():] if match else line
+            line = line[match.end() :] if match else line
             match = self.unit.search(line)
-            line = line[match.end():] if match else line
+            line = line[match.end() :] if match else line
             line = self.paren.sub("", line)
             line = line.rsplit(",", 1)[0].strip()
             line = re.sub(r"\s+", " ", line).strip()
@@ -62,7 +70,10 @@ class IngredientsParser:
         """
         amounts = re.compile(
             r"^\s*(?:(?P<r1>\d+(?:\.\d+)?)\s*(?:-|–|to)\s*(?P<r2>\d+(?:\.\d+)?)|(?:(?P<uw>\d+)\s*)?(?P<uf>["
-            + re.escape(self.frac_chars) + r"])|(?P<dec>\d+\.\d+)|(?P<int>\d+))", re.I)
+            + re.escape(self.frac_chars)
+            + r"])|(?P<dec>\d+\.\d+)|(?P<int>\d+))",
+            re.I,
+        )
 
         results = []
         for line in self.ingredients:
@@ -70,14 +81,16 @@ class IngredientsParser:
             match = amounts.search(line)
             if match:
                 groups = match.group
-                if groups('r1'):
-                    quantity = float(groups('r1'))
-                elif groups('uf'):
-                    quantity = (float(groups('uw')) if groups('uw') else 0.0) + float(self.unicode_fractions.get(groups('uf'), 0.0))
-                elif groups('dec'):
-                    quantity = float(groups('dec'))
-                elif groups('int'):
-                    quantity = float(groups('int'))
+                if groups("r1"):
+                    quantity = float(groups("r1"))
+                elif groups("uf"):
+                    quantity = (float(groups("uw")) if groups("uw") else 0.0) + float(
+                        self.unicode_fractions.get(groups("uf"), 0.0)
+                    )
+                elif groups("dec"):
+                    quantity = float(groups("dec"))
+                elif groups("int"):
+                    quantity = float(groups("int"))
 
             if quantity is not None and quantity.is_integer():
                 quantity = int(quantity)
@@ -94,18 +107,22 @@ class IngredientsParser:
         results = []
         for line in self.ingredients:
             match = units.search(self.paren.sub(" ", line)) or units.search(line)
-            results.append(self.alias_to_canon.get(match.group(1).lower()) if match else None)
+            results.append(
+                self.alias_to_canon.get(match.group(1).lower()) if match else None
+            )
         self.ingredients_measurement_units = results
 
     def extract_descriptors(self):
         """
-        Extracts descriptive modifiers of the ingredient (adjectives, compounds, and participial adjectives) 
+        Extracts descriptive modifiers of the ingredient (adjectives, compounds, and participial adjectives)
         after removing quantities, units, and preparation phrases. And stores them in self.descriptors.
         """
         results = []
         for line in self.ingredients:
-            match = self.qty.search(line);  line = line[match.end():] if match else line
-            match = self.unit.search(line); line = line[match.end():] if match else line
+            match = self.qty.search(line)
+            line = line[match.end() :] if match else line
+            match = self.unit.search(line)
+            line = line[match.end() :] if match else line
             line = self.paren.sub("", line)
             line = line.rsplit(",", 1)[0].strip()
             line = re.sub(r"\s+", " ", line).strip()
@@ -122,7 +139,11 @@ class IngredientsParser:
                     descriptors.append(tok.text.lower())
                 elif tok.dep_ == "compound" and tok.head == head:
                     descriptors.append(tok.text.lower())
-                elif tok.tag_ in ("VBN", "VBG") and tok.dep_ == "amod" and tok.head == head:
+                elif (
+                    tok.tag_ in ("VBN", "VBG")
+                    and tok.dep_ == "amod"
+                    and tok.head == head
+                ):
                     descriptors.append(tok.text.lower())
             results.append(descriptors)
         self.descriptors = results
@@ -150,7 +171,7 @@ class IngredientsParser:
         self.preparations = results
 
     def parse(self) -> list[dict[str, list[str] | str | int | float | None]]:
-        """"
+        """ "
         Executes all extraction methods ingredients.
         returns: A list of dictionaries, each containing the parsed components of an ingredient:
             - original_ingredient_sentence: The original ingredient line.
@@ -168,13 +189,15 @@ class IngredientsParser:
 
         output = []
         for i in range(len(self.ingredients)):
-            output.append({
-                "original_ingredient_sentence": self.ingredients[i],
-                "ingredient_name": self.ingredients_names[i],
-                "ingredient_quantity": self.ingredients_quantities_and_amounts[i],
-                "measurement_unit": self.ingredients_measurement_units[i],
-                "ingredient_descriptors": self.descriptors[i],
-                "ingredient_preparation": self.preparations[i],
-            })
+            output.append(
+                {
+                    "original_ingredient_sentence": self.ingredients[i],
+                    "ingredient_name": self.ingredients_names[i],
+                    "ingredient_quantity": self.ingredients_quantities_and_amounts[i],
+                    "measurement_unit": self.ingredients_measurement_units[i],
+                    "ingredient_descriptors": self.descriptors[i],
+                    "ingredient_preparation": self.preparations[i],
+                }
+            )
 
         return output

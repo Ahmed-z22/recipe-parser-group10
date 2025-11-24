@@ -1,5 +1,45 @@
 #+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-
 
+                                                        Project Structure
+
+.
+├── backend
+│   └── api.py
+├── frontend
+│   ├── public
+│   │   └── index.html
+│   ├── src
+│   │   ├── App.css
+│   │   ├── App.js
+│   │   ├── index.css
+│   │   └── index.js
+│   ├── package-lock.json
+│   └── package.json
+├── src
+│   ├── helper_files
+│   │   ├── method_keywords.json
+│   │   ├── tools_keywords.json
+│   │   ├── unicode_fractions.json
+│   │   └── units_map.json
+│   ├── __init__.py
+│   ├── chatbot.py
+│   ├── ingredients_parser.py
+│   ├── methods_parser.py
+│   ├── scraper.py
+│   ├── steps_parser.py
+│   └── tools_parser.py
+├── .gitignore
+├── environment.yml
+├── pyproject.toml
+├── README.md
+└── README.txt
+#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-
+
+
+
+
+#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-
+
                                                         src/ folder
 
 scraper.py
@@ -83,8 +123,6 @@ For answering questions about a scraped recipe.
 
 
 
-
-
 #+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-
 
                                                         backend/ folder
@@ -102,8 +140,6 @@ Endpoints:
 
 Runs on 127.0.0.1:5001 when executed directly.
 #+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-
-
-
 
 
 
