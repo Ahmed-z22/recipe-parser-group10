@@ -676,5 +676,5 @@ class Chatbot:
 
 
 if __name__ == "__main__":
-    chatbot = Chatbot(test=True)
+    chatbot = Chatbot()
     chatbot.converse()
