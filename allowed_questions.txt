@@ -1,4 +1,4 @@
-********** These are some representitve questions for each of the six questions categories **********
+********** These are some representative questions for each of the six questions categories **********
 
 #+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-
 Retrieval Question
@@ -6,6 +6,7 @@ Retrieval Question
     1. "Show me the recipe"
     2. "Display the ingredients" | "What are the ingredients?" | "Which ingredients are needed?"
     3. "List the steps" | "Give the directions" | "What are the steps?" | "Which steps are required?"
+    4. "Go to step the nineteenth step" | "Go to the twentieth step" | "Go to the <x> step" where <x> is from 1 to 20
 
 2. Ask about descriptor and and preparation
     1. "what kind of (ingredient_name)" | "what kind of parsley"
