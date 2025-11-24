@@ -18,25 +18,19 @@ class Chatbot:
             self._retrieval_query,
             self._navigation_query,
             self._parameter_query,
-            self._clarification_query,
             self._procedure_query,
+            self._clarification_query,
             self._quantity_query,
         ]
 
-        self.identification = [
-            self._is_retrieval,
-            self._is_navigation,
-            self._is_parameter,
-            self._is_clarification,
-            self._is_procedure,
-            self._is_quantity,
-        ]
         self.path = Path(__file__).resolve().parent / "helper_files"
-        method_keywords_path = self.path / "usages.json"
-        with open(method_keywords_path, "r") as f:
+        usages_path = self.path / "usages.json"
+        with open(usages_path, "r") as f:
             self.usages = json.load(f)
 
-        self.nlp = spacy.load("en_core_web_sm")
+        procedures_path = self.path / "procedures.json"
+        with open(procedures_path, "r") as f:
+            self.procedures = json.load(f)
 
         self.step_words = [
             "first",
@@ -87,8 +81,8 @@ class Chatbot:
             "retrieval_query",
             "navigation_query",
             "parameter_query",
-            "clarification_query",
             "procedure_query",
+            "clarification_query",
             "quantity_query",
         ]
 
@@ -126,6 +120,12 @@ class Chatbot:
                 r"\breplace\b",
                 r"\bhow\s+(hot|warm|cold)\b",
             ],
+            [  # procedure_patterns
+                r"\bhow\s+do\s+(I|you)",
+                r"\bhow\s+to\b",
+                r"\bwhat\'?s\s+the\s+(way|method|process)\b",
+                r"\bcan\s+you\s+(show|tell|explain)\s+me\s+how\b",
+            ],
             [  # clarification_patterns
                 r"\bwhat\s+is\s+(a\s+|an\s+)?",
                 r"\bwhat\s+does\s+\w+\s+mean\b",
@@ -133,12 +133,6 @@ class Chatbot:
                 r"\bdefine\b",
                 r"\bexplain\b",
                 r"\bwhat\s+are\s+\w+\b(?!.*\bingredients?\b)",
-            ],
-            [  # procedure_patterns
-                r"\bhow\s+do\s+(I|you)",
-                r"\bhow\s+to\b",
-                r"\bwhat\'?s\s+the\s+(way|method|process)\b",
-                r"\bcan\s+you\s+(show|tell|explain)\s+me\s+how\b",
             ],
             [  # quantity_patterns
                 r"\b(how\s+much|how\s+many|what\s+amount)",
@@ -330,13 +324,6 @@ class Chatbot:
             if any(re.search(pattern, query) for pattern in self.query_patterns[i]):
                 return i
 
-        doc = self.nlp(query)
-
-        # Use spaCy for more flexible matching
-        for i, identifier in enumerate(self.identification):
-            if identifier(doc):
-                return i
-
         return -1
 
     """
@@ -346,17 +333,6 @@ class Chatbot:
         "Show me the ingredients list."
         "Display the recipe."
     """
-
-    def _is_retrieval(self, doc):
-        root = doc[:].root
-        lemmas = {token.lemma_.lower() for token in doc}
-        retrieval_verbs = {"show", "display", "list", "give"}
-        if root.lemma_ in retrieval_verbs:
-            return True
-        if lemmas & retrieval_verbs:
-            return True
-        return False
-
     def _get_title(self):
         return f' --- {self.title["title"]} --- \n'
 
@@ -386,6 +362,33 @@ class Chatbot:
 
         return self.steps[idx]["description"]
 
+    def _retrieval_query(self, question: str):
+        if "name" in question or "title" in question:
+            return self._get_title()
+
+        if "ingredient" in question:
+            return self._get_ingredients()
+
+        if "step" in question or "direction" in question:
+            return self._get_steps()
+
+        if "recipe" in question:
+            return self._get_title() + self._get_ingredients() + self._get_steps()
+
+        return "Unclear question."
+
+
+    """
+    Navigation Queries
+    Moving between, repeating, or revisiting recipe steps.
+    Examples:
+        "Go back one step."
+        "Go to the next step."
+        "Repeat please."
+        "Take me to the first step."
+        "What’s next?"
+        "What was that again?"
+    """
     def _retrieve_step_index(self, question):
         if "last" in question:
             return len(self.steps) - 1
@@ -403,36 +406,6 @@ class Chatbot:
             freq[int(number)] += 1
 
         return freq.most_common(1)[0][0]
-
-    def _retrieval_query(self, question: str):
-        if "name" in question or "title" in question:
-            return self._get_title()
-
-        if "ingredient" in question:
-            return self._get_ingredients()
-
-        if "step" in question or "direction" in question:
-            return self._get_steps()
-
-        if "recipe" in question:
-            return self._get_title() + self._get_ingredients() + self._get_steps()
-
-        return "Unclear question."
-
-    """
-    Navigation Queries
-    Moving between, repeating, or revisiting recipe steps.
-    Examples:
-        "Go back one step."
-        "Go to the next step."
-        "Repeat please."
-        "Take me to the first step."
-        "What’s next?"
-        "What was that again?"
-    """
-
-    def _is_navigation(self, doc):
-        pass
 
     def _navigation_query(self, question: str):
         prev_keywords = ["back", "prior", "before", "prev"]
@@ -465,10 +438,6 @@ class Chatbot:
         "When is it done?"
         "What can I use instead of butter?"
     """
-
-    def _is_parameter(self, doc):
-        pass
-
     def _parameter_query(self, question):
         time_keywords = ["long", "time", "when", "done", "finished", "complete"]
         substitute_keywords = ["instead", "use", "replace", "what"]
@@ -501,8 +470,8 @@ class Chatbot:
 
             return f'{step["time"]["duration"]}.\n'
 
-        elif idx == 1:  # substitute
-            return "Substitutes currently unavailble.\n"
+        # elif idx == 1:  # substitute
+        #     return "Substitutes currently unavailble.\n"
 
         elif idx == 2:  # temperature
             if step["temperature"] == None:
@@ -516,10 +485,6 @@ class Chatbot:
     Examples:
         "What is a whisk?"
     """
-
-    def _is_clarification(self, doc):
-        pass
-
     def _extract_keyword(self, question):
         """
         Extracts keywords for clarification
@@ -567,9 +532,11 @@ class Chatbot:
         usage = ""
         definition = ""
         for tool in self.usages:
+            tool_tokens = tool.split()
             for token in tokens:
-                if token in tool:
-                    counter[tool] += 1
+                for tool_tok in tool_tokens:
+                    if token == tool_tok:
+                        counter[tool] += 1
 
         result = ""
         if len(counter) > 0:
@@ -578,8 +545,11 @@ class Chatbot:
             definition = self.usages[tool]["description"]
             result = f"{tool[0].upper() + tool[1:]} refers to {definition[0].lower() + definition[1:]}. {usage}\n"
 
-        result += f"Here is a YouTube search which may help further clarify your query: {self._get_youtube_link(query)}"
-        return result
+            result += f"Here is a YouTube search which may help further clarify your query: {self._get_youtube_link(query)}"
+
+            return result
+
+        return "Please clarify your query.\n"
 
     """
     Procedure Queries
@@ -587,18 +557,26 @@ class Chatbot:
     Specific: "How do I knead the dough?"
     Vague (step-dependent): "How do I do that?" — referring to the current step’s action.
     """
-
-    def _is_procedure(self, doc):
-        pass
-
     def _procedure_query(self, question):
-        step = self.steps[self.current_step]
-        methods = step["methods"]
+        tokens = question.split()
+        keyword = tokens[-1]
 
-        if methods == None:
-            return "No methods corresponding to this step.\n"
+        tokens = keyword.split()
+        counter = Counter()
 
-        return "Procedure not yet supported.\n"
+        for procedure in self.procedures:
+            proc_tokens = procedure.split()
+            for token in tokens:
+                for proc_tok in proc_tokens:
+                    if token == proc_tok:
+                        counter[procedure] += 1
+
+        if len(counter) == 0:
+            return 'Unclear procedure. Please clarify.\n'
+
+        mx = counter.most_common(1)[0][0]
+
+        return f'{mx[0].upper() + mx[1:]} means {self.procedures[mx][0].lower() + self.procedures[mx][1:]}\n'
 
     """
     Quantity Queries
@@ -606,10 +584,6 @@ class Chatbot:
     Specific: "How much flour do I need?"
     Vague (step-dependent): "How much of that do I need?" — referring to an ingredient mentioned in the current step.
     """
-
-    def _is_quantity(self, doc):
-        pass
-
     def _get_ingredient_quantity(self, query):
         quantity = -1
         unit = ""
@@ -629,12 +603,24 @@ class Chatbot:
 
     def _quantity_query(self, question):
         step = self.steps[self.current_step]
-        ingredient = step["ingredients"]
+        tokens = self._extract_keyword(question).split()
+        counter = Counter()
+        for idx, ing in enumerate(self.ingredients):
+            for tok in tokens:
+                if tok in ing['ingredient_name']:
+                    counter[idx] += 1
 
-        if ingredient == None:
-            return "No ingredients mentioned\n"
+        if len(counter) == 0:
+            ingredient = step["ingredients"]
 
-        ingredient = ingredient[0]
+            if ingredient == None:
+                return "No ingredients mentioned\n"
+
+            ingredient = ingredient[0]
+        else:
+            idx = counter.most_common(1)[0][0]
+            ingredient = self.ingredients[idx]['ingredient_name']
+
         quantity, unit = self._get_ingredient_quantity(ingredient)
 
         if quantity == "":
@@ -644,3 +630,7 @@ class Chatbot:
             return f"{quantity} of {ingredient}.\n"
         else:
             return f"{quantity} {ingredient}.\n"
+
+if __name__ == "__main__":
+    chatbot = Chatbot(test=True)
+    chatbot.converse()
