@@ -65,7 +65,8 @@ In the CLI run the following command:
 &nbsp;
 
 ## Allowed questions
-**Please look at `ALLOWED_QUESTIONS.txt`**
+- **Please look at `ALLOWED_QUESTIONS.txt`**
+- **Click here to go to the ALLOWED_QUESTIONS.txt file => [Allowed Questions](ALLOWED_QUESTIONS.txt)**
 
 &nbsp;
 
