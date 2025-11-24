@@ -4,13 +4,10 @@
 Retrieval Question
 1. Ask to show, display, list, give, or tell the recipe or any part of it, such as:
     1. "Show me the recipe"
-    2. "Display the ingredients" | "What are the ingredients?" | Which ingredients are needed?
+    2. "Display the ingredients" | "What are the ingredients?" | "Which ingredients are needed?"
     3. "List the steps" | "Give the directions" | "What are the steps?" | "Which steps are required?"
 
-2. how many ingredients in this step?
-    1. how many ingredients in this step
-
-3 Ask about descriptor and and preparation
+2. Ask about descriptor and and preparation
     1. "what kind of (ingredient_name)" | "what kind of parsley"
 #+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-
 
@@ -28,7 +25,7 @@ Navigation Question
     2. "Previous step" | "Prior step" | "Back one step" | "Go back"
 
 
-3. Repeat
+3. Repeat the current step
     1. "Repeat" | "Repeat please" | "Repeat that" | "Again"
 
 
