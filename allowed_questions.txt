@@ -51,7 +51,7 @@ Parameter Question
 #+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-
 Clarification Question
 1. “What’s a / an … ?” (add a tool name)
-    - "What’s a whisk?"
+    - "What is a whisk?"
 
 2. Using "define (___)" ask about a method
     1. "Define saute"
