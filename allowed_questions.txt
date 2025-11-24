@@ -1,0 +1,74 @@
+********** These are some representitve questions of each of the six questions categories **********
+
+#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-
+1. Ask to show, display, list, give, or tell the recipe or any part of it, such as:
+    1. "Show me the recipe"
+    2. "Display the ingredients" | "What are the ingredients?" | Which ingredients are needed?
+    3. "List the steps" | "Give the directions" | "What are the steps?" | "Which steps are required?"
+
+2. how many ingredients in this step?
+    1. how many ingredients in this step
+#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-
+
+
+#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-
+1. Go to next / previous / first / last step
+    1. "Go to the next step" | "Move to the next step" | "Jump to the next step" | "Skip to the next step" | "Take me to the next step" | .. etc
+    2. "Go to the previous step" | "Move to the previous step" | “Jump to the previous step” | .. etc
+    3. "Take me to the first step" | "First step"
+    4. "Take me to the last step" | "Last step"
+
+2. "Next / previous step" phrasing
+    1. "Next step”
+    2. "Previous step" | "Prior step" | "Back one step" | "Go back"
+
+
+3. Repeat
+    1. "Repeat" | "Repeat please" | "Repeat that" | "Again"
+
+
+4. Ask about the current step
+    1. "What is the current step?"
+#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-
+
+
+#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-
+1. Asking about time (duration)
+    1. "What time does this take?" | "How long should it stay in the oven?" | "How long to bake it?" | "How much time does this step need?" | "When is it done?"
+
+
+2. Asking about temperature
+    1. "How hot should the oven be?" | "how hot should it be" | "How hot does the pan need to be?" | "What temperature do I set it to?"
+#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-
+
+
+
+#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-
+1. “What’s a / an … ?” (add a tool name)
+    - "What’s a whisk?"
+
+
+2. Using "define (___)" ask about a method
+    1. "Define sauté"
+#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-
+
+
+
+#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-
+1. “How do I / you … ?” (Asking how to perform a cooking action or technique)
+    - "How do you make a roux?" | “How do you whip egg whites?"
+
+2. “How to …” (Instruction-style phrasing)
+    - "How to bake a cake?" | "How to boil pasta?"
+
+4. “Can you show/tell/explain me how … ?”
+    - "Can you show me how to whisk properly?" | "Can you tell me how to make a glaze?" | "Can you explain how to grill steak?"
+#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-
+
+
+#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-
+1. Asking “how much,” “how many,” or “what amount”
+    1. "How much sugar should I use?"
+    2. "How many eggs do I need?"
+    3. "What amount of flour is required?"
+#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-
