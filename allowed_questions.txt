@@ -24,10 +24,8 @@ Navigation Question
     1. "Next step”
     2. "Previous step" | "Prior step" | "Back one step" | "Go back"
 
-
 3. Repeat the current step
     1. "Repeat" | "Repeat please" | "Repeat that" | "Again"
-
 
 4. Ask about the current step
     1. "What is the current step?"
@@ -39,11 +37,9 @@ Parameter Question
 1. Asking about time (duration)
     1. "What time does this take?" | "How long should it stay in the oven?" | "How long to bake it?" | "How much time does this step need?" | "When is it done?"
 
-
 2. Asking about temperature
     1. "How hot should the oven be?" | "how hot should it be" | "How hot does the pan need to be?" | "What temperature do I set it to?"
 #+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-
-
 
 
 #+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-
@@ -51,11 +47,9 @@ Clarification Question
 1. “What’s a / an … ?” (add a tool name)
     - "What’s a whisk?"
 
-
 2. Using "define (___)" ask about a method
     1. "Define saute"
 #+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-
-
 
 
 #+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-
