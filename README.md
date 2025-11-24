@@ -65,7 +65,7 @@ In the CLI run the following command:
 &nbsp;
 
 ## Allowed questions
-TODO
+**Please look at `ALLOWED_QUESTIONS.txt`**
 
 &nbsp;
 
@@ -100,6 +100,7 @@ TODO
 ├── .gitignore
 ├── environment.yml
 ├── pyproject.toml
+├── ALLOWED_QUESTIONS.txt
 ├── README.md
 └── README.txt
 ```
