@@ -56,7 +56,7 @@ Clarification Question
 
 
 2. Using "define (___)" ask about a method
-    1. "Define sauté"
+    1. "Define saute"
 #+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-
 
 
@@ -70,7 +70,7 @@ Procedure Question
     - "How to bake a cake?" | "How to boil pasta?"
 
 4. “Can you show/tell/explain me how … ?”
-    - "Can you show me how to whisk properly?" | "Can you tell me how to make a glaze?" | "Can you explain how to grill steak?"
+    - "Can you show me how to whisk?" | "Can you tell me how to make a glaze?" | "Can you explain how to saute?"
 #+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-
 
 

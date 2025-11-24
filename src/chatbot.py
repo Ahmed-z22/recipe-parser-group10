@@ -288,7 +288,6 @@ class Chatbot:
             print(self.respond(query))
 
     def respond(self, query):
-        # try:
         query = self._clean_query(query)
         
         if 'what kind of' in query:
@@ -346,6 +345,9 @@ class Chatbot:
 
         if self.test and query[-1].isdigit():
             return int(query.split()[-1])
+
+        if 'define' in query:
+            return 3
 
         # First check for regex matches
         for i in range(len(self.query_patterns)):
@@ -585,8 +587,8 @@ class Chatbot:
     Specific: "How do I knead the dough?"
     Vague (step-dependent): "How do I do that?" — referring to the current step’s action.
     """
-    def _procedure_query(self, question):
-        tokens = question.split()
+    def _procedure_query(self, query):
+        tokens = query.split()
         keyword = tokens[-1]
 
         tokens = keyword.split()
@@ -599,12 +601,14 @@ class Chatbot:
                     if token == proc_tok:
                         counter[procedure] += 1
 
-        if len(counter) == 0:
-            return 'Unclear procedure. Please clarify.\n'
+        result = ''
+        if len(counter) >= 0:
+            mx = counter.most_common(1)[0][0]
+            result += f'{mx[0].upper() + mx[1:]} means {self.procedures[mx][0].lower() + self.procedures[mx][1:]}\n'
 
-        mx = counter.most_common(1)[0][0]
+        result += f"Here is a YouTube search which may help further clarify your query: {self._get_youtube_link(query)}\n"
 
-        return f'{mx[0].upper() + mx[1:]} means {self.procedures[mx][0].lower() + self.procedures[mx][1:]}\n'
+        return result
 
     """
     Quantity Queries
