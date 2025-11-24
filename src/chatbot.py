@@ -94,7 +94,7 @@ class Chatbot:
                 r"\bingredients?\s+list\b",
             ],
             [  # navigation_patterns
-                r"\b(go|move|jump|skip|take\s+me)\s+(to\s+)?(the\s+)?(next|previous|back|forward|first|last)",
+                r"\b(go|move|jump|skip|take\s+me)\s+(to\s+)?(the\s+)?",
                 r"\b(next|previous|prior|back|first|last)\s+(step|one)",
                 r"\bgo\s+back\b",
                 r"\bwhat\'?s?\s+next\b",
@@ -288,7 +288,33 @@ class Chatbot:
             print(self.respond(query))
 
     def respond(self, query):
+        # try:
         query = self._clean_query(query)
+        
+        if 'what kind of' in query:
+            query = query.split()
+            keyword = query[3]
+            
+            result = []
+            for ing in self.ingredients:
+                if keyword in ing['ingredient_name']:
+                    if ing['ingredient_descriptors'] is not None:
+                        result.append(' '.join(ing['ingredient_descriptors']))
+
+                    if ing['ingredient_preparation'] is not None:
+                        result.append(' '.join(ing['ingredient_descriptors']))
+                    break
+
+            if len(result) == 0:
+                return 'Unclear ingredient.\n'
+            result.append(keyword)
+
+            result = [val for i, val in enumerate(result) if not (i > 0 and val == result[i - 1])]
+            result = ' '.join(result)
+            result = result[0].upper() + result[1:] + '.\n'
+
+            return result
+
         question_type = self._identify_query(query)
 
         if question_type == -1:
@@ -298,6 +324,8 @@ class Chatbot:
             print(self.query_types[question_type])
 
         return self.responses[question_type](query)
+        # except:
+            # return "Unclear question type.\n"
 
     def _clean_query(self, query):
         """
