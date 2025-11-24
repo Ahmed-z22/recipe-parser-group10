@@ -2,13 +2,13 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 import sys
 import os
-from src.chatbot import Chatbot
 
 parent_dir = os.path.join(os.path.dirname(__file__), "..")
 src_dir = os.path.join(parent_dir, "src")
 sys.path.insert(0, parent_dir)
 sys.path.insert(0, src_dir)
 
+from src.chatbot import Chatbot
 
 app = Flask(__name__)
 CORS(app)
