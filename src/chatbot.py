@@ -302,7 +302,7 @@ class Chatbot:
                         result.append(' '.join(ing['ingredient_descriptors']))
 
                     if ing['ingredient_preparation'] is not None:
-                        result.append(' '.join(ing['ingredient_descriptors']))
+                        result.append(' '.join(ing['ingredient_preparation']))
                     break
 
             if len(result) == 0:

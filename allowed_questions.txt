@@ -1,6 +1,7 @@
-********** These are some representitve questions of each of the six questions categories **********
+********** These are some representitve questions for each of the six questions categories **********
 
 #+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-
+Retrieval Question
 1. Ask to show, display, list, give, or tell the recipe or any part of it, such as:
     1. "Show me the recipe"
     2. "Display the ingredients" | "What are the ingredients?" | Which ingredients are needed?
@@ -15,6 +16,7 @@
 
 
 #+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-
+Navigation Question
 1. Go to next / previous / first / last step
     1. "Go to the next step" | "Move to the next step" | "Jump to the next step" | "Skip to the next step" | "Take me to the next step" | .. etc
     2. "Go to the previous step" | "Move to the previous step" | “Jump to the previous step” | .. etc
@@ -36,6 +38,7 @@
 
 
 #+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-
+Parameter Question
 1. Asking about time (duration)
     1. "What time does this take?" | "How long should it stay in the oven?" | "How long to bake it?" | "How much time does this step need?" | "When is it done?"
 
@@ -47,6 +50,7 @@
 
 
 #+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-
+Clarification Question
 1. “What’s a / an … ?” (add a tool name)
     - "What’s a whisk?"
 
@@ -58,6 +62,7 @@
 
 
 #+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-
+Procedure Question
 1. “How do I / you … ?” (Asking how to perform a cooking action or technique)
     - "How do you make a roux?" | “How do you whip egg whites?"
 
@@ -70,6 +75,7 @@
 
 
 #+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-
+Quantity Question
 1. Asking “how much,” “how many,” or “what amount”
     1. "How much sugar should I use?"
     2. "How many eggs do I need?"
