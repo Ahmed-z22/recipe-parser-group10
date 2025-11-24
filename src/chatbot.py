@@ -171,7 +171,7 @@ class Chatbot:
     def _get_url(self):
         while True:
             if self.test:
-                url = "https://www.allrecipes.com/recipe/219491/to-die-for-chicken-pot-pie/"
+                url = "https://www.allrecipes.com/recipe/166160/juicy-thanksgiving-turkey/"
             else:
                 url = input("Please input the recipe URL: ")
 
@@ -288,43 +288,44 @@ class Chatbot:
             print(self.respond(query))
 
     def respond(self, query):
-        query = self._clean_query(query)
-        
-        if 'what kind of' in query:
-            query = query.split()
-            keyword = query[3]
+        try:
+            query = self._clean_query(query)
             
-            result = []
-            for ing in self.ingredients:
-                if keyword in ing['ingredient_name']:
-                    if ing['ingredient_descriptors'] is not None:
-                        result.append(' '.join(ing['ingredient_descriptors']))
+            if 'what kind of' in query:
+                query = query.split()
+                keyword = query[3]
+                
+                result = []
+                for ing in self.ingredients:
+                    if keyword in ing['ingredient_name']:
+                        if ing['ingredient_descriptors'] is not None:
+                            result.append(' '.join(ing['ingredient_descriptors']))
 
-                    if ing['ingredient_preparation'] is not None:
-                        result.append(' '.join(ing['ingredient_preparation']))
-                    break
+                        if ing['ingredient_preparation'] is not None:
+                            result.append(' '.join(ing['ingredient_preparation']))
+                        break
 
-            if len(result) == 0:
-                return 'Unclear ingredient.\n'
-            result.append(keyword)
+                if len(result) == 0:
+                    return 'Unclear ingredient.\n'
+                result.append(keyword)
 
-            result = [val for i, val in enumerate(result) if not (i > 0 and val == result[i - 1])]
-            result = ' '.join(result)
-            result = result[0].upper() + result[1:] + '.\n'
+                result = [val for i, val in enumerate(result) if not (i > 0 and val == result[i - 1])]
+                result = ' '.join(result)
+                result = result[0].upper() + result[1:] + '.\n'
 
-            return result
+                return result
 
-        question_type = self._identify_query(query)
+            question_type = self._identify_query(query)
 
-        if question_type == -1:
-            return "Unclear question type.\n"
+            if question_type == -1:
+                return "Unclear question type.\n"
 
-        if self.test:
-            print(self.query_types[question_type])
+            if self.test:
+                print(self.query_types[question_type])
 
-        return self.responses[question_type](query)
-        # except:
-            # return "Unclear question type.\n"
+            return self.responses[question_type](query)
+        except:
+            return "Unclear question.\n"
 
     def _clean_query(self, query):
         """
@@ -602,7 +603,7 @@ class Chatbot:
                         counter[procedure] += 1
 
         result = ''
-        if len(counter) >= 0:
+        if len(counter) > 0:
             mx = counter.most_common(1)[0][0]
             result += f'{mx[0].upper() + mx[1:]} means {self.procedures[mx][0].lower() + self.procedures[mx][1:]}\n'
 
