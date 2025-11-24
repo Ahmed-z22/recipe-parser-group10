@@ -8,6 +8,9 @@
 
 2. how many ingredients in this step?
     1. how many ingredients in this step
+
+3 Ask about descriptor and and preparation
+    1. "what kind of (ingredient_name)" | "what kind of sugar"
 #+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-
 
 
