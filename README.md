@@ -109,4 +109,4 @@ In the CLI run the following command:
 &nbsp;
 
 ## Note
-**For a detailed overview of the project structure and source code descriptions, see** `README.txt`.
+**For a detailed overview of the project structure and source code descriptions, see** [`README.txt`](README.txt).
