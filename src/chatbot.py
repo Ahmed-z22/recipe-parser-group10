@@ -452,7 +452,7 @@ class Chatbot:
         if "last" in question:
             return len(self.steps) - 1
 
-        for i in range(20):
+        for i in range(19, -1, -1):
             if self.step_words[i] in question or self.number_words[i] in question:
                 return i
 
@@ -464,7 +464,7 @@ class Chatbot:
         for number in numbers:
             freq[int(number)] += 1
 
-        return freq.most_common(1)[0][0]
+        return freq.most_common(1)[0][0] - 1
 
     def _navigation_query(self, question: str):
         prev_keywords = ["back", "prior", "before", "prev"]
