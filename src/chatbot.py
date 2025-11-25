@@ -292,28 +292,28 @@ class Chatbot:
         try:
             query = self._clean_query(query)
             if query == "what are the ingredients in the current step":
-                ings = self.steps[self.current_step]['ingredients']
+                ings = self.steps[self.current_step]["ingredients"]
 
                 if len(ings) == 0:
                     return "There are no ingredients in the current step.\n"
 
-                return f'The ingredients are: {', '.join(ings)}.\n'
+                return f"The ingredients are: {', '.join(ings)}.\n"
 
             if query == "what are the tools in the current step":
-                tools = self.steps[self.current_step]['tools']
+                tools = self.steps[self.current_step]["tools"]
 
                 if len(tools) == 0:
-                    return 'There are no tools in the current step.\n'
+                    return "There are no tools in the current step.\n"
 
-                return f'The tools are: {', '.join(tools)}.\n'
+                return f"The tools are: {', '.join(tools)}.\n"
 
-            if query == 'what are the methods in the current step':
-                methods = self.steps[self.current_step]['methods']
+            if query == "what are the methods in the current step":
+                methods = self.steps[self.current_step]["methods"]
 
                 if len(methods) == 0:
-                    return 'There are no methods in the current step.\n'
+                    return "There are no methods in the current step.\n"
 
-                return f'The methods are: {', '.join(methods)}.\n'
+                return f"The methods are: {', '.join(methods)}.\n"
 
             if "what kind of" in query:
                 query = query.split()
