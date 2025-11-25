@@ -525,7 +525,7 @@ class Chatbot:
             return "Can you please elaborate on your query?\n"
 
         elif idx == 0:  # time
-            if step["time"] == None:
+            if step["time"] is None:
                 return "No time available for this step.\n"
 
             return f'{step["time"]["duration"]}.\n'
@@ -534,7 +534,7 @@ class Chatbot:
         #     return "Substitutes currently unavailble.\n"
 
         elif idx == 2:  # temperature
-            if step["temperature"] == None:
+            if step["temperature"] is None:
                 return "No temperature available for this step.\n"
 
             return f'{step["temperature"]["value"]} {step["temperature"]["unit"]}.\n'
@@ -661,7 +661,7 @@ class Chatbot:
         if quantity == "":
             return None, None
 
-        if unit == None:
+        if unit is None:
             return quantity, False
 
         return f"{quantity} {unit}", True
@@ -678,7 +678,7 @@ class Chatbot:
         if len(counter) == 0:
             ingredient = step["ingredients"]
 
-            if ingredient == None:
+            if ingredient is None:
                 return "No ingredients mentioned\n"
 
             ingredient = ingredient[0]
