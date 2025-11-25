@@ -5,7 +5,6 @@ from src.methods_parser import MethodsParser
 from src.tools_parser import ToolsParser
 import re
 from collections import Counter
-import spacy
 from urllib.parse import quote
 from pathlib import Path
 import json
