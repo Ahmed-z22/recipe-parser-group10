@@ -6,7 +6,6 @@ Retrieval Question
     1. "Show me the recipe"
     2. "Display the ingredients" | "What are the ingredients?" | "Which ingredients are needed?"
     3. "List the steps" | "Give the directions" | "What are the steps?" | "Which steps are required?"
-    4. "Go to the nineth step" | "Go to the twentieth step" | "Go to the <x> step" where <x> is from 1 to 20
 
 2. Ask to show the ingredients, tools, or methods in the current step.
     1. "What are the ingredients in the current step?"
@@ -25,6 +24,7 @@ Navigation Question
     2. "Go to the previous step" | "Move to the previous step" | “Jump to the previous step” | .. etc
     3. "Take me to the first step" | "First step"
     4. "Take me to the last step" | "Last step"
+    5. "Go to the (x) step" where x can be any number or a word from "first/one" to "twentieth/twenty"
 
 2. "Next / previous step" phrasing
     1. "Next step”
