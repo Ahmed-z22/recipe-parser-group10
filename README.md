@@ -101,7 +101,7 @@ In the CLI run the following command:
 ├── .gitignore
 ├── environment.yml
 ├── pyproject.toml
-├── ALLOWED_QUESTIONS.txt
+├── allowed_questions.txt
 ├── README.md
 └── README.txt
 ```
