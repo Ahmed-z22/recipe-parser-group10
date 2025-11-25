@@ -6,7 +6,7 @@ Retrieval Question
     1. "Show me the recipe"
     2. "Display the ingredients" | "What are the ingredients?" | "Which ingredients are needed?"
     3. "List the steps" | "Give the directions" | "What are the steps?" | "Which steps are required?"
-    4. "Go to step the nineth step" | "Go to the twentieth step" | "Go to the <x> step" where <x> is from 1 to 20
+    4. "Go to the nineth step" | "Go to the twentieth step" | "Go to the <x> step" where <x> is from 1 to 20
 
 2. Ask to show the ingredients, tools, or methods in the current step.
     1. "What are the ingredients in the current step?"
@@ -54,7 +54,7 @@ Clarification Question
     - "What is a whisk?"
 
 2. Using "define (___)"  (about anything)
-    1. "Define saute"
+    - "Define saute"
 #+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-
 
 
@@ -66,7 +66,7 @@ Procedure Question
 2. “How to …” (Instruction-style phrasing)
     - "How to bake a cake?" | "How to boil pasta?"
 
-4. “Can you (show|tell|explain) me how … ?”
+3. “Can you (show|tell|explain) me how … ?”
     - "Can you show me how to whisk?" | "Can you tell me how to make a glaze?" | "Can you explain how to saute?"
 #+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-
 
