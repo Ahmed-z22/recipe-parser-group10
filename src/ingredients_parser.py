@@ -7,9 +7,8 @@ from google import genai
 from google.genai import types
 import os
 
-
 class IngredientsParser:
-    def __init__(self, ingredients: dict[str, list[str]], mode: str = "classical"):
+    def __init__(self, ingredients: dict[str, list[str]], mode: str = "classical", model_name: str = "gemini-2.5-flash-lite"):
         self.mode = mode
 
         if self.mode == "classical":
@@ -35,6 +34,7 @@ class IngredientsParser:
             )
             self.unit = re.compile(r"^\s*(?:" + self.units_pattern + r")\b\.?\s*", re.I)
             self.paren = re.compile(r"\([^)]*\)")
+
         else:
             self.path = Path(__file__).resolve().parent.parent
             load_dotenv(self.path / "apikey.env")
@@ -44,7 +44,7 @@ class IngredientsParser:
                     "GEMINI_API_KEY not found. Please set it in your .env file."
                 )
 
-            with open(self.path / "src" / "prompts" / "LLM_based_qa_prompt.txt", "r") as f:
+            with open(self.path / "src" / "prompts" / "ingredients_parser_prompt.txt", "r") as f:
                 self.system_prompt = f.read()
 
             self.client = genai.Client()
@@ -57,7 +57,6 @@ class IngredientsParser:
                     top_k=40,
                 ),
             )
-
 
     def _load_json(self, path: Path) -> dict[str, str]:
         with path.open("r", encoding="utf-8") as f:
