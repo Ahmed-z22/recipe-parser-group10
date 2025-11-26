@@ -214,23 +214,9 @@ class MethodsParser:
                 if m:
                     methods.append(m)
 
-        seen = set()
-        unique_methods = []
-        for m in methods:
-            if m not in seen:
-                seen.add(m)
-                unique_methods.append(m)
+        return methods
 
-        if self.method_keywords:
-            unique_methods = [
-                m
-                for m in unique_methods
-                if any(m == k or m.startswith(k + " ") for k in self.method_keywords)
-            ]
-
-        return unique_methods
-
-    def parse(self):
+    def parse(self, flag_llm=False):
         """
         Parse cooking directions and extract cooking methods from each step.
         Uses self.extract_methods() to identify cooking methods in each step.
@@ -247,7 +233,10 @@ class MethodsParser:
         for direction, steps in self.directions_split.items():
             output_dict = {"direction": direction, "steps": steps, "methods": ()}
             for step in steps:
-                methods_in_step = self.extract_methods(step)
+                if flag_llm:
+                    methods_in_step = self.extract_methods_llm(step)
+                else:
+                    methods_in_step = self.extract_methods(step)
                 # output_dict["methods"].append(methods_in_step)
                 output_dict["methods"] = list(
                     set(output_dict["methods"]) | set(methods_in_step)
