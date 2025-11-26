@@ -21,7 +21,6 @@ def make_classical_bot(url):
     bot = Chatbot(backend=True, mode="classical")
     success = bot.process_url(url)
     if not success:
-        # Fail fast so we don't store a half-initialized bot
         raise RuntimeError("Failed to process recipe URL in classical mode")
     return bot
 
@@ -30,7 +29,6 @@ def make_hybrid_bot(url):
     bot = Chatbot(backend=True, mode="hybrid")
     success = bot.process_url(url)
     if not success:
-        # Fail fast so we don't store a half-initialized bot
         raise RuntimeError("Failed to process recipe URL in hybrid mode")
     return bot
 
