@@ -1,10 +1,14 @@
 import json
 import spacy
 from pathlib import Path
-
+from dotenv import load_dotenv
+from google import genai
+from google.genai import types
+import os
 
 class MethodsParser:
-    def __init__(self, directions):
+    def __init__(self, directions, mode = "classical"):
+        self.mode = mode
         self.directions = directions["directions"]
         self.tools = None
         self.nlp = spacy.load("en_core_web_sm")
@@ -16,6 +20,17 @@ class MethodsParser:
             data = json.load(f)
 
         self.method_keywords = data.get("method_keywords")
+
+        if self.mode != "classical":
+            self.path = Path(__file__).resolve().parent.parent
+            load_dotenv(self.path / "apikey.env")
+            self.api_key = os.getenv("GEMINI_API_KEY")
+            if not self.api_key:
+                raise ValueError(
+                    "GEMINI_API_KEY not found. Please set it in your .env file."
+                )
+
+            self.client = genai.Client(api_key=self.api_key)
 
     # can maybe add this to the Steps section
     def split_directions_into_steps(self):
@@ -125,6 +140,17 @@ class MethodsParser:
                 for m in methods
                 if any(m == k or m.startswith(k + " ") for k in self.method_keywords)
             ]
+
+        return methods
+    
+    def extract_methods_llm(self, step):
+        """Extracts tools from a given step using LLM-based approach.
+        Args:
+            step (str): A single step from the recipe directions.
+        Returns:
+            list: A list of extracted tools found in the step.
+        """
+
 
         return methods
 
