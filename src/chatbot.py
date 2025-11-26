@@ -497,20 +497,25 @@ class Chatbot:
                 else:
                     return "Unclear question.\n"
 
-    
     def llm_respond(self, query, step):
         """
         Hybrid-mode LLM-based response for unsupported questions.
         """
-        print(step)
         try:
-            contents = self._message_formatting(
-                "raw ingredients:\n" + self.raw_ingredients +
-                "steps:\n" + self.raw_steps +
-                self.qa_prompt.strip() + 
-                "\n\nUser Question:\n" + 
-                query.strip()
+            ingredients_text = "\n".join(self.raw_ingredients["ingredients"])
+            steps_text = "\n".join(self.raw_steps["directions"])
+
+            full_prompt = (
+                self.qa_prompt.strip()
+                + "\n\nRECIPE INGREDIENTS:\n"
+                + ingredients_text
+                + "\n\nRECIPE STEPS:\n"
+                + steps_text
+                + "\n\nUser Question:\n"
+                + query.strip()
             )
+
+            contents = self._message_formatting(full_prompt)
 
             response = self.client.models.generate_content(
                 model=self.model_name,
@@ -527,27 +532,31 @@ class Chatbot:
             except AttributeError:
                 raw_parts = []
                 for cand in getattr(response, "candidates", []) or []:
-                    for part in getattr(getattr(cand, "content", None), "parts", []) or []:
+                    for part in (
+                        getattr(getattr(cand, "content", None), "parts", []) or []
+                    ):
                         if hasattr(part, "text"):
                             raw_parts.append(part.text)
                 raw = "".join(raw_parts)
 
             if raw is None:
-                return "Unclear question."
+                return None
 
             text = raw.strip()
 
             if text.startswith("```"):
-                text = re.sub(r"^```(?:txt|text|plain)?", "", text, flags=re.IGNORECASE).strip()
+                text = re.sub(
+                    r"^```(?:txt|text|plain)?", "", text, flags=re.IGNORECASE
+                ).strip()
                 if text.endswith("```"):
                     text = text[:-3].strip()
 
             if not text:
-                return "Unclear question."
+                return None
 
             return text
         except Exception:
-            return "Unclear question."
+            return None
 
     def _clean_query(self, query):
         """
