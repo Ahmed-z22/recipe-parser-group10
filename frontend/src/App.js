@@ -241,26 +241,47 @@ function App() {
                 </button>
               </div>
 
-              <div style={{ marginTop: '16px', marginBottom: '8px' }}>
-                <span style={{ marginRight: '12px' }}>System type:</span>
-                <label style={{ marginRight: '12px' }}>
-                  <input
-                    type="radio"
-                    value="classical"
-                    checked={mode === 'classical'}
-                    onChange={() => setMode('classical')}
-                  />{' '}
+              <div
+                style={{
+                  marginTop: '20px',
+                  display: 'flex',
+                  justifyContent: 'center',
+                  gap: '20px'
+                }}
+              >
+                <button
+                  onClick={() => setMode('classical')}
+                  className="mode-btn"
+                  style={{
+                    padding: '12px 22px',
+                    borderRadius: '10px',
+                    border: mode === 'classical' ? '2px solid #2196f3' : '2px solid #1b3a57',
+                    backgroundColor: mode === 'classical' ? '#2196f3' : '#1b3a57',
+                    color: 'white',
+                    cursor: 'pointer',
+                    fontSize: '16px',
+                    transition: '0.2s ease',
+                  }}
+                >
                   Classical NLP
-                </label>
-                <label>
-                  <input
-                    type="radio"
-                    value="llm"
-                    checked={mode === 'llm'}
-                    onChange={() => setMode('llm')}
-                  />{' '}
+                </button>
+
+                <button
+                  onClick={() => setMode('llm')}
+                  className="mode-btn"
+                  style={{
+                    padding: '12px 22px',
+                    borderRadius: '10px',
+                    border: mode === 'llm' ? '2px solid #2196f3' : '2px solid #1b3a57',
+                    backgroundColor: mode === 'llm' ? '#2196f3' : '#1b3a57',
+                    color: 'white',
+                    cursor: 'pointer',
+                    fontSize: '16px',
+                    transition: '0.2s ease',
+                  }}
+                >
                   LLM (Gemini)
-                </label>
+                </button>
               </div>
 
               <div className="supported-sites">
