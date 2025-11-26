@@ -6,4 +6,3 @@ pyrightconfig.json
 frontend/node_modules
 .ruff_cache/
 .vscode/
-apikey.env
