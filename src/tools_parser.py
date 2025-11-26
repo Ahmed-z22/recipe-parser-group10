@@ -169,7 +169,22 @@ class ToolsParser:
             ['large skillet', 'wooden spoon']
         """
 
-        
+        payload = json.dumps({"step": step}, ensure_ascii=False)
+        full_prompt = self.tools_prompt.strip() + "\n\nINPUT JSON:\n" + payload
+
+        contents = self._message_formatting(full_prompt)
+
+        response = self.client.models.generate_content(
+            model=self.model_name,
+            contents=contents,
+            config=types.GenerateContentConfig(
+                temperature=0.2,
+                top_p=0.8,
+                top_k=40,
+            ),
+        )
+
+        return tools
 
     def parse(self, flag_llm=False):
         """
