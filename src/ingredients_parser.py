@@ -35,7 +35,6 @@ class IngredientsParser:
             )
             self.unit = re.compile(r"^\s*(?:" + self.units_pattern + r")\b\.?\s*", re.I)
             self.paren = re.compile(r"\([^)]*\)")
-
         else:
             self.path = Path(__file__).resolve().parent.parent
             load_dotenv(self.path / "apikey.env")
@@ -44,7 +43,9 @@ class IngredientsParser:
                 raise ValueError(
                     "GEMINI_API_KEY not found. Please set it in your .env file."
                 )
-            
+
+            self.client = genai.Client(api_key=self.api_key)
+
             with open(self.path / "src" / "prompts" / "ingredients_names_prompt.txt", "r") as f:
                 self.ingredients_names_prompt = f.read()
             with open(self.path / "src" / "prompts" / "quantities_prompt.txt", "r") as f:
@@ -55,6 +56,8 @@ class IngredientsParser:
                 self.descriptors_prompt = f.read()
             with open(self.path / "src" / "prompts" / "preparations_prompt.txt", "r") as f:
                 self.preparations_prompt = f.read()
+
+            self.paren = re.compile(r"\([^)]*\)")
 
     def _load_json(self, path: Path) -> dict[str, str]:
         with path.open("r", encoding="utf-8") as f:
@@ -198,18 +201,27 @@ class IngredientsParser:
         self.preparations = results
 
 
-    def _message_formatting(self, context):
+    def _message_formatting(self, context: str) -> str:
         return (
-                "=== Context ===\n"
-                f"{context}\n\n"
-                "=== Context ===\n\n"
-                "Output:"
-                )
+            "=== Context ===\n"
+            f"{context}\n\n"
+            "=== Context ===\n\n"
+            "Output:"
+        )
     
-    def llm_based_extraction(self):
-        client = genai.Client()
-        chat = self.client.models.generate_content(
+    def _call_llm(self, task_prompt: str):
+        """
+        Calls the LLM with a given task prompt and the current ingredients list.
+        Expects the model to return ONLY a JSON array (no extra text).
+        """
+        payload = json.dumps({"ingredients": self.ingredients}, ensure_ascii=False)
+        full_prompt = task_prompt.strip() + "\n\nINPUT JSON:\n" + payload
+
+        contents = self._message_formatting(full_prompt)
+
+        response = self.client.models.generate_content(
             model=self.model_name,
+            contents=contents,
             config=types.GenerateContentConfig(
                 temperature=0.2,
                 top_p=0.8,
@@ -217,10 +229,62 @@ class IngredientsParser:
             )
         )
 
+        try:
+            raw = response.text
+        except AttributeError:
+            raw_parts = []
+            for cand in getattr(response, "candidates", []) or []:
+                for part in getattr(cand, "content", {}).parts or []:
+                    if hasattr(part, "text"):
+                        raw_parts.append(part.text)
+            raw = "".join(raw_parts)
 
+        if raw is None:
+            raise ValueError("LLM response had no text content.")
+
+        text = raw.strip()
+
+        if text.startswith("```"):
+            text = re.sub(r"^```(?:json)?", "", text, flags=re.IGNORECASE).strip()
+            if text.endswith("```"):
+                text = text[:-3].strip()
+
+        try:
+            return json.loads(text)
+        except json.JSONDecodeError as e:
+            raise ValueError(f"Failed to parse LLM JSON output: {e}\nRaw output:\n{text}") from e
+        
+    def llm_based_extraction(self):
+        """
+        Uses the LLM (with 5 task-specific prompts) to populate:
+        - self.ingredients_names
+        - self.ingredients_quantities_and_amounts
+        - self.ingredients_measurement_units
+        - self.descriptors
+        - self.preparations
+        """
+
+        self.ingredients_names = self._call_llm(self.ingredients_names_prompt)
+        self.ingredients_quantities_and_amounts = self._call_llm(self.quantities_prompt)
+        self.ingredients_measurement_units = self._call_llm(self.measurement_units_prompt)
+        self.descriptors = self._call_llm(self.descriptors_prompt)
+        self.preparations = self._call_llm(self.preparations_prompt)
+
+        n = len(self.ingredients)
+        for name, arr in [
+            ("ingredient_name", self.ingredients_names),
+            ("ingredient_quantity", self.ingredients_quantities_and_amounts),
+            ("measurement_unit", self.ingredients_measurement_units),
+            ("ingredient_descriptors", self.descriptors),
+            ("ingredient_preparation", self.preparations),
+        ]:
+            if not isinstance(arr, list) or len(arr) != n:
+                raise ValueError(
+                    f"LLM output for {name} must be a list of length {n}, got {type(arr)} with length {len(arr) if isinstance(arr, list) else 'N/A'}."
+                )
 
     def _parse_classical(self) -> list[dict[str, list[str] | str | int | float | None]]:
-        """ "
+        """
         Executes all extraction methods ingredients.
         returns: A list of dictionaries, each containing the parsed components of an ingredient:
             - original_ingredient_sentence: The original ingredient line.
@@ -230,6 +294,7 @@ class IngredientsParser:
             - ingredient_preparation: List of preparation phrases (list of str).
             - ingredient_descriptors: List of adjective descriptors (list of str).
         """
+
         self.extract_ingredients_names()
         self.extract_quantities()
         self.extract_measurement_units()
@@ -253,16 +318,24 @@ class IngredientsParser:
     
     def _parse_llm(self) -> list[dict[str, list[str] | str | int | float | None]]:
         """
-        returns: A list of dictionaries, each containing the parsed components of an ingredient:
-            - original_ingredient_sentence: The original ingredient line.
-            - ingredient_name: The extracted ingredient name (str).
-            - ingredient_quantity: The extracted quantity (int, float, or None).
-            - measurement_unit: The standardized measurement unit (str or None).
-            - ingredient_preparation: List of preparation phrases (list of str).
-            - ingredient_descriptors: List of adjective descriptors (list of str).
+        LLM-based parsing. Same output schema as _parse_classical.
         """
-        
+
         self.llm_based_extraction()
+
+        output = []
+        for i in range(len(self.ingredients)):
+            output.append(
+                {
+                    "original_ingredient_sentence": self.ingredients[i],
+                    "ingredient_name": self.ingredients_names[i],
+                    "ingredient_quantity": self.ingredients_quantities_and_amounts[i],
+                    "measurement_unit": self.ingredients_measurement_units[i],
+                    "ingredient_descriptors": self.descriptors[i],
+                    "ingredient_preparation": self.preparations[i],
+                }
+            )
+        return output
     
     def parse(self) -> list[dict[str, list[str] | str | int | float | None]]:
         """
