@@ -13,7 +13,7 @@ RESET = "\033[0m"
 BOLD = "\033[1m"
 
 class LLMBasedQA:
-    def __init__(self, url, model_name="gemini-2.5-flash-lite"):
+    def __init__(self, url, model_name="gemini-2.5-flash"):
 
         self.path = Path(__file__).resolve().parent.parent
         load_dotenv(self.path / "apikey.env")
