@@ -348,7 +348,8 @@ class StepsParser:
         for i, step_text in enumerate(atomic_steps, start=1):
             step_ingredients = self.extract_ingredients_from_step(step_text)
             step_tools = self.extract_tools(step_text)
-            time.sleep(10)  # to avoid rate limiting #
+            if self.mode != "classical":
+                time.sleep(10)  # to avoid rate limiting #
             step_methods = self.extract_methods(step_text)
             time_info = self.extract_time(step_text)
             temp_info = self.extract_temperature(step_text)
