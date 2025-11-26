@@ -56,29 +56,28 @@ class IngredientsParser:
 
             self.client = genai.Client(api_key=self.api_key)
 
-            with open(
-                self.path / "src" / "prompts" / "ingredients_names_prompt.txt", "r"
-            ) as f:
-                self.ingredients_names_prompt = f.read()
-            with open(
-                self.path / "src" / "prompts" / "quantities_prompt.txt", "r"
-            ) as f:
-                self.quantities_prompt = f.read()
-            with open(
-                self.path / "src" / "prompts" / "measurement_units_prompt.txt", "r"
-            ) as f:
-                self.measurement_units_prompt = f.read()
-            with open(
-                self.path / "src" / "prompts" / "descriptors_prompt.txt", "r"
-            ) as f:
-                self.descriptors_prompt = f.read()
-            with open(
-                self.path / "src" / "prompts" / "preparations_prompt.txt", "r"
-            ) as f:
-                self.preparations_prompt = f.read()
+            self.ingredients_names_prompt = self._load_text(
+                self.path / "src" / "prompts" / "ingredients_names_prompt.txt"
+            )
+            self.quantities_prompt = self._load_text(
+                self.path / "src" / "prompts" / "quantities_prompt.txt"
+            )
+            self.measurement_units_prompt = self._load_text(
+                self.path / "src" / "prompts" / "measurement_units_prompt.txt"
+            )
+            self.descriptors_prompt = self._load_text(
+                self.path / "src" / "prompts" / "descriptors_prompt.txt"
+            )
+            self.preparations_prompt = self._load_text(
+                self.path / "src" / "prompts" / "preparations_prompt.txt"
+            )
 
             self.paren = re.compile(r"\([^)]*\)")
 
+    def _load_text(self, path: Path) -> str:
+        with path.open("r", encoding="utf-8") as f:
+            return f.read()
+        
     def _load_json(self, path: Path) -> dict[str, str]:
         with path.open("r", encoding="utf-8") as f:
             return json.load(f)
