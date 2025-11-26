@@ -23,7 +23,7 @@ class LLMBasedQA:
                 "GEMINI_API_KEY not found. Please set it in your .env file."
             )
 
-        with open(self.path / "src" / "prompts" / "prompt_part2.txt", "r") as f:
+        with open(self.path / "src" / "prompts" / "LLM_based_qa_prompt.txt", "r") as f:
             self.system_prompt = f.read()
 
         self.client = genai.Client()
