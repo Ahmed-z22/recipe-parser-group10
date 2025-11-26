@@ -14,7 +14,6 @@ class MethodsParser:
         self.model_name = model_name
 
         self.directions = directions["directions"]
-        self.tools = None
         self.nlp = spacy.load("en_core_web_sm")
         self.directions_split = self.split_directions_into_steps()
         # Load method keywords from JSON file
@@ -61,11 +60,11 @@ class MethodsParser:
         return split_dirs
 
     def extract_methods(self, step):
-        """Extracts tools from a given step using spaCy NLP.
+        """Extracts methods from a given step using spaCy NLP.
         Args:
             step (str): A single step from the recipe directions.
         Returns:
-            list: A list of extracted tools found in the step.
+            list: A list of extracted methods found in the step.
         """
         doc = self.nlp(step)
         methods = []
@@ -153,11 +152,11 @@ class MethodsParser:
         return "=== Context ===\n" f"{context}\n\n" "=== Context ===\n\n" "Output:"
 
     def extract_methods_llm(self, step):
-        """Extracts tools from a given step using LLM-based approach.
+        """Extracts methods from a given step using LLM-based approach.
         Args:
             step (str): A single step from the recipe directions.
         Returns:
-            list: A list of extracted tools (methods) found in the step.
+            list: A list of extracted methods found in the step.
         """
         payload = json.dumps({"step": step}, ensure_ascii=False)
         full_prompt = self.methods_prompt.strip() + "\n\nINPUT JSON:\n" + payload
@@ -211,7 +210,7 @@ class MethodsParser:
 
         return methods
 
-    def parse(self, flag_llm=False):
+    def parse(self):
         """
         Parse cooking directions and extract cooking methods from each step.
         Uses self.extract_methods() to identify cooking methods in each step.
@@ -228,10 +227,10 @@ class MethodsParser:
         for direction, steps in self.directions_split.items():
             output_dict = {"direction": direction, "steps": steps, "methods": ()}
             for step in steps:
-                if flag_llm:
-                    methods_in_step = self.extract_methods_llm(step)
-                else:
+                if self.mode == "classical":
                     methods_in_step = self.extract_methods(step)
+                else:
+                    methods_in_step = self.extract_methods_llm(step)
                 output_dict["methods"] = list(
                     set(output_dict["methods"]) | set(methods_in_step)
                 )
