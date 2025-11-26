@@ -391,8 +391,7 @@ class IngredientsParser:
         Parses the ingredients based on the selected mode.
 
         - "classical": spaCy-based pipeline only.
-        - "hybrid": try LLM first; if it fails for any reason, fall back to classical.
-        - anything else: treat as full LLM mode.
+        - "hybrid": LLM-based extraction with fallbacks to classical methods.
         """
         if self.mode == "classical":
             return self._parse_classical()
