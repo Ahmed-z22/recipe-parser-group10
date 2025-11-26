@@ -124,6 +124,19 @@ For answering questions about a scraped recipe.
 3 - Parses structured ingredients, tools, methods, and atomic steps using the aforementioned classes. 
 4 - Maintains current_step state for navigation.
 5 - Parses questions and answer them
+------------------------------------------------------------------------------------------------------------------------------
+
+LLM_based_qa.py
+
+Defines LLMBasedQA, a wrapper around Google Gemini for recipe-question answering.
+Behavior:
+1 - Loads API key from apikey.env and system prompt from prompts/prompt_part2.txt.
+2 - Initializes a Gemini chat session with controlled decoding settings.
+3 - Scrapes recipe title, ingredients, and directions using get_recipe_data(url).
+4 - Formats recipe data + user question into a structured prompt.
+5 - Sends queries to the model and returns the latest answer.
+When run directly:
+• Prompts for a recipe URL, starts an interactive terminal Q&A loop, and responds until the user exits.
 #+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-
 
 
