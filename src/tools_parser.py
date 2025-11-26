@@ -10,7 +10,7 @@ import re
 
 
 class ToolsParser:
-    def __init__(self, directions, mode="classical", model_name="gemini-2.5-flash-lite"):
+    def __init__(self, directions, mode="classical", model_name="gemini-2.0-flash-lite"):
         self.mode = mode
         self.model_name = model_name
 
@@ -218,7 +218,7 @@ class ToolsParser:
 
         return tools
 
-    def parse(self):
+    def parse(self, flag_llm=False):
         """
         Parse directions and extract tools used in each direction's steps.
         Relies on the extract_tools() method to identify tools from step text.
@@ -235,10 +235,10 @@ class ToolsParser:
         for direction, steps in self.directions_split.items():
             output_dict = {"direction": direction, "steps": steps, "tools": ()}
             for step in steps:
-                if self.mode == "classical":
-                    tools_in_step = self.extract_tools(step)
-                else:
+                if flag_llm:
                     tools_in_step = self.extract_tools_llm(step)
+                else:
+                    tools_in_step = self.extract_tools(step)
                 output_dict["tools"] = list(
                     set(output_dict["tools"]) | set(tools_in_step)
                 )

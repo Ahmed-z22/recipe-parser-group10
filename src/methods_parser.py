@@ -215,7 +215,7 @@ class MethodsParser:
 
         return methods
 
-    def parse(self):
+    def parse(self, flag_llm=False):
         """
         Parse cooking directions and extract cooking methods from each step.
         Uses self.extract_methods() to identify cooking methods in each step.
@@ -232,10 +232,10 @@ class MethodsParser:
         for direction, steps in self.directions_split.items():
             output_dict = {"direction": direction, "steps": steps, "methods": ()}
             for step in steps:
-                if self.mode == "classical":
-                    methods_in_step = self.extract_methods(step)
-                else:
+                if flag_llm:
                     methods_in_step = self.extract_methods_llm(step)
+                else:
+                    methods_in_step = self.extract_methods(step)
                 output_dict["methods"] = list(
                     set(output_dict["methods"]) | set(methods_in_step)
                 )
