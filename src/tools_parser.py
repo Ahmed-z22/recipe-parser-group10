@@ -147,6 +147,14 @@ class ToolsParser:
         )
         return tools
 
+    def _message_formatting(self, context: str) -> str:
+        return (
+            "=== Context ===\n"
+            f"{context}\n\n"
+            "=== Context ===\n\n"
+            "Output:"
+        )
+
     def parse(self, flag_llm=False):
         """
         Parse directions and extract tools used in each direction's steps.
