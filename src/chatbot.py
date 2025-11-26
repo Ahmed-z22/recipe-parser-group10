@@ -1,3 +1,4 @@
+import time
 from src.scraper import get_recipe_data
 from src.ingredients_parser import IngredientsParser
 from src.steps_parser import StepsParser
@@ -233,10 +234,16 @@ class Chatbot:
         if self.test:
             print("Ingredients parsed")
 
+        print("Waiting to avoid rate limiting...")
+        time.sleep(60)  # to avoid rate limiting
+
         methods = MethodsParser(self.raw_steps, self.mode)
         self.methods = methods.parse()
         if self.test:
             print("Methods parsed")
+
+        print("Waiting to avoid rate limiting...")
+        time.sleep(60)  # to avoid rate limiting
 
         steps = StepsParser(self.raw_steps, self.ingredients, self.mode)
         self.steps = steps.parse()
@@ -246,6 +253,9 @@ class Chatbot:
 
         if self.test:
             print("Steps parsed")
+
+        print("Waiting to avoid rate limiting...")
+        time.sleep(60)  # to avoid rate limiting
 
         tools = ToolsParser(self.raw_steps, self.mode)
         self.tools = tools.parse()
@@ -700,5 +710,5 @@ class Chatbot:
 
 
 if __name__ == "__main__":
-    chatbot = Chatbot()
+    chatbot = Chatbot(mode="hybrid", test=True)
     chatbot.converse()
