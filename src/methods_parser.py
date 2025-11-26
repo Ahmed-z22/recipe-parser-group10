@@ -237,7 +237,6 @@ class MethodsParser:
                     methods_in_step = self.extract_methods_llm(step)
                 else:
                     methods_in_step = self.extract_methods(step)
-                # output_dict["methods"].append(methods_in_step)
                 output_dict["methods"] = list(
                     set(output_dict["methods"]) | set(methods_in_step)
                 )
