@@ -35,9 +35,11 @@ Backend must be running on port **5001**.
 ### Select a Processing Mode
 - Classical NLP
 - LLM (Gemini)
+- Hybrid (NLP + LLM)
+    - <span style="color:red; font-weight:bold">Hybrid mode may be very slow without a Gemini subscription — loading can take up to around 5 minutes</span>
 
 ### Steps
-1. Enter a supported recipe URL (allrecipes.com, epicurious.com, bonappetit.com)
+1. Enter a recipe URL from one of these supported websites (allrecipes.com, epicurious.com, bonappetit.com)
 2. Click **Load Recipe**
 3. Ask questions about the recipe
 4. Explore the TTS feature!
@@ -56,7 +58,7 @@ Backend must be running on port **5001**.
 
 ## Running the recipe parser (CLI)
 
-### Classical NLP mode
+### Classical NLP or Hybrid (NLP + LLM) modes
 >> python -m src.chatbot
 
 ### LLM (Gemini) mode:
@@ -101,7 +103,14 @@ Backend must be running on port **5001**.
 │   │   ├── units_map.json
 │   │   └── usages.json
 │   ├── prompts
-│   │   └── LLM_based_qa_prompt.txt
+│   │   ├── descriptors_prompt.txt
+│   │   ├── ingredients_names_prompt.txt
+│   │   ├── LLM_based_qa_prompt.txt
+│   │   ├── measurement_units_prompt.txt
+│   │   ├── methods_prompt.txt
+│   │   ├── preparations_prompt.txt
+│   │   ├── quantities_prompt.txt
+│   │   └── tools_prompt.txt
 │   ├── __init__.py
 │   ├── chatbot.py
 │   ├── ingredients_parser.py
