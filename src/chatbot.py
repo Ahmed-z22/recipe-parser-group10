@@ -67,6 +67,15 @@ class Chatbot:
             ) as f:
                 self.parameter_clarification_procedure_prompt = f.read()
 
+            with open(
+                self.path
+                / "src"
+                / "prompts"
+                / "qa_prompt.txt",
+                "r",
+            ) as f:
+                self.qa_prompt = f.read()
+
         self.step_words = [
             "first",
             "second",
@@ -326,7 +335,7 @@ class Chatbot:
         Parses all metadata related to URL
         """
 
-        ingredients = IngredientsParser(self.raw_ingredients, self.mode)
+        ingredients = IngredientsParser(self.raw_ingredients)
         self.ingredients = ingredients.parse()
         if self.test:
             print("Ingredients parsed")
@@ -465,15 +474,89 @@ class Chatbot:
 
             question_type = self._identify_query(query)
 
-            if question_type == -1:
+            if question_type == -1 and self.mode == "classical":
                 return "Unclear question type.\n"
+            elif question_type == -1 and self.mode != "classical":
+                llm_answer = self.llm_respond(query, self.steps[self.current_step])
+                if llm_answer is not None and llm_answer != "":
+                    return llm_answer
+                else:
+                    return "Unclear question type.\n"
 
             if self.test:
                 print(self.query_types[question_type])
 
             return self.responses[question_type](query)
         except:
-            return "Unclear question.\n"
+            if self.mode == "classical":
+                return "Unclear question.\n"
+            else:
+                llm_answer = self.llm_respond(query, self.steps[self.current_step])
+                if llm_answer is not None and llm_answer != "":
+                    return llm_answer
+                else:
+                    return "Unclear question.\n"
+
+    def llm_respond(self, query, step):
+        """
+        Hybrid-mode LLM-based response for unsupported questions.
+        """
+        try:
+            ingredients_text = "\n".join(self.raw_ingredients["ingredients"])
+            steps_text = "\n".join(self.raw_steps["directions"])
+
+            full_prompt = (
+                self.qa_prompt.strip()
+                + "\n\nRECIPE INGREDIENTS:\n"
+                + ingredients_text
+                + "\n\nRECIPE STEPS:\n"
+                + steps_text
+                + "\n\nUser Question:\n"
+                + query.strip()
+            )
+
+            contents = self._message_formatting(full_prompt)
+
+            response = self.client.models.generate_content(
+                model=self.model_name,
+                contents=contents,
+                config=types.GenerateContentConfig(
+                    temperature=0.2,
+                    top_p=0.8,
+                    top_k=40,
+                ),
+            )
+
+            try:
+                raw = response.text
+            except AttributeError:
+                raw_parts = []
+                for cand in getattr(response, "candidates", []) or []:
+                    for part in (
+                        getattr(getattr(cand, "content", None), "parts", []) or []
+                    ):
+                        if hasattr(part, "text"):
+                            raw_parts.append(part.text)
+                raw = "".join(raw_parts)
+
+            if raw is None:
+                return None
+
+            text = raw.strip()
+
+            if text.startswith("```"):
+                text = re.sub(
+                    r"^```(?:txt|text|plain)?", "", text, flags=re.IGNORECASE
+                ).strip()
+                if text.endswith("```"):
+                    text = text[:-3].strip()
+
+            if not text:
+                return None
+
+            return text
+        except Exception:
+            return None
 
     def _clean_query(self, query):
         """
