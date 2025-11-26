@@ -129,12 +129,14 @@ For answering questions about a scraped recipe.
 LLM_based_qa.py
 
 Defines LLMBasedQA, a wrapper around Google Gemini for recipe-question answering.
+
 Behavior:
 1 - Loads API key from apikey.env and system prompt from prompts/prompt_part2.txt.
 2 - Initializes a Gemini chat session with controlled decoding settings.
 3 - Scrapes recipe title, ingredients, and directions using get_recipe_data(url).
 4 - Formats recipe data + user question into a structured prompt.
 5 - Sends queries to the model and returns the latest answer.
+
 When run directly:
 • Prompts for a recipe URL, starts an interactive terminal Q&A loop, and responds until the user exits.
 #+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-
@@ -148,14 +150,17 @@ When run directly:
 
 api.py
 
-Flask API wrapping the Chatbot and parsers.
+Flask API for both the classical parser-based chatbot and the LLM-based QA bot, with per-session state.
 
-make_chatbot(url): builds a chatbot instance with parsed recipe metadata.
+• make_classical_bot(url): builds a Chatbot instance and parses the recipe.
+• make_llm_bot(url): builds an LLMBasedQA instance for LLM-only Q&A.
 
 Endpoints:
-• POST /api/initialize → creates chatbot, returns title
-• POST /api/chat → processes a question, returns response + step indices
-• GET /api/health → health check
+• POST /api/initialize → takes url, session_id, and mode; creates bot instance, stores it, and returns recipe title + mode.
+• POST /api/chat → routes question to the correct bot;
+    - classical: returns response, current_step, total_steps
+    – llm: returns the LLM answer with current_step = 0, total_steps = 0
+• GET /api/health → health check.
 
 Runs on 127.0.0.1:5001 when executed directly.
 #+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-
