@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 from google import genai
 from google.genai import types
 import os
+import time
 
 
 class IngredientsParser:
@@ -281,6 +282,7 @@ class IngredientsParser:
 
         try:
             self.ingredients_names = self._call_llm(self.ingredients_names_prompt)
+            time.sleep(15)  
         except Exception:
             self.extract_ingredients_names()  # Fallback to classical extraction
 
@@ -291,11 +293,13 @@ class IngredientsParser:
 
         try:
             self.descriptors = self._call_llm(self.descriptors_prompt)
+            time.sleep(15)
         except Exception:
             self.extract_descriptors()  # Fallback to classical extraction
         
         try:
             self.preparations = self._call_llm(self.preparations_prompt)
+            time.sleep(15)
         except Exception:
             self.extract_preparations()  # Fallback to classical extraction
 
