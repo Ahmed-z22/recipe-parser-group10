@@ -29,6 +29,7 @@ For the current step, identify the following only if explicitly stated in the st
 Ingredients used
 if asked about the ingredients in the current step
 Identify which ingredients from the recipe are referenced in the step, even if the wording is slightly different. When listing them, output the ingredient exactly as it appears in the recipe’s ingredient list.
+If a step references a part of an ingredient (e.g., backbone, skin, bones, zest, peel), treat it as referencing the full ingredient and list the full ingredient name exactly as written in the recipe's ingredient list.
 Preserve the step's wording (e.g., "thinly sliced onion" must stay exactly as written).
 If no ingredients are mentioned:
 Respond: "This step does not mention any ingredients."
