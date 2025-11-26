@@ -6,9 +6,7 @@ A recipe parsing project — developed as part of **COMP SCI 337** at **Northwes
 &nbsp;
 
 ## Conda environment
-
 >> conda env create -f environment.yml
-
 >> conda activate recipe-parser-group10
 
 &nbsp;
@@ -16,34 +14,31 @@ A recipe parsing project — developed as part of **COMP SCI 337** at **Northwes
 ## Running the recipe parser (UI)
 
 ### Backend
-
 Run the backend api in separate terminal:
-
 >> python backend/api.py
-
 Runs on **[http://localhost:5001](http://localhost:5001)**.
 
 ### Frontend
-
 To setup and run the UI, open new terminal window and run the following commands
-
 >> cd frontend/ 
-
 >> npm install
-
 >> npm start
 
 Opens at **[http://localhost:3000](http://localhost:3000)**.
 Backend must be running on port **5001**.
 
-### Usage (UI)
+### Select a Processing Mode
+- Classical NLP
+- LLM (Gemini)
+
+### Steps
 1. Enter a supported recipe URL (allrecipes.com, epicurious.com, bonappetit.com)
 2. Click **Load Recipe**
 3. Ask questions about the recipe
 4. Explore the TTS feature!
 5. Explore talking to the agent using the record button! (STT)
 
-### Supported websites
+### Supported browsers
 1. `Google Chroom`
 2. `Safari`
 3. `Firefox (only TTS is supported)`
@@ -55,16 +50,23 @@ Backend must be running on port **5001**.
 &nbsp;
 
 ## Running the recipe parser (CLI)
-In the CLI run the following command:
+
+### Classical NLP mode
 >> python -m src.chatbot
 
+### LLM (Gemini) mode:
+>> python -m src.LLM_based_qa
+
 ### Usage (CLI)
-1. Enter a supported recipe URL (allrecipes.com, epicurious.com, bonappetit.com)
+1. Enter a recipe URL from a supported website
+    - allrecipes.com
+    - epicurious.com
+    - bonappetit.com
 2. Ask questions about the recipe
 
 &nbsp;
 
-## Allowed questions
+## Allowed questions (Only for Classical NLP mode)
 - **Please look at `allowed_questions.txt` to see some of the questions examples**
 - **Click here to go to [`allowed_questions.txt`](allowed_questions.txt)**
 
