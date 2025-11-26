@@ -200,7 +200,6 @@ class IngredientsParser:
             results.append([line] if keep and line else [])
         self.preparations = results
 
-
     def _message_formatting(self, context: str) -> str:
         return (
             "=== Context ===\n"
@@ -283,6 +282,20 @@ class IngredientsParser:
                     f"LLM output for {name} must be a list of length {n}, got {type(arr)} with length {len(arr) if isinstance(arr, list) else 'N/A'}."
                 )
 
+    def _clean_name_with_descriptors(self, name: str, descriptors: list[str]) -> str:
+        """
+        Remove any token from ingredient_name that also appears in ingredient_descriptors.
+        """
+        if not name:
+            return name
+
+        name_tokens = name.split()
+        desc_set = set(descriptors or [])
+
+        cleaned = [tok for tok in name_tokens if tok not in desc_set]
+
+        return " ".join(cleaned).strip()
+
     def _parse_classical(self) -> list[dict[str, list[str] | str | int | float | None]]:
         """
         Executes all extraction methods ingredients.
@@ -315,7 +328,7 @@ class IngredientsParser:
             )
 
         return output
-    
+
     def _parse_llm(self) -> list[dict[str, list[str] | str | int | float | None]]:
         """
         LLM-based parsing. Same output schema as _parse_classical.
@@ -325,10 +338,11 @@ class IngredientsParser:
 
         output = []
         for i in range(len(self.ingredients)):
+            cleaned_name = self._clean_name_with_descriptors(self.ingredients_names[i], self.descriptors[i])
             output.append(
                 {
                     "original_ingredient_sentence": self.ingredients[i],
-                    "ingredient_name": self.ingredients_names[i],
+                    "ingredient_name": cleaned_name,
                     "ingredient_quantity": self.ingredients_quantities_and_amounts[i],
                     "measurement_unit": self.ingredients_measurement_units[i],
                     "ingredient_descriptors": self.descriptors[i],
@@ -336,7 +350,7 @@ class IngredientsParser:
                 }
             )
         return output
-    
+
     def parse(self) -> list[dict[str, list[str] | str | int | float | None]]:
         """
         Parses the ingredients based on the selected mode (classical or LLM).
