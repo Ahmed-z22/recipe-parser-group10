@@ -82,6 +82,5 @@ if __name__ == "__main__":
 
         question, answer = llm_qa.answer(user_question)
 
-        # Assistant label in magenta
         print(BOLD + MAGENTA + "Assistant:" + RESET)
         print(f"{answer}\n")
