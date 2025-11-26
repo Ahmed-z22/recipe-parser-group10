@@ -13,7 +13,9 @@ import json
 class Chatbot:
     """Initialize Chatbot"""
 
-    def __init__(self, test=False, backend=False):
+    def __init__(self, mode="classical", test=False, backend=False):
+        self.mode = mode
+        
         self.responses = [
             self._retrieval_query,
             self._navigation_query,
@@ -226,17 +228,17 @@ class Chatbot:
         Parses all metadata related to URL
         """
 
-        ingredients = IngredientsParser(self.raw_ingredients)
+        ingredients = IngredientsParser(self.raw_ingredients, self.mode)
         self.ingredients = ingredients.parse()
         if self.test:
             print("Ingredients parsed")
 
-        methods = MethodsParser(self.raw_steps)
+        methods = MethodsParser(self.raw_steps, self.mode)
         self.methods = methods.parse()
         if self.test:
             print("Methods parsed")
 
-        steps = StepsParser(self.raw_steps, self.ingredients)
+        steps = StepsParser(self.raw_steps, self.ingredients, self.mode)
         self.steps = steps.parse()
 
         for step in self.steps:
@@ -245,7 +247,7 @@ class Chatbot:
         if self.test:
             print("Steps parsed")
 
-        tools = ToolsParser(self.raw_steps)
+        tools = ToolsParser(self.raw_steps, self.mode)
         self.tools = tools.parse()
         if self.test:
             print("Tools parsed")
