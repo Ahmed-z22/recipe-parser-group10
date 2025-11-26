@@ -9,18 +9,22 @@ sys.path.insert(0, parent_dir)
 sys.path.insert(0, src_dir)
 
 from src.chatbot import Chatbot
+from src.LLM_based_qa import LLMBasedQA
 
 app = Flask(__name__)
 CORS(app)
 
-chatbots = {}
+sessions = {}
 
 
-def make_chatbot(url):
-    chatbot = Chatbot(backend=True)
-    chatbot.process_url(url)
+def make_classical_bot(url):
+    bot = Chatbot(backend=True)
+    bot.process_url(url)
+    return bot
 
-    return chatbot
+
+def make_llm_bot(url):
+    return LLMBasedQA(url)
 
 
 @app.route("/api/initialize", methods=["POST"])
@@ -28,17 +32,25 @@ def initialize():
     data = request.json
     url = data.get("url")
     sid = data.get("session_id", "default")
+    mode = data.get("mode", "classical")
 
     if not url:
         return jsonify({"error": "URL is required"}), 400
 
-    try:
-        bot = make_chatbot(url)
-        chatbots[sid] = bot
+    if mode not in ["classical", "llm"]:
+        return jsonify({"error": "Invalid mode"}), 400
 
-        return jsonify(
-            {"success": True, "title": bot.title.get("title", "Unknown Recipe")}
-        )
+    try:
+        if mode == "classical":
+            bot = make_classical_bot(url)
+            title = bot.title.get("title", "Unknown Recipe")
+        else:
+            bot = make_llm_bot(url)
+            title = bot.title.get("title", "Unknown Recipe")
+
+        sessions[sid] = {"mode": mode, "bot": bot}
+
+        return jsonify({"success": True, "title": title, "mode": mode})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
@@ -52,24 +64,40 @@ def chat():
     if not question:
         return jsonify({"error": "Question is required"}), 400
 
-    if sid not in chatbots:
+    if sid not in sessions:
         return jsonify({"error": "Chatbot not initialized"}), 400
 
-    bot = chatbots[sid]
+    session = sessions[sid]
+    mode = session["mode"]
+    bot = session["bot"]
 
     try:
-        response = bot.respond(question)
+        if mode == "classical":
+            response = bot.respond(question)
+            if not response:
+                response = "No response."
 
-        if not response:
-            response = "No response."
+            return jsonify(
+                {
+                    "response": response,
+                    "current_step": bot.current_step,
+                    "total_steps": len(bot.steps),
+                    "mode": mode,
+                }
+            )
 
-        return jsonify(
-            {
-                "response": response,
-                "current_step": bot.current_step,
-                "total_steps": len(bot.steps),
-            }
-        )
+        else:
+            _, answer = bot.answer(question)
+            response = answer or "No response."
+
+            return jsonify(
+                {
+                    "response": response,
+                    "current_step": 0,
+                    "total_steps": 0,
+                    "mode": mode,
+                }
+            )
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
