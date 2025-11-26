@@ -10,13 +10,20 @@ from urllib.parse import quote
 from pathlib import Path
 import json
 
+GREEN = "\033[92m"
+CYAN = "\033[96m"
+YELLOW = "\033[93m"
+MAGENTA = "\033[95m"
+RESET = "\033[0m"
+BOLD = "\033[1m"
+
 
 class Chatbot:
     """Initialize Chatbot"""
 
     def __init__(self, mode="classical", test=False, backend=False):
         self.mode = mode
-        
+
         self.responses = [
             self._retrieval_query,
             self._navigation_query,
@@ -176,7 +183,7 @@ class Chatbot:
             if self.test:
                 url = "https://www.allrecipes.com/recipe/166160/juicy-thanksgiving-turkey/"
             else:
-                url = input("Please input the recipe URL: ")
+                url = input(YELLOW + "Enter the recipe URL: " + RESET)
 
             if self.process_url(url):
                 break
@@ -286,9 +293,26 @@ class Chatbot:
         Maintains continual loop of conversation while updating internal state
         """
 
+        print(
+            CYAN + "\n------------------------------------------------------------" + RESET
+        )
+        print(BOLD + "You can now ask questions about the recipe." + RESET)
+        print("(Type 'exit' or 'quit' to stop)")
+        print(
+            CYAN + "------------------------------------------------------------\n" + RESET
+        )
+
         while True:
-            query = input("Please input a question: ")
-            print(self.respond(query))
+            query = input(GREEN + "You: " + RESET)
+
+            if query.lower().strip() in ("exit", "quit"):
+                print(CYAN + "\nGoodbye!\n" + RESET)
+                break
+
+            answer = self.respond(query)
+
+            print(BOLD + MAGENTA + "Assistant:" + RESET)
+            print(f"{answer}\n")
 
     def respond(self, query):
         try:
@@ -609,7 +633,10 @@ class Chatbot:
             definition = self.usages[tool]["description"]
             result = f"{tool[0].upper() + tool[1:]} refers to {definition[0].lower() + definition[1:]}. {usage}\n"
 
-            result += f"Here is a YouTube search which may help further clarify your query: {self._get_youtube_link(query)}"
+            result += (
+                "Here is a YouTube search which may help further clarify your query: "
+                f"{self._get_youtube_link(query)}"
+            )
 
             return result
 
@@ -639,9 +666,15 @@ class Chatbot:
         result = ""
         if len(counter) > 0:
             mx = counter.most_common(1)[0][0]
-            result += f"{mx[0].upper() + mx[1:]} means {self.procedures[mx][0].lower() + self.procedures[mx][1:]}\n"
+            result += (
+                f"{mx[0].upper() + mx[1:]} means "
+                f"{self.procedures[mx][0].lower() + self.procedures[mx][1:]}\n"
+            )
 
-        result += f"Here is a YouTube search which may help further clarify your query: {self._get_youtube_link(query)}\n"
+        result += (
+            "Here is a YouTube search which may help further clarify your query: "
+            f"{self._get_youtube_link(query)}\n"
+        )
 
         return result
 
@@ -701,5 +734,7 @@ class Chatbot:
 
 
 if __name__ == "__main__":
+    print(BOLD + CYAN + "\n=== Recipe Navigation Chatbot ===\n" + RESET)
+
     chatbot = Chatbot()
     chatbot.converse()
