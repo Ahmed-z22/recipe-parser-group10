@@ -18,8 +18,18 @@ sessions = {}
 
 
 def make_classical_bot(url):
-    bot = Chatbot(backend=True)
-    bot.process_url(url)
+    bot = Chatbot(backend=True, mode="classical")
+    success = bot.process_url(url)
+    if not success:
+        raise RuntimeError("Failed to process recipe URL in classical mode")
+    return bot
+
+
+def make_hybrid_bot(url):
+    bot = Chatbot(backend=True, mode="hybrid")
+    success = bot.process_url(url)
+    if not success:
+        raise RuntimeError("Failed to process recipe URL in hybrid mode")
     return bot
 
 
@@ -37,15 +47,18 @@ def initialize():
     if not url:
         return jsonify({"error": "URL is required"}), 400
 
-    if mode not in ["classical", "llm"]:
+    if mode not in ["classical", "llm", "hybrid"]:
         return jsonify({"error": "Invalid mode"}), 400
 
     try:
         if mode == "classical":
             bot = make_classical_bot(url)
             title = bot.title.get("title", "Unknown Recipe")
-        else:
+        elif mode == "llm":
             bot = make_llm_bot(url)
+            title = bot.title.get("title", "Unknown Recipe")
+        else:
+            bot = make_hybrid_bot(url)
             title = bot.title.get("title", "Unknown Recipe")
 
         sessions[sid] = {"mode": mode, "bot": bot}
@@ -72,7 +85,7 @@ def chat():
     bot = session["bot"]
 
     try:
-        if mode == "classical":
+        if mode in ["classical", "hybrid"]:
             response = bot.respond(question)
             if not response:
                 response = "No response."

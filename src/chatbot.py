@@ -1,3 +1,4 @@
+import time
 from src.scraper import get_recipe_data
 from src.ingredients_parser import IngredientsParser
 from src.steps_parser import StepsParser
@@ -9,11 +10,20 @@ from urllib.parse import quote
 from pathlib import Path
 import json
 
+GREEN = "\033[92m"
+CYAN = "\033[96m"
+YELLOW = "\033[93m"
+MAGENTA = "\033[95m"
+RESET = "\033[0m"
+BOLD = "\033[1m"
+
 
 class Chatbot:
     """Initialize Chatbot"""
 
-    def __init__(self, test=False, backend=False):
+    def __init__(self, mode="classical", test=False, backend=False):
+        self.mode = mode
+
         self.responses = [
             self._retrieval_query,
             self._navigation_query,
@@ -173,7 +183,7 @@ class Chatbot:
             if self.test:
                 url = "https://www.allrecipes.com/recipe/166160/juicy-thanksgiving-turkey/"
             else:
-                url = input("Please input the recipe URL: ")
+                url = input(YELLOW + "Enter the recipe URL: " + RESET)
 
             if self.process_url(url):
                 break
@@ -226,17 +236,17 @@ class Chatbot:
         Parses all metadata related to URL
         """
 
-        ingredients = IngredientsParser(self.raw_ingredients)
+        ingredients = IngredientsParser(self.raw_ingredients, self.mode)
         self.ingredients = ingredients.parse()
         if self.test:
             print("Ingredients parsed")
 
-        methods = MethodsParser(self.raw_steps)
+        methods = MethodsParser(self.raw_steps, self.mode)
         self.methods = methods.parse()
         if self.test:
             print("Methods parsed")
 
-        steps = StepsParser(self.raw_steps, self.ingredients)
+        steps = StepsParser(self.raw_steps, self.ingredients, self.mode)
         self.steps = steps.parse()
 
         for step in self.steps:
@@ -245,7 +255,7 @@ class Chatbot:
         if self.test:
             print("Steps parsed")
 
-        tools = ToolsParser(self.raw_steps)
+        tools = ToolsParser(self.raw_steps, self.mode)
         self.tools = tools.parse()
         if self.test:
             print("Tools parsed")
@@ -283,9 +293,30 @@ class Chatbot:
         Maintains continual loop of conversation while updating internal state
         """
 
+        print(
+            CYAN
+            + "\n------------------------------------------------------------"
+            + RESET
+        )
+        print(BOLD + "You can now ask questions about the recipe." + RESET)
+        print("(Type 'exit' or 'quit' to stop)")
+        print(
+            CYAN
+            + "------------------------------------------------------------\n"
+            + RESET
+        )
+
         while True:
-            query = input("Please input a question: ")
-            print(self.respond(query))
+            query = input(GREEN + "You: " + RESET)
+
+            if query.lower().strip() in ("exit", "quit"):
+                print(CYAN + "\nGoodbye!\n" + RESET)
+                break
+
+            answer = self.respond(query)
+
+            print(BOLD + MAGENTA + "Assistant:" + RESET)
+            print(f"{answer}\n")
 
     def respond(self, query):
         try:
@@ -606,7 +637,10 @@ class Chatbot:
             definition = self.usages[tool]["description"]
             result = f"{tool[0].upper() + tool[1:]} refers to {definition[0].lower() + definition[1:]}. {usage}\n"
 
-            result += f"Here is a YouTube search which may help further clarify your query: {self._get_youtube_link(query)}"
+            result += (
+                "Here is a YouTube search which may help further clarify your query: "
+                f"{self._get_youtube_link(query)}"
+            )
 
             return result
 
@@ -636,9 +670,15 @@ class Chatbot:
         result = ""
         if len(counter) > 0:
             mx = counter.most_common(1)[0][0]
-            result += f"{mx[0].upper() + mx[1:]} means {self.procedures[mx][0].lower() + self.procedures[mx][1:]}\n"
+            result += (
+                f"{mx[0].upper() + mx[1:]} means "
+                f"{self.procedures[mx][0].lower() + self.procedures[mx][1:]}\n"
+            )
 
-        result += f"Here is a YouTube search which may help further clarify your query: {self._get_youtube_link(query)}\n"
+        result += (
+            "Here is a YouTube search which may help further clarify your query: "
+            f"{self._get_youtube_link(query)}\n"
+        )
 
         return result
 
@@ -698,5 +738,7 @@ class Chatbot:
 
 
 if __name__ == "__main__":
+    print(BOLD + CYAN + "\n=== Recipe Navigation Chatbot ===\n" + RESET)
+
     chatbot = Chatbot()
     chatbot.converse()

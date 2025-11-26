@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 from google import genai
 from google.genai import types
 import os
+import time
 
 
 class IngredientsParser:
@@ -13,7 +14,7 @@ class IngredientsParser:
         self,
         ingredients: dict[str, list[str]],
         mode: str = "classical",
-        model_name: str = "gemini-2.5-flash",
+        model_name: str = "gemini-2.5-flash-lite",
     ):
         self.mode = mode
         self.ingredients = ingredients["ingredients"]
@@ -24,28 +25,24 @@ class IngredientsParser:
         self.preparations = None
         self.model_name = model_name
 
-        if self.mode == "classical":
-            self.nlp = spacy.load("en_core_web_sm")
-            self.path = Path(__file__).resolve().parent / "helper_files"
-            self.alias_to_canon = self._load_json(self.path / "units_map.json")
-            self.unicode_fractions = self._load_json(
-                self.path / "unicode_fractions.json"
-            )
-            self.frac_chars = "".join(self.unicode_fractions.keys())
-            self.units_pattern = "|".join(
-                sorted(
-                    map(re.escape, self.alias_to_canon.keys()), key=len, reverse=True
-                )
-            )
-            self.qty = re.compile(
-                r"^\s*(?:\d+(?:\.\d+)?\s*(?:-|–|to)\s*\d+(?:\.\d+)?|(?:(\d+)\s*)?["
-                + re.escape(self.frac_chars)
-                + r"]|(?:(\d+)\s+)?\d+\s*/\s*\d+|\d+\.\d+|\d+)\s*",
-                re.I,
-            )
-            self.unit = re.compile(r"^\s*(?:" + self.units_pattern + r")\b\.?\s*", re.I)
-            self.paren = re.compile(r"\([^)]*\)")
-        else:
+        self.nlp = spacy.load("en_core_web_sm")
+        self.path = Path(__file__).resolve().parent / "helper_files"
+        self.alias_to_canon = self._load_json(self.path / "units_map.json")
+        self.unicode_fractions = self._load_json(self.path / "unicode_fractions.json")
+        self.frac_chars = "".join(self.unicode_fractions.keys())
+        self.units_pattern = "|".join(
+            sorted(map(re.escape, self.alias_to_canon.keys()), key=len, reverse=True)
+        )
+        self.qty = re.compile(
+            r"^\s*(?:\d+(?:\.\d+)?\s*(?:-|–|to)\s*\d+(?:\.\d+)?|(?:(\d+)\s*)?["
+            + re.escape(self.frac_chars)
+            + r"]|(?:(\d+)\s+)?\d+\s*/\s*\d+|\d+\.\d+|\d+)\s*",
+            re.I,
+        )
+        self.unit = re.compile(r"^\s*(?:" + self.units_pattern + r")\b\.?\s*", re.I)
+        self.paren = re.compile(r"\([^)]*\)")
+
+        if self.mode != "classical":
             self.path = Path(__file__).resolve().parent.parent
             load_dotenv(self.path / "apikey.env")
             self.api_key = os.getenv("GEMINI_API_KEY")
@@ -59,12 +56,12 @@ class IngredientsParser:
             self.ingredients_names_prompt = self._load_text(
                 self.path / "src" / "prompts" / "ingredients_names_prompt.txt"
             )
-            self.quantities_prompt = self._load_text(
-                self.path / "src" / "prompts" / "quantities_prompt.txt"
-            )
-            self.measurement_units_prompt = self._load_text(
-                self.path / "src" / "prompts" / "measurement_units_prompt.txt"
-            )
+            # self.quantities_prompt = self._load_text(
+            #     self.path / "src" / "prompts" / "quantities_prompt.txt"
+            # )
+            # self.measurement_units_prompt = self._load_text(
+            #     self.path / "src" / "prompts" / "measurement_units_prompt.txt"
+            # )
             self.descriptors_prompt = self._load_text(
                 self.path / "src" / "prompts" / "descriptors_prompt.txt"
             )
@@ -77,7 +74,7 @@ class IngredientsParser:
     def _load_text(self, path: Path) -> str:
         with path.open("r", encoding="utf-8") as f:
             return f.read()
-        
+
     def _load_json(self, path: Path) -> dict[str, str]:
         with path.open("r", encoding="utf-8") as f:
             return json.load(f)
@@ -279,13 +276,31 @@ class IngredientsParser:
         - self.preparations
         """
 
-        self.ingredients_names = self._call_llm(self.ingredients_names_prompt)
-        self.ingredients_quantities_and_amounts = self._call_llm(self.quantities_prompt)
-        self.ingredients_measurement_units = self._call_llm(
-            self.measurement_units_prompt
-        )
-        self.descriptors = self._call_llm(self.descriptors_prompt)
-        self.preparations = self._call_llm(self.preparations_prompt)
+        try:
+            self.ingredients_names = self._call_llm(self.ingredients_names_prompt)
+            time.sleep(5)
+        except Exception:
+            self.extract_ingredients_names()  # Fallback to classical extraction
+            time.sleep(20)
+
+        # self.ingredients_quantities_and_amounts = self._call_llm(self.quantities_prompt)
+        # self.ingredients_measurement_units = self._call_llm(self.measurement_units_prompt)
+        self.extract_quantities()  # Regular extraction for quantities
+        self.extract_measurement_units()  # Regular extraction for measurement units
+
+        try:
+            self.descriptors = self._call_llm(self.descriptors_prompt)
+            time.sleep(5)
+        except Exception:
+            self.extract_descriptors()  # Fallback to classical extraction
+            time.sleep(20)
+
+        try:
+            self.preparations = self._call_llm(self.preparations_prompt)
+            time.sleep(5)
+        except Exception:
+            self.extract_preparations()  # Fallback to classical extraction
+            time.sleep(20)
 
         n = len(self.ingredients)
         for name, arr in [
@@ -373,8 +388,11 @@ class IngredientsParser:
 
     def parse(self) -> list[dict[str, list[str] | str | int | float | None]]:
         """
-        Parses the ingredients based on the selected mode (classical or LLM).
-        returns: A list of dictionaries, each containing the parsed components of an ingredient.
+        Parses the ingredients based on the selected mode.
+
+        - "classical": spaCy-based pipeline only.
+        - "hybrid": try LLM first; if it fails for any reason, fall back to classical.
+        - anything else: treat as full LLM mode.
         """
         if self.mode == "classical":
             return self._parse_classical()
