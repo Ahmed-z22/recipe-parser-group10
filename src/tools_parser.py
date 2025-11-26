@@ -155,20 +155,17 @@ class ToolsParser:
             "Output:"
         )
 
-    def extract_methods_llm(self, step):
+    def extract_tools_llm(self, step):
         """
         Extract cooking tools and equipment from recipe text using llm-based approach.
         Args:
-            text (str): The recipe text
+            step (str): A single step from the recipe directions.
         Returns:
-            list[str]: A sorted list of normalized tool names found in the text.
-                       Duplicates are removed and articles (a, an, the) are stripped
-                       from the beginning of tool names.
+            list[str]: A list of normalized tool names found in the text.
         Example:
-            >>> parser.extract_tools("Heat oil in a large skillet and use a wooden spoon to stir")
+            >>> parser.extract_tools_llm("Heat oil in a large skillet and use a wooden spoon to stir")
             ['large skillet', 'wooden spoon']
         """
-
         payload = json.dumps({"step": step}, ensure_ascii=False)
         full_prompt = self.tools_prompt.strip() + "\n\nINPUT JSON:\n" + payload
 
@@ -181,8 +178,43 @@ class ToolsParser:
                 temperature=0.2,
                 top_p=0.8,
                 top_k=40,
-            ),
+            )
         )
+
+        try:
+            raw = response.text
+        except AttributeError:
+            raw_parts = []
+            for cand in getattr(response, "candidates", []) or []:
+                for part in getattr(cand, "content", {}).parts or []:
+                    if hasattr(part, "text"):
+                        raw_parts.append(part.text)
+            raw = "".join(raw_parts)
+
+        if raw is None:
+            return self.extract_tools(step)
+
+        text = raw.strip()
+
+        if text.startswith("```"):
+            text = re.sub(r"^```(?:json)?", "", text, flags=re.IGNORECASE).strip()
+            if text.endswith("```"):
+                text = text[:-3].strip()
+
+        try:
+            parsed = json.loads(text)
+        except json.JSONDecodeError:
+            return self.extract_tools(step)
+
+        if not isinstance(parsed, list):
+            return self.extract_tools(step)
+
+        tools = []
+        for item in parsed:
+            if isinstance(item, str):
+                t = item.strip().lower()
+                if t:
+                    tools.append(t)
 
         return tools
 
