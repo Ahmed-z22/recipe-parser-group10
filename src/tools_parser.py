@@ -148,7 +148,12 @@ class ToolsParser:
         return tools
 
     def _message_formatting(self, context: str) -> str:
-        return "=== Context ===\n" f"{context}\n\n" "=== Context ===\n\n" "Output:"
+        return (
+            "=== Context ===\n"
+            f"{context}\n\n"
+            "=== Context ===\n\n"
+            "Output:"
+        )
 
     def extract_tools_llm(self, step):
         """
