@@ -108,6 +108,7 @@ Backend must be running on port **5001**.
 │   │   ├── LLM_based_qa_prompt.txt
 │   │   ├── measurement_units_prompt.txt
 │   │   ├── methods_prompt.txt
+│   │   ├── parameter_clarification_procedure_prompt.txt
 │   │   ├── preparations_prompt.txt
 │   │   ├── quantities_prompt.txt
 │   │   └── tools_prompt.txt
