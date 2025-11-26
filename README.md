@@ -96,7 +96,7 @@ Backend must be running on port **5001**.
 │   │   ├── units_map.json
 │   │   └── usages.json
 │   ├── prompts
-│   │   └── prompt_part2.txt
+│   │   └── LLM_based_qa_prompt.txt
 │   ├── __init__.py
 │   ├── chatbot.py
 │   ├── ingredients_parser.py
