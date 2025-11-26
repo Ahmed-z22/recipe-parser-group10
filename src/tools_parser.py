@@ -2,10 +2,18 @@ import json
 import re
 import spacy
 from pathlib import Path
+from dotenv import load_dotenv
+from google import genai
+from google.genai import types
+import os
+import re
 
 
 class ToolsParser:
-    def __init__(self, directions):
+    def __init__(self, directions, mode = "classical", model_name = "gemini-2.5-flash"):
+        self.mode = mode
+        self.model_name = model_name
+
         self.directions = directions["directions"]
         self.tools = None
         self.nlp = spacy.load("en_core_web_sm")
@@ -23,6 +31,22 @@ class ToolsParser:
 
         # verbs that often imply tool usage
         self.tool_verb_list = data.get("tool_verb_list")
+
+        self.method_keywords = data.get("method_keywords")
+
+        if self.mode != "classical":
+            self.path = Path(__file__).resolve().parent.parent
+            load_dotenv(self.path / "apikey.env")
+            self.api_key = os.getenv("GEMINI_API_KEY")
+            if not self.api_key:
+                raise ValueError(
+                    "GEMINI_API_KEY not found. Please set it in your .env file."
+                )
+
+            self.client = genai.Client(api_key=self.api_key)
+
+            with open(self.path / "src" / "prompts" / "tools_prompt.txt", "r") as f:
+                self.tools_prompt = f.read()
 
     # can maybe add this to the Steps section
     def split_directions_into_steps(self):
