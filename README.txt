@@ -237,15 +237,17 @@ procedures.json           => contains explanations of common cooking procedures 
    
                                                     src/prompts
 
-LLM_based_qa_prompt.txt        => contains the full prompt for the LLM-Based QA; handles all QA-related logic
+LLM_based_qa_prompt.txt                             => contains the full prompt for the LLM-Based QA; handles all QA-related logic
 
-ingredients_names_prompt.txt   => extracts ingredient names from full ingredient sentences
-preparations_prompt.txt        => extracts specific ingredient preparations from an ingredient sentence
-descriptors_prompt.txt         => extracts ingredient descriptors from an ingredient sentence
-methods_prompt.txt             => extracts cooking methods from a single step
-tools_prompt.txt               => extracts kitchen tools from a single step
-quantities_prompt.txt          => extracts quantities and amounts from a single ingredient sentence
+ingredients_names_prompt.txt                        => extracts ingredient names from full ingredient sentences
+preparations_prompt.txt                             => extracts specific ingredient preparations from an ingredient sentence
+descriptors_prompt.txt                              => extracts ingredient descriptors from an ingredient sentence
+methods_prompt.txt                                  => extracts cooking methods from a single step
+tools_prompt.txt                                    => extracts kitchen tools from a single step
+parameter_clarification_procedure_prompt.txt        => Answers parameter, clarification, and procedure queries.
+
+quantities_prompt.txt                               => extracts quantities and amounts from a single ingredient sentence
     - Note: Requires a Gemini subscription (too costly to run without one)
-measurement_units_prompt.txt   => extracts measurement units associated with a specific ingredient in a single ingredient step
+measurement_units_prompt.txt                        => extracts measurement units associated with a specific ingredient in a single ingredient step
     - Note: Requires a Gemini subscription (too costly to run without one)
 #+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-
