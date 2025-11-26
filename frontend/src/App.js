@@ -37,6 +37,8 @@ function App() {
   const recognitionRef = useRef(null);
   const [autoSpeak, setAutoSpeak] = useState(false);
 
+  const [mode, setMode] = useState('classical');
+
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
@@ -49,7 +51,11 @@ function App() {
       const res = await fetch(`${API_URL}/api/initialize`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url: url.trim(), session_id: 'default' }),
+        body: JSON.stringify({
+          url: url.trim(),
+          session_id: 'default',
+          mode,
+        }),
       });
 
       const data = await res.json();
@@ -57,6 +63,13 @@ function App() {
       if (res.ok) {
         setInitialized(true);
         setMessages([{ type: 'bot', text: 'Recipe loaded! Ask me anything.' }]);
+
+        if (data.mode) {
+          setMode(data.mode);
+        }
+
+        setCurrentStep(0);
+        setTotalSteps(0);
       } else {
         alert(`Error: ${data.error || 'Failed to load recipe'}`);
       }
@@ -73,7 +86,7 @@ function App() {
     if (!text.trim() || loading) return;
 
     setInput('');
-    setMessages((prev) => [...prev, { type: 'user', text: text }]);
+    setMessages((prev) => [...prev, { type: 'user', text }]);
     setLoading(true);
 
     try {
@@ -87,15 +100,26 @@ function App() {
 
       if (res.ok) {
         setMessages((prev) => [...prev, { type: 'bot', text: data.response }]);
+
         setCurrentStep(data.current_step || 0);
         setTotalSteps(data.total_steps || 0);
 
+        if (data.mode) {
+          setMode(data.mode);
+        }
+
         if (autoSpeak) speak(data.response);
       } else {
-        setMessages((prev) => [...prev, { type: 'bot', text: `Error: ${data.error}` }]);
+        setMessages((prev) => [
+          ...prev,
+          { type: 'bot', text: `Error: ${data.error}` },
+        ]);
       }
     } catch (error) {
-      setMessages((prev) => [...prev, { type: 'bot', text: `Error: ${error.message}` }]);
+      setMessages((prev) => [
+        ...prev,
+        { type: 'bot', text: `Error: ${error.message}` },
+      ]);
     } finally {
       setLoading(false);
     }
@@ -147,6 +171,11 @@ function App() {
           <div>
             <h1>Recipe Chatbot</h1>
             <p className="course-info">CS 337 - Group 10</p>
+            {initialized && (
+              <p style={{ fontSize: '0.9rem', color: '#ccc', marginTop: '4px' }}>
+                Mode: {mode === 'classical' ? 'Classical NLP' : 'LLM (Gemini)'}
+              </p>
+            )}
           </div>
           {initialized && (
             <div className="recipe-info">
@@ -155,7 +184,9 @@ function App() {
                   Step {currentStep + 1} of {totalSteps}
                 </span>
               )}
-              <button onClick={resetChat} className="reset-btn">New Recipe</button>
+              <button onClick={resetChat} className="reset-btn">
+                New Recipe
+              </button>
             </div>
           )}
         </div>
@@ -201,9 +232,35 @@ function App() {
                   className="url-input"
                   onKeyPress={(e) => e.key === 'Enter' && initializeRecipe()}
                 />
-                <button onClick={initializeRecipe} disabled={loading} className="load-btn">
+                <button
+                  onClick={initializeRecipe}
+                  disabled={loading}
+                  className="load-btn"
+                >
                   {loading ? 'Loading...' : 'Load Recipe'}
                 </button>
+              </div>
+
+              <div style={{ marginTop: '16px', marginBottom: '8px' }}>
+                <span style={{ marginRight: '12px' }}>System type:</span>
+                <label style={{ marginRight: '12px' }}>
+                  <input
+                    type="radio"
+                    value="classical"
+                    checked={mode === 'classical'}
+                    onChange={() => setMode('classical')}
+                  />{' '}
+                  Classical NLP
+                </label>
+                <label>
+                  <input
+                    type="radio"
+                    value="llm"
+                    checked={mode === 'llm'}
+                    onChange={() => setMode('llm')}
+                  />{' '}
+                  LLM (Gemini)
+                </label>
               </div>
 
               <div className="supported-sites">
@@ -222,13 +279,23 @@ function App() {
               {messages.map((msg, idx) => (
                 <div
                   key={idx}
-                  className={`message ${msg.type === 'user' ? 'user-message' : 'bot-message'}`}
+                  className={`message ${
+                    msg.type === 'user' ? 'user-message' : 'bot-message'
+                  }`}
                 >
                   <div className="message-content">
-                    {msg.text.split('\n').map((line, i) => <p key={i}>{line}</p>)}
+                    {msg.text.split('\n').map((line, i) => (
+                      <p key={i}>{line}</p>
+                    ))}
 
                     {msg.type === 'bot' && (
-                      <div style={{ display: "flex", gap: "10px", marginTop: "6px" }}>
+                      <div
+                        style={{
+                          display: "flex",
+                          gap: "10px",
+                          marginTop: "6px"
+                        }}
+                      >
                         <button
                           className="speak-btn"
                           onClick={() => speak(msg.text)}
@@ -252,7 +319,9 @@ function App() {
                 <div className="message bot-message">
                   <div className="message-content">
                     <div className="typing-indicator">
-                      <span></span><span></span><span></span>
+                      <span></span>
+                      <span></span>
+                      <span></span>
                     </div>
                   </div>
                 </div>
