@@ -309,6 +309,20 @@ function App() {
                 </button>
               </div>
 
+              {mode === 'hybrid' && (
+                <p
+                  style={{
+                    marginTop: '16px',
+                    color: '#ff4d4f',
+                    fontWeight: 600,
+                    textAlign: 'center',
+                    maxWidth: '520px',
+                  }}
+                >
+                  Hybrid mode may be very slow without a Gemini subscription — loading can take up to around 5 minutes.
+                </p>
+              )}
+
               <div className="supported-sites">
                 <p>Supported sites:</p>
                 <ul>
