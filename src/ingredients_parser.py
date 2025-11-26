@@ -2,32 +2,62 @@ import json
 import re
 import spacy
 from pathlib import Path
+from dotenv import load_dotenv
+from google import genai
+from google.genai import types
+import os
 
 
 class IngredientsParser:
-    def __init__(self, ingredients: dict[str, list[str]]):
-        self.ingredients = ingredients["ingredients"]
-        self.ingredients_names = None
-        self.ingredients_quantities_and_amounts = None
-        self.ingredients_measurement_units = None
-        self.descriptors = None
-        self.preparations = None
-        self.nlp = spacy.load("en_core_web_sm")
-        self.path = Path(__file__).resolve().parent / "helper_files"
-        self.alias_to_canon = self._load_json(self.path / "units_map.json")
-        self.unicode_fractions = self._load_json(self.path / "unicode_fractions.json")
-        self.frac_chars = "".join(self.unicode_fractions.keys())
-        self.units_pattern = "|".join(
-            sorted(map(re.escape, self.alias_to_canon.keys()), key=len, reverse=True)
-        )
-        self.qty = re.compile(
-            r"^\s*(?:\d+(?:\.\d+)?\s*(?:-|–|to)\s*\d+(?:\.\d+)?|(?:(\d+)\s*)?["
-            + re.escape(self.frac_chars)
-            + r"]|(?:(\d+)\s+)?\d+\s*/\s*\d+|\d+\.\d+|\d+)\s*",
-            re.I,
-        )
-        self.unit = re.compile(r"^\s*(?:" + self.units_pattern + r")\b\.?\s*", re.I)
-        self.paren = re.compile(r"\([^)]*\)")
+    def __init__(self, ingredients: dict[str, list[str]], mode: str = "classical"):
+        self.mode = mode
+
+        if self.mode == "classical":
+            self.ingredients = ingredients["ingredients"]
+            self.ingredients_names = None
+            self.ingredients_quantities_and_amounts = None
+            self.ingredients_measurement_units = None
+            self.descriptors = None
+            self.preparations = None
+            self.nlp = spacy.load("en_core_web_sm")
+            self.path = Path(__file__).resolve().parent / "helper_files"
+            self.alias_to_canon = self._load_json(self.path / "units_map.json")
+            self.unicode_fractions = self._load_json(self.path / "unicode_fractions.json")
+            self.frac_chars = "".join(self.unicode_fractions.keys())
+            self.units_pattern = "|".join(
+                sorted(map(re.escape, self.alias_to_canon.keys()), key=len, reverse=True)
+            )
+            self.qty = re.compile(
+                r"^\s*(?:\d+(?:\.\d+)?\s*(?:-|–|to)\s*\d+(?:\.\d+)?|(?:(\d+)\s*)?["
+                + re.escape(self.frac_chars)
+                + r"]|(?:(\d+)\s+)?\d+\s*/\s*\d+|\d+\.\d+|\d+)\s*",
+                re.I,
+            )
+            self.unit = re.compile(r"^\s*(?:" + self.units_pattern + r")\b\.?\s*", re.I)
+            self.paren = re.compile(r"\([^)]*\)")
+        else:
+            self.path = Path(__file__).resolve().parent.parent
+            load_dotenv(self.path / "apikey.env")
+            self.api_key = os.getenv("GEMINI_API_KEY")
+            if not self.api_key:
+                raise ValueError(
+                    "GEMINI_API_KEY not found. Please set it in your .env file."
+                )
+
+            with open(self.path / "src" / "prompts" / "LLM_based_qa_prompt.txt", "r") as f:
+                self.system_prompt = f.read()
+
+            self.client = genai.Client()
+            self.chat = self.client.chats.create(
+                model=model_name,
+                config=types.GenerateContentConfig(
+                    system_instruction=self.system_prompt,
+                    temperature=0.2,
+                    top_p=0.8,
+                    top_k=40,
+                ),
+            )
+
 
     def _load_json(self, path: Path) -> dict[str, str]:
         with path.open("r", encoding="utf-8") as f:
