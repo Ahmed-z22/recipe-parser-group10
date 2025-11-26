@@ -48,7 +48,7 @@ class IngredientsParser:
                 self.system_prompt = f.read()
 
             self.client = genai.Client()
-            self.chat = self.client.chats.create(
+            self.chat = self.client.models.generate_content(
                 model=model_name,
                 config=types.GenerateContentConfig(
                     system_instruction=self.system_prompt,
