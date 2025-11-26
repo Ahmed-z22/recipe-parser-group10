@@ -11,7 +11,7 @@ class StepsParser:
     """Parses recipe directions into atomic steps with annotations."""
 
     def __init__(
-        self, directions: Dict[str, List[str]], parsed_ingredients: List[Dict[str, Any]]
+        self, directions: Dict[str, List[str]], parsed_ingredients: List[Dict[str, Any]], mode = "classical"
     ):
         """Initialize parser with directions and parsed ingredients.
 
@@ -19,12 +19,14 @@ class StepsParser:
             directions: Dict with 'directions' key containing list of direction strings
             parsed_ingredients: List of ingredient dicts from IngredientsParser.parse()
         """
+        self.mode = mode
+
         self.directions = directions["directions"]
         self.parsed_ingredients = parsed_ingredients
         self.nlp = spacy.load("en_core_web_sm")
 
-        self.tools_parser = ToolsParser(directions)
-        self.methods_parser = MethodsParser(directions)
+        self.tools_parser = ToolsParser(directions, self.mode)
+        self.methods_parser = MethodsParser(directions, self.mode)
 
         # load method keywords for classifying step types
         self.path = Path(__file__).resolve().parent / "helper_files"
@@ -165,7 +167,10 @@ class StepsParser:
         Returns:
             List of tool names
         """
-        return self.tools_parser.extract_tools(step)
+        if self.mode == "classical":
+            return self.tools_parser.extract_tools(step)
+        else:
+            return self.tools_parser.extract_tools_llm(step)
 
     def extract_methods(self, step: str) -> List[str]:
         """Extract cooking methods from the step.
@@ -176,7 +181,10 @@ class StepsParser:
         Returns:
             List of cooking methods
         """
-        return self.methods_parser.extract_methods(step)
+        if self.mode == "classical":
+            return self.methods_parser.extract_methods(step)
+        else:
+            return self.methods_parser.extract_methods_llm(step)
 
     def extract_time(self, step: str) -> Optional[Dict[str, str]]:
         """Extract time/duration from step text.
