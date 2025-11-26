@@ -9,7 +9,7 @@ import re
 
 
 class MethodsParser:
-    def __init__(self, directions, mode = "classical", model_name = "gemini-2.5-flash-lite"):
+    def __init__(self, directions, mode = "classical", model_name = "gemini-2.5-flash"):
         self.mode = mode
         self.model_name = model_name
 
