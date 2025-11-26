@@ -740,5 +740,22 @@ class Chatbot:
 if __name__ == "__main__":
     print(BOLD + CYAN + "\n=== Recipe Navigation Chatbot ===\n" + RESET)
 
-    chatbot = Chatbot()
+    # Let the user choose the mode in the CLI
+    print(YELLOW + "Choose mode:" + RESET)
+    print("  1) Classical NLP")
+    print("  2) Hybrid (NLP + LLM)")
+    choice = input(GREEN + "Enter 1 or 2 [default 1]: " + RESET).strip()
+
+    if choice == "2":
+        selected_mode = "hybrid"
+    else:
+        selected_mode = "classical"
+
+    print(
+        BOLD
+        + f"\nMode selected: {selected_mode.capitalize() if selected_mode == 'classical' else 'Hybrid (NLP + LLM)'}"
+        + RESET
+    )
+
+    chatbot = Chatbot(mode=selected_mode)
     chatbot.converse()
