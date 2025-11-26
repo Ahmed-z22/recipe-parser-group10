@@ -28,14 +28,10 @@ class IngredientsParser:
         self.nlp = spacy.load("en_core_web_sm")
         self.path = Path(__file__).resolve().parent / "helper_files"
         self.alias_to_canon = self._load_json(self.path / "units_map.json")
-        self.unicode_fractions = self._load_json(
-            self.path / "unicode_fractions.json"
-        )
+        self.unicode_fractions = self._load_json(self.path / "unicode_fractions.json")
         self.frac_chars = "".join(self.unicode_fractions.keys())
         self.units_pattern = "|".join(
-            sorted(
-                map(re.escape, self.alias_to_canon.keys()), key=len, reverse=True
-            )
+            sorted(map(re.escape, self.alias_to_canon.keys()), key=len, reverse=True)
         )
         self.qty = re.compile(
             r"^\s*(?:\d+(?:\.\d+)?\s*(?:-|–|to)\s*\d+(?:\.\d+)?|(?:(\d+)\s*)?["
@@ -78,7 +74,7 @@ class IngredientsParser:
     def _load_text(self, path: Path) -> str:
         with path.open("r", encoding="utf-8") as f:
             return f.read()
-        
+
     def _load_json(self, path: Path) -> dict[str, str]:
         with path.open("r", encoding="utf-8") as f:
             return json.load(f)
@@ -289,8 +285,8 @@ class IngredientsParser:
 
         # self.ingredients_quantities_and_amounts = self._call_llm(self.quantities_prompt)
         # self.ingredients_measurement_units = self._call_llm(self.measurement_units_prompt)
-        self.extract_quantities() # Regular extraction for quantities
-        self.extract_measurement_units() # Regular extraction for measurement units
+        self.extract_quantities()  # Regular extraction for quantities
+        self.extract_measurement_units()  # Regular extraction for measurement units
 
         try:
             self.descriptors = self._call_llm(self.descriptors_prompt)
@@ -298,7 +294,7 @@ class IngredientsParser:
         except Exception:
             self.extract_descriptors()  # Fallback to classical extraction
             time.sleep(20)
-        
+
         try:
             self.preparations = self._call_llm(self.preparations_prompt)
             time.sleep(5)
@@ -402,4 +398,3 @@ class IngredientsParser:
             return self._parse_classical()
         else:
             return self._parse_llm()
-

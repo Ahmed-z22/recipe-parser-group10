@@ -9,7 +9,9 @@ import re
 
 
 class MethodsParser:
-    def __init__(self, directions, mode="classical", model_name="gemini-2.5-flash-lite"):
+    def __init__(
+        self, directions, mode="classical", model_name="gemini-2.5-flash-lite"
+    ):
         self.mode = mode
         self.model_name = model_name
 
@@ -149,12 +151,7 @@ class MethodsParser:
         return methods
 
     def _message_formatting(self, context: str) -> str:
-        return (
-            "=== Context ===\n"
-            f"{context}\n\n"
-            "=== Context ===\n\n"
-            "Output:"
-        )
+        return "=== Context ===\n" f"{context}\n\n" "=== Context ===\n\n" "Output:"
 
     def extract_methods_llm(self, step):
         """Extracts methods from a given step using LLM-based approach.

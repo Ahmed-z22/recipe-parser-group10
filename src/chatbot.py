@@ -294,12 +294,16 @@ class Chatbot:
         """
 
         print(
-            CYAN + "\n------------------------------------------------------------" + RESET
+            CYAN
+            + "\n------------------------------------------------------------"
+            + RESET
         )
         print(BOLD + "You can now ask questions about the recipe." + RESET)
         print("(Type 'exit' or 'quit' to stop)")
         print(
-            CYAN + "------------------------------------------------------------\n" + RESET
+            CYAN
+            + "------------------------------------------------------------\n"
+            + RESET
         )
 
         while True:

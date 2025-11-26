@@ -12,7 +12,10 @@ class StepsParser:
     """Parses recipe directions into atomic steps with annotations."""
 
     def __init__(
-        self, directions: Dict[str, List[str]], parsed_ingredients: List[Dict[str, Any]], mode = "classical"
+        self,
+        directions: Dict[str, List[str]],
+        parsed_ingredients: List[Dict[str, Any]],
+        mode="classical",
     ):
         """Initialize parser with directions and parsed ingredients.
 
