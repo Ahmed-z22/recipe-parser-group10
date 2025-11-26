@@ -155,6 +155,22 @@ class ToolsParser:
             "Output:"
         )
 
+    def extract_methods_llm(self, step):
+        """
+        Extract cooking tools and equipment from recipe text using llm-based approach.
+        Args:
+            text (str): The recipe text
+        Returns:
+            list[str]: A sorted list of normalized tool names found in the text.
+                       Duplicates are removed and articles (a, an, the) are stripped
+                       from the beginning of tool names.
+        Example:
+            >>> parser.extract_tools("Heat oil in a large skillet and use a wooden spoon to stir")
+            ['large skillet', 'wooden spoon']
+        """
+
+        
+
     def parse(self, flag_llm=False):
         """
         Parse directions and extract tools used in each direction's steps.
