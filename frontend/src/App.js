@@ -173,7 +173,12 @@ function App() {
             <p className="course-info">CS 337 - Group 10</p>
             {initialized && (
               <p style={{ fontSize: '0.9rem', color: '#ccc', marginTop: '4px' }}>
-                Mode: {mode === 'classical' ? 'Classical NLP' : 'LLM (Gemini)'}
+                Mode:{' '}
+                {mode === 'classical'
+                  ? 'Classical NLP'
+                  : mode === 'llm'
+                  ? 'LLM (Gemini)'
+                  : 'Hybrid (NLP + LLM)'}
               </p>
             )}
           </div>
@@ -261,6 +266,7 @@ function App() {
                     cursor: 'pointer',
                     fontSize: '16px',
                     transition: '0.2s ease',
+                    minWidth: '190px',
                   }}
                 >
                   Classical NLP
@@ -278,9 +284,28 @@ function App() {
                     cursor: 'pointer',
                     fontSize: '16px',
                     transition: '0.2s ease',
+                    minWidth: '190px',
                   }}
                 >
                   LLM (Gemini)
+                </button>
+
+                <button
+                  onClick={() => setMode('hybrid')}
+                  className="mode-btn"
+                  style={{
+                    padding: '12px 22px',
+                    borderRadius: '10px',
+                    border: mode === 'hybrid' ? '2px solid #2196f3' : '2px solid #1b3a57',
+                    backgroundColor: mode === 'hybrid' ? '#2196f3' : '#1b3a57',
+                    color: 'white',
+                    cursor: 'pointer',
+                    fontSize: '16px',
+                    transition: '0.2s ease',
+                    minWidth: '190px',
+                  }}
+                >
+                  Hybrid (NLP + LLM)
                 </button>
               </div>
 
