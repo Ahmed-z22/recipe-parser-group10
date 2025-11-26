@@ -59,12 +59,12 @@ class IngredientsParser:
             self.ingredients_names_prompt = self._load_text(
                 self.path / "src" / "prompts" / "ingredients_names_prompt.txt"
             )
-            self.quantities_prompt = self._load_text(
-                self.path / "src" / "prompts" / "quantities_prompt.txt"
-            )
-            self.measurement_units_prompt = self._load_text(
-                self.path / "src" / "prompts" / "measurement_units_prompt.txt"
-            )
+            # self.quantities_prompt = self._load_text(
+            #     self.path / "src" / "prompts" / "quantities_prompt.txt"
+            # )
+            # self.measurement_units_prompt = self._load_text(
+            #     self.path / "src" / "prompts" / "measurement_units_prompt.txt"
+            # )
             self.descriptors_prompt = self._load_text(
                 self.path / "src" / "prompts" / "descriptors_prompt.txt"
             )
@@ -279,13 +279,25 @@ class IngredientsParser:
         - self.preparations
         """
 
-        self.ingredients_names = self._call_llm(self.ingredients_names_prompt)
-        self.ingredients_quantities_and_amounts = self._call_llm(self.quantities_prompt)
-        self.ingredients_measurement_units = self._call_llm(
-            self.measurement_units_prompt
-        )
-        self.descriptors = self._call_llm(self.descriptors_prompt)
-        self.preparations = self._call_llm(self.preparations_prompt)
+        try:
+            self.ingredients_names = self._call_llm(self.ingredients_names_prompt)
+        except Exception:
+            self.extract_ingredients_names()  # Fallback to classical extraction
+
+        # self.ingredients_quantities_and_amounts = self._call_llm(self.quantities_prompt)
+        # self.ingredients_measurement_units = self._call_llm(self.measurement_units_prompt)
+        self.extract_quantities() # Regular extraction for quantities
+        self.extract_measurement_units() # Regular extraction for measurement units
+
+        try:
+            self.descriptors = self._call_llm(self.descriptors_prompt)
+        except Exception:
+            self.extract_descriptors()  # Fallback to classical extraction
+        
+        try:
+            self.preparations = self._call_llm(self.preparations_prompt)
+        except Exception:
+            self.extract_preparations()  # Fallback to classical extraction
 
         n = len(self.ingredients)
         for name, arr in [
@@ -381,11 +393,6 @@ class IngredientsParser:
         """
         if self.mode == "classical":
             return self._parse_classical()
+        else:
+            return self._parse_llm()
 
-        if self.mode == "hybrid":
-            try:
-                return self._parse_llm()
-            except Exception:
-                return self._parse_classical()
-
-        return self._parse_llm()
