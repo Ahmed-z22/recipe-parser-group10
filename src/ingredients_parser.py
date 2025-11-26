@@ -7,8 +7,14 @@ from google import genai
 from google.genai import types
 import os
 
+
 class IngredientsParser:
-    def __init__(self, ingredients: dict[str, list[str]], mode: str = "classical", model_name: str = "gemini-2.5-flash-lite"):
+    def __init__(
+        self,
+        ingredients: dict[str, list[str]],
+        mode: str = "classical",
+        model_name: str = "gemini-2.5-flash-lite",
+    ):
         self.mode = mode
         self.ingredients = ingredients["ingredients"]
         self.ingredients_names = None
@@ -22,10 +28,14 @@ class IngredientsParser:
             self.nlp = spacy.load("en_core_web_sm")
             self.path = Path(__file__).resolve().parent / "helper_files"
             self.alias_to_canon = self._load_json(self.path / "units_map.json")
-            self.unicode_fractions = self._load_json(self.path / "unicode_fractions.json")
+            self.unicode_fractions = self._load_json(
+                self.path / "unicode_fractions.json"
+            )
             self.frac_chars = "".join(self.unicode_fractions.keys())
             self.units_pattern = "|".join(
-                sorted(map(re.escape, self.alias_to_canon.keys()), key=len, reverse=True)
+                sorted(
+                    map(re.escape, self.alias_to_canon.keys()), key=len, reverse=True
+                )
             )
             self.qty = re.compile(
                 r"^\s*(?:\d+(?:\.\d+)?\s*(?:-|–|to)\s*\d+(?:\.\d+)?|(?:(\d+)\s*)?["
@@ -46,15 +56,25 @@ class IngredientsParser:
 
             self.client = genai.Client(api_key=self.api_key)
 
-            with open(self.path / "src" / "prompts" / "ingredients_names_prompt.txt", "r") as f:
+            with open(
+                self.path / "src" / "prompts" / "ingredients_names_prompt.txt", "r"
+            ) as f:
                 self.ingredients_names_prompt = f.read()
-            with open(self.path / "src" / "prompts" / "quantities_prompt.txt", "r") as f:
+            with open(
+                self.path / "src" / "prompts" / "quantities_prompt.txt", "r"
+            ) as f:
                 self.quantities_prompt = f.read()
-            with open(self.path / "src" / "prompts" / "measurement_units_prompt.txt", "r") as f:
+            with open(
+                self.path / "src" / "prompts" / "measurement_units_prompt.txt", "r"
+            ) as f:
                 self.measurement_units_prompt = f.read()
-            with open(self.path / "src" / "prompts" / "descriptors_prompt.txt", "r") as f:
+            with open(
+                self.path / "src" / "prompts" / "descriptors_prompt.txt", "r"
+            ) as f:
                 self.descriptors_prompt = f.read()
-            with open(self.path / "src" / "prompts" / "preparations_prompt.txt", "r") as f:
+            with open(
+                self.path / "src" / "prompts" / "preparations_prompt.txt", "r"
+            ) as f:
                 self.preparations_prompt = f.read()
 
             self.paren = re.compile(r"\([^)]*\)")
@@ -201,13 +221,8 @@ class IngredientsParser:
         self.preparations = results
 
     def _message_formatting(self, context: str) -> str:
-        return (
-            "=== Context ===\n"
-            f"{context}\n\n"
-            "=== Context ===\n\n"
-            "Output:"
-        )
-    
+        return "=== Context ===\n" f"{context}\n\n" "=== Context ===\n\n" "Output:"
+
     def _call_llm(self, task_prompt: str):
         """
         Calls the LLM with a given task prompt and the current ingredients list.
@@ -225,7 +240,7 @@ class IngredientsParser:
                 temperature=0.2,
                 top_p=0.8,
                 top_k=40,
-            )
+            ),
         )
 
         try:
@@ -251,8 +266,10 @@ class IngredientsParser:
         try:
             return json.loads(text)
         except json.JSONDecodeError as e:
-            raise ValueError(f"Failed to parse LLM JSON output: {e}\nRaw output:\n{text}") from e
-        
+            raise ValueError(
+                f"Failed to parse LLM JSON output: {e}\nRaw output:\n{text}"
+            ) from e
+
     def llm_based_extraction(self):
         """
         Uses the LLM (with 5 task-specific prompts) to populate:
@@ -265,7 +282,9 @@ class IngredientsParser:
 
         self.ingredients_names = self._call_llm(self.ingredients_names_prompt)
         self.ingredients_quantities_and_amounts = self._call_llm(self.quantities_prompt)
-        self.ingredients_measurement_units = self._call_llm(self.measurement_units_prompt)
+        self.ingredients_measurement_units = self._call_llm(
+            self.measurement_units_prompt
+        )
         self.descriptors = self._call_llm(self.descriptors_prompt)
         self.preparations = self._call_llm(self.preparations_prompt)
 
@@ -338,7 +357,9 @@ class IngredientsParser:
 
         output = []
         for i in range(len(self.ingredients)):
-            cleaned_name = self._clean_name_with_descriptors(self.ingredients_names[i], self.descriptors[i])
+            cleaned_name = self._clean_name_with_descriptors(
+                self.ingredients_names[i], self.descriptors[i]
+            )
             output.append(
                 {
                     "original_ingredient_sentence": self.ingredients[i],

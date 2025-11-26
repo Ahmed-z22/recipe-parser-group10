@@ -12,6 +12,7 @@ MAGENTA = "\033[95m"
 RESET = "\033[0m"
 BOLD = "\033[1m"
 
+
 class LLMBasedQA:
     def __init__(self, url, model_name="gemini-2.5-flash"):
 
@@ -39,7 +40,9 @@ class LLMBasedQA:
 
         self.title, self.ingredients, self.directions = get_recipe_data(url)
 
-    def _question_formatting(self, question: str, title: str, ingredients: list, steps: list) -> (str, str):
+    def _question_formatting(
+        self, question: str, title: str, ingredients: list, steps: list
+    ) -> (str, str):
         return (
             (
                 "=== RECIPE DATA START ===\n"
@@ -53,13 +56,17 @@ class LLMBasedQA:
             ),
             question,
         )
-    
+
     def answer(self, question: str) -> (str, str):
         formatted_question, user_question = self._question_formatting(
-            question, self.title["title"], self.ingredients["ingredients"], self.directions["directions"]
+            question,
+            self.title["title"],
+            self.ingredients["ingredients"],
+            self.directions["directions"],
         )
         self.chat.send_message(formatted_question)
         return user_question, self.chat.get_history()[-1].parts[0].text
+
 
 if __name__ == "__main__":
     print(BOLD + CYAN + "\n=== Recipe Explainer Chatbot ===\n" + RESET)
@@ -68,10 +75,14 @@ if __name__ == "__main__":
 
     llm_qa = LLMBasedQA(input_url)
 
-    print(CYAN + "\n------------------------------------------------------------" + RESET)
+    print(
+        CYAN + "\n------------------------------------------------------------" + RESET
+    )
     print(BOLD + "You can now ask questions about the recipe." + RESET)
     print("(Type 'exit' or 'quit' to stop)")
-    print(CYAN + "------------------------------------------------------------\n" + RESET)
+    print(
+        CYAN + "------------------------------------------------------------\n" + RESET
+    )
 
     while True:
         user_question = input(GREEN + "You: " + RESET)
