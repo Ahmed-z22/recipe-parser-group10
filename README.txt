@@ -24,7 +24,14 @@
 │   │   ├── units_map.json
 │   │   └── usages.json
 │   ├── prompts
-│   │   └── LLM_based_qa_prompt.txt
+│   │   ├── descriptors_prompt.txt
+│   │   ├── ingredients_names_prompt.txt
+│   │   ├── LLM_based_qa_prompt.txt
+│   │   ├── measurement_units_prompt.txt
+│   │   ├── methods_prompt.txt
+│   │   ├── preparations_prompt.txt
+│   │   ├── quantities_prompt.txt
+│   │   └── tools_prompt.txt
 │   ├── __init__.py
 │   ├── chatbot.py
 │   ├── ingredients_parser.py
@@ -199,4 +206,20 @@ Behavior:
 • Handles URL input, recipe initialization, mode selection, chat messages, loading state, and (for classical mode) step tracking.
 • Provides both text input and voice input via the Web Speech API, with optional auto-speak plus per-message Speak/Stop controls.
 • Talks to the Flask backend via /api/initialize and /api/chat, sending a fixed session_id to preserve conversation state.
+#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-
+
+
+
+
+#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-
+                                                    src/helper_files
+
+
+method_keywords.json => contains common methods
+tools_keywords.json => contains common tools, prep words, tools verb list
+unicode_fractions.json => contains mapping between unicode fractions to numbers
+units_map.json => contains measurement_units and a mapping from the different variations to canonical form
+usages.json => contains the usages of common tools
+procedures.json => contains explinations of common procedures (methods)
+
 #+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-
