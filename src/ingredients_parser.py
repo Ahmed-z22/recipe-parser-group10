@@ -199,7 +199,7 @@ class IngredientsParser:
             results.append([line] if keep and line else [])
         self.preparations = results
 
-    def parse(self) -> list[dict[str, list[str] | str | int | float | None]]:
+    def _parse_classical(self) -> list[dict[str, list[str] | str | int | float | None]]:
         """ "
         Executes all extraction methods ingredients.
         returns: A list of dictionaries, each containing the parsed components of an ingredient:
@@ -230,3 +230,25 @@ class IngredientsParser:
             )
 
         return output
+    
+    def _parse_llm(self) -> list[dict[str, list[str] | str | int | float | None]]:
+        """
+        returns: A list of dictionaries, each containing the parsed components of an ingredient:
+            - original_ingredient_sentence: The original ingredient line.
+            - ingredient_name: The extracted ingredient name (str).
+            - ingredient_quantity: The extracted quantity (int, float, or None).
+            - measurement_unit: The standardized measurement unit (str or None).
+            - ingredient_preparation: List of preparation phrases (list of str).
+            - ingredient_descriptors: List of adjective descriptors (list of str).
+        """
+        pass
+    
+    def parse(self) -> list[dict[str, list[str] | str | int | float | None]]:
+        """
+        Parses the ingredients based on the selected mode (classical or LLM).
+        returns: A list of dictionaries, each containing the parsed components of an ingredient.
+        """
+        if self.mode == "classical":
+            return self._parse_classical()
+        else:
+            return self._parse_llm()
