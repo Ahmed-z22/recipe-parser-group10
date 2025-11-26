@@ -213,7 +213,7 @@ class ToolsParser:
 
         return tools
 
-    def parse(self, flag_llm=False):
+    def parse(self):
         """
         Parse directions and extract tools used in each direction's steps.
         Relies on the extract_tools() method to identify tools from step text.
@@ -230,10 +230,10 @@ class ToolsParser:
         for direction, steps in self.directions_split.items():
             output_dict = {"direction": direction, "steps": steps, "tools": ()}
             for step in steps:
-                if flag_llm:
-                    tools_in_step = self.extract_tools_llm(step)
-                else:
+                if self.mode == "classical":
                     tools_in_step = self.extract_tools(step)
+                else:
+                    tools_in_step = self.extract_tools_llm(step)
                 output_dict["tools"] = list(
                     set(output_dict["tools"]) | set(tools_in_step)
                 )
