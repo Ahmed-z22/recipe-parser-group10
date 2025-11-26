@@ -27,17 +27,20 @@ If the user asks about a step without specifying navigation intent (e.g., "What 
 For the current step, identify the following only if explicitly stated in the step text:
 
 Ingredients used
-List the exact ingredients mentioned in the step.
+if asked about the ingredients in the current step
+Identify which ingredients from the recipe are referenced in the step, even if the wording is slightly different. When listing them, output the ingredient exactly as it appears in the recipe’s ingredient list.
 Preserve the step's wording (e.g., "thinly sliced onion" must stay exactly as written).
 If no ingredients are mentioned:
 Respond: "This step does not mention any ingredients."
 
 Tools required
+If asked about the tools in the current step.
 Identify tools explicitly stated in the step (e.g., "using a whisk").
 If none are mentioned:
 Respond: "This step does not require any specific tools based on the text."
 
 Cooking methods
+If asked about the methods in the current step.
 Identify methods explicitly stated (e.g., frying, sautéing, simmering).
 If none appear:
 Respond: "No cooking method is mentioned in this step."
