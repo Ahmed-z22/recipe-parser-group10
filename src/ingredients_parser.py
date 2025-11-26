@@ -16,6 +16,7 @@ class IngredientsParser:
         self.ingredients_measurement_units = None
         self.descriptors = None
         self.preparations = None
+        self.model_name = model_name
 
         if self.mode == "classical":
             self.nlp = spacy.load("en_core_web_sm")
@@ -43,20 +44,17 @@ class IngredientsParser:
                 raise ValueError(
                     "GEMINI_API_KEY not found. Please set it in your .env file."
                 )
-
-            with open(self.path / "src" / "prompts" / "ingredients_parser_prompt.txt", "r") as f:
-                self.system_prompt = f.read()
-
-            self.client = genai.Client()
-            self.chat = self.client.models.generate_content(
-                model=model_name,
-                config=types.GenerateContentConfig(
-                    system_instruction=self.system_prompt,
-                    temperature=0.2,
-                    top_p=0.8,
-                    top_k=40,
-                ),
-            )
+            
+            with open(self.path / "src" / "prompts" / "ingredients_names_prompt.txt", "r") as f:
+                self.ingredients_names_prompt = f.read()
+            with open(self.path / "src" / "prompts" / "quantities_prompt.txt", "r") as f:
+                self.quantities_prompt = f.read()
+            with open(self.path / "src" / "prompts" / "measurement_units_prompt.txt", "r") as f:
+                self.measurement_units_prompt = f.read()
+            with open(self.path / "src" / "prompts" / "descriptors_prompt.txt", "r") as f:
+                self.descriptors_prompt = f.read()
+            with open(self.path / "src" / "prompts" / "preparations_prompt.txt", "r") as f:
+                self.preparations_prompt = f.read()
 
     def _load_json(self, path: Path) -> dict[str, str]:
         with path.open("r", encoding="utf-8") as f:
@@ -199,8 +197,26 @@ class IngredientsParser:
             results.append([line] if keep and line else [])
         self.preparations = results
 
+
+    def _message_formatting(self, context):
+        return (
+                "=== Context ===\n"
+                f"{context}\n\n"
+                "=== Context ===\n\n"
+                "Output:"
+                )
+    
     def llm_based_extraction(self):
-        pass
+        client = genai.Client()
+        chat = self.client.models.generate_content(
+            model=self.model_name,
+            config=types.GenerateContentConfig(
+                temperature=0.2,
+                top_p=0.8,
+                top_k=40,
+            )
+        )
+
 
 
     def _parse_classical(self) -> list[dict[str, list[str] | str | int | float | None]]:
