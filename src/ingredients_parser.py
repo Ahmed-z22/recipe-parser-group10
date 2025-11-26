@@ -13,7 +13,7 @@ class IngredientsParser:
         self,
         ingredients: dict[str, list[str]],
         mode: str = "classical",
-        model_name: str = "gemini-2.5-flash",
+        model_name: str = "gemini-2.0-flash-lite",
     ):
         self.mode = mode
         self.ingredients = ingredients["ingredients"]
