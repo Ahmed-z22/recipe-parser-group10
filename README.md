@@ -88,20 +88,25 @@ In the CLI run the following command:
 ├── src
 │   ├── helper_files
 │   │   ├── method_keywords.json
+│   │   ├── procedures.json
 │   │   ├── tools_keywords.json
 │   │   ├── unicode_fractions.json
-│   │   └── units_map.json
+│   │   ├── units_map.json
+│   │   └── usages.json
+│   ├── prompts
+│   │   └── prompt_part2.txt
 │   ├── __init__.py
 │   ├── chatbot.py
 │   ├── ingredients_parser.py
+│   ├── LLM_based_qa.py
 │   ├── methods_parser.py
 │   ├── scraper.py
 │   ├── steps_parser.py
 │   └── tools_parser.py
 ├── .gitignore
+├── allowed_questions.txt
 ├── environment.yml
 ├── pyproject.toml
-├── allowed_questions.txt
 ├── README.md
 └── README.txt
 ```
