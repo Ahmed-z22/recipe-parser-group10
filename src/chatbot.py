@@ -9,6 +9,10 @@ from collections import Counter
 from urllib.parse import quote
 from pathlib import Path
 import json
+import os
+from dotenv import load_dotenv
+from google import genai
+from google.genai import types
 
 GREEN = "\033[92m"
 CYAN = "\033[96m"
@@ -21,8 +25,9 @@ BOLD = "\033[1m"
 class Chatbot:
     """Initialize Chatbot"""
 
-    def __init__(self, mode="classical", test=False, backend=False):
+    def __init__(self, mode="classical", test=False, backend=False, model_name="gemini-2.5-flash-lite"):
         self.mode = mode
+        self.model_name = model_name
 
         self.responses = [
             self._retrieval_query,
@@ -41,6 +46,26 @@ class Chatbot:
         procedures_path = self.path / "procedures.json"
         with open(procedures_path, "r") as f:
             self.procedures = json.load(f)
+
+        if self.mode != "classical":
+            self.path = Path(__file__).resolve().parent.parent
+            load_dotenv(self.path / "apikey.env")
+            self.api_key = os.getenv("GEMINI_API_KEY")
+            if not self.api_key:
+                raise ValueError(
+                    "GEMINI_API_KEY not found. Please set it in your .env file."
+                )
+
+            self.client = genai.Client(api_key=self.api_key)
+
+            with open(
+                self.path
+                / "src"
+                / "prompts"
+                / "parameter_clarification_procedure_prompt.txt",
+                "r",
+            ) as f:
+                self.parameter_clarification_procedure_prompt = f.read()
 
         self.step_words = [
             "first",
@@ -158,6 +183,71 @@ class Chatbot:
             self._get_url()
 
         self.current_step = 0
+
+    def _message_formatting(self, context: str) -> str:
+        return "=== Context ===\n" f"{context}\n\n" "=== Context ===\n\n" "Output:"
+
+    def _llm_parameter_clarification_procedure(self, question_type, question):
+        """
+        Hybrid-mode LLM helper for parameter / clarification / procedure questions.
+        Falls back to classical handling on any failure.
+        """
+        try:
+            payload = {
+                "user_query": question,
+                "current_step_index": self.current_step,
+                "steps": self.steps,
+                "ingredients": self.ingredients,
+                "tool_definitions": self.usages,
+                "procedure_definitions": self.procedures,
+                "youtube_search_url": self._get_youtube_link(question),
+                "question_type": question_type,
+            }
+
+            full_prompt = (
+                self.parameter_clarification_procedure_prompt.strip()
+                + "\n\nINPUT JSON:\n"
+                + json.dumps(payload, ensure_ascii=False)
+            )
+
+            contents = self._message_formatting(full_prompt)
+
+            response = self.client.models.generate_content(
+                model=self.model_name,
+                contents=contents,
+                config=types.GenerateContentConfig(
+                    temperature=0.2,
+                    top_p=0.8,
+                    top_k=40,
+                ),
+            )
+
+            try:
+                raw = response.text
+            except AttributeError:
+                raw_parts = []
+                for cand in getattr(response, "candidates", []) or []:
+                    for part in getattr(getattr(cand, "content", None), "parts", []) or []:
+                        if hasattr(part, "text"):
+                            raw_parts.append(part.text)
+                raw = "".join(raw_parts)
+
+            if raw is None:
+                return None
+
+            text = raw.strip()
+
+            if text.startswith("```"):
+                text = re.sub(r"^```(?:txt|text|plain)?", "", text, flags=re.IGNORECASE).strip()
+                if text.endswith("```"):
+                    text = text[:-3].strip()
+
+            if not text:
+                return None
+
+            return text
+        except Exception:
+            return None
 
     def process_url(self, url):
         """
@@ -530,6 +620,13 @@ class Chatbot:
     """
 
     def _parameter_query(self, question):
+        if self.mode != "classical":
+            llm_answer = self._llm_parameter_clarification_procedure(
+                "parameter", question
+            )
+            if llm_answer is not None and llm_answer != "":
+                return llm_answer
+
         time_keywords = ["long", "time", "when", "done", "finished", "complete"]
         substitute_keywords = ["instead", "use", "replace", "what"]
         temperature_keywords = [
@@ -616,6 +713,13 @@ class Chatbot:
         return f"https://www.youtube.com/results?search_query={encoded_query}"
 
     def _clarification_query(self, query):
+        if self.mode != "classical":
+            llm_answer = self._llm_parameter_clarification_procedure(
+                "clarification", query
+            )
+            if llm_answer is not None and llm_answer != "":
+                return llm_answer
+
         keyword = self._extract_keyword(query)
 
         tokens = keyword.split()
@@ -654,6 +758,13 @@ class Chatbot:
     """
 
     def _procedure_query(self, query):
+        if self.mode != "classical":
+            llm_answer = self._llm_parameter_clarification_procedure(
+                "procedure", query
+            )
+            if llm_answer is not None and llm_answer != "":
+                return llm_answer
+
         tokens = query.split()
         keyword = tokens[-1]
 
