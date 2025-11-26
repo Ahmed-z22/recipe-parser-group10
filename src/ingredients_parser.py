@@ -282,9 +282,10 @@ class IngredientsParser:
 
         try:
             self.ingredients_names = self._call_llm(self.ingredients_names_prompt)
-            time.sleep(15)  
+            time.sleep(5)
         except Exception:
             self.extract_ingredients_names()  # Fallback to classical extraction
+            time.sleep(20)
 
         # self.ingredients_quantities_and_amounts = self._call_llm(self.quantities_prompt)
         # self.ingredients_measurement_units = self._call_llm(self.measurement_units_prompt)
@@ -293,15 +294,17 @@ class IngredientsParser:
 
         try:
             self.descriptors = self._call_llm(self.descriptors_prompt)
-            time.sleep(15)
+            time.sleep(5)
         except Exception:
             self.extract_descriptors()  # Fallback to classical extraction
+            time.sleep(20)
         
         try:
             self.preparations = self._call_llm(self.preparations_prompt)
-            time.sleep(15)
+            time.sleep(5)
         except Exception:
             self.extract_preparations()  # Fallback to classical extraction
+            time.sleep(20)
 
         n = len(self.ingredients)
         for name, arr in [
