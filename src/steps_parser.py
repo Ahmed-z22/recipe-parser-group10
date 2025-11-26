@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import List, Dict, Any, Optional
 from src.tools_parser import ToolsParser
 from src.methods_parser import MethodsParser
+import time
 
 
 class StepsParser:
@@ -170,7 +171,11 @@ class StepsParser:
         if self.mode == "classical":
             return self.tools_parser.extract_tools(step)
         else:
-            return self.tools_parser.extract_tools_llm(step)
+            try:
+                return self.tools_parser.extract_tools_llm(step)
+            except Exception:
+                time.sleep(5)  # to avoid rate limiting #
+                return self.tools_parser.extract_tools(step)
 
     def extract_methods(self, step: str) -> List[str]:
         """Extract cooking methods from the step.
@@ -184,7 +189,11 @@ class StepsParser:
         if self.mode == "classical":
             return self.methods_parser.extract_methods(step)
         else:
-            return self.methods_parser.extract_methods_llm(step)
+            try:
+                return self.methods_parser.extract_methods_llm(step)
+            except Exception:
+                time.sleep(5)  # to avoid rate limiting #
+                return self.methods_parser.extract_methods(step)
 
     def extract_time(self, step: str) -> Optional[Dict[str, str]]:
         """Extract time/duration from step text.
@@ -339,6 +348,7 @@ class StepsParser:
         for i, step_text in enumerate(atomic_steps, start=1):
             step_ingredients = self.extract_ingredients_from_step(step_text)
             step_tools = self.extract_tools(step_text)
+            time.sleep(10)  # to avoid rate limiting #
             step_methods = self.extract_methods(step_text)
             time_info = self.extract_time(step_text)
             temp_info = self.extract_temperature(step_text)
