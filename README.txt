@@ -194,9 +194,9 @@ Layout and visuals for the chat interface.
 
 src/App.js
 
-Main React UI for the recipe chatbot.
-
-Manages URL input, initialization, messages, loading state, step tracking, speech recognition, and speech synthesis.
-
-Communicates with backend via /api/initialize and /api/chat.
+Main React UI for the recipe chatbot, supporting both Classical NLP and LLM (Gemini) modes.
+Behavior:
+• Handles URL input, recipe initialization, mode selection, chat messages, loading state, and (for classical mode) step tracking.
+• Provides both text input and voice input via the Web Speech API, with optional auto-speak plus per-message Speak/Stop controls.
+• Talks to the Flask backend via /api/initialize and /api/chat, sending a fixed session_id to preserve conversation state.
 #+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-
