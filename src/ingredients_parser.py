@@ -10,14 +10,14 @@ import os
 class IngredientsParser:
     def __init__(self, ingredients: dict[str, list[str]], mode: str = "classical", model_name: str = "gemini-2.5-flash-lite"):
         self.mode = mode
+        self.ingredients = ingredients["ingredients"]
+        self.ingredients_names = None
+        self.ingredients_quantities_and_amounts = None
+        self.ingredients_measurement_units = None
+        self.descriptors = None
+        self.preparations = None
 
         if self.mode == "classical":
-            self.ingredients = ingredients["ingredients"]
-            self.ingredients_names = None
-            self.ingredients_quantities_and_amounts = None
-            self.ingredients_measurement_units = None
-            self.descriptors = None
-            self.preparations = None
             self.nlp = spacy.load("en_core_web_sm")
             self.path = Path(__file__).resolve().parent / "helper_files"
             self.alias_to_canon = self._load_json(self.path / "units_map.json")
@@ -199,6 +199,10 @@ class IngredientsParser:
             results.append([line] if keep and line else [])
         self.preparations = results
 
+    def llm_based_extraction(self):
+        pass
+
+
     def _parse_classical(self) -> list[dict[str, list[str] | str | int | float | None]]:
         """ "
         Executes all extraction methods ingredients.
@@ -241,7 +245,8 @@ class IngredientsParser:
             - ingredient_preparation: List of preparation phrases (list of str).
             - ingredient_descriptors: List of adjective descriptors (list of str).
         """
-        pass
+        
+        self.llm_based_extraction()
     
     def parse(self) -> list[dict[str, list[str] | str | int | float | None]]:
         """
