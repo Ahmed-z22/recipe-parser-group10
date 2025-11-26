@@ -13,7 +13,7 @@ class IngredientsParser:
         self,
         ingredients: dict[str, list[str]],
         mode: str = "classical",
-        model_name: str = "gemini-2.0-flash-lite",
+        model_name: str = "gemini-2.5-flash-lite",
     ):
         self.mode = mode
         self.ingredients = ingredients["ingredients"]
@@ -24,28 +24,28 @@ class IngredientsParser:
         self.preparations = None
         self.model_name = model_name
 
-        if self.mode == "classical":
-            self.nlp = spacy.load("en_core_web_sm")
-            self.path = Path(__file__).resolve().parent / "helper_files"
-            self.alias_to_canon = self._load_json(self.path / "units_map.json")
-            self.unicode_fractions = self._load_json(
-                self.path / "unicode_fractions.json"
+        self.nlp = spacy.load("en_core_web_sm")
+        self.path = Path(__file__).resolve().parent / "helper_files"
+        self.alias_to_canon = self._load_json(self.path / "units_map.json")
+        self.unicode_fractions = self._load_json(
+            self.path / "unicode_fractions.json"
+        )
+        self.frac_chars = "".join(self.unicode_fractions.keys())
+        self.units_pattern = "|".join(
+            sorted(
+                map(re.escape, self.alias_to_canon.keys()), key=len, reverse=True
             )
-            self.frac_chars = "".join(self.unicode_fractions.keys())
-            self.units_pattern = "|".join(
-                sorted(
-                    map(re.escape, self.alias_to_canon.keys()), key=len, reverse=True
-                )
-            )
-            self.qty = re.compile(
-                r"^\s*(?:\d+(?:\.\d+)?\s*(?:-|–|to)\s*\d+(?:\.\d+)?|(?:(\d+)\s*)?["
-                + re.escape(self.frac_chars)
-                + r"]|(?:(\d+)\s+)?\d+\s*/\s*\d+|\d+\.\d+|\d+)\s*",
-                re.I,
-            )
-            self.unit = re.compile(r"^\s*(?:" + self.units_pattern + r")\b\.?\s*", re.I)
-            self.paren = re.compile(r"\([^)]*\)")
-        else:
+        )
+        self.qty = re.compile(
+            r"^\s*(?:\d+(?:\.\d+)?\s*(?:-|–|to)\s*\d+(?:\.\d+)?|(?:(\d+)\s*)?["
+            + re.escape(self.frac_chars)
+            + r"]|(?:(\d+)\s+)?\d+\s*/\s*\d+|\d+\.\d+|\d+)\s*",
+            re.I,
+        )
+        self.unit = re.compile(r"^\s*(?:" + self.units_pattern + r")\b\.?\s*", re.I)
+        self.paren = re.compile(r"\([^)]*\)")
+
+        if self.mode != "classical":
             self.path = Path(__file__).resolve().parent.parent
             load_dotenv(self.path / "apikey.env")
             self.api_key = os.getenv("GEMINI_API_KEY")
@@ -373,10 +373,19 @@ class IngredientsParser:
 
     def parse(self) -> list[dict[str, list[str] | str | int | float | None]]:
         """
-        Parses the ingredients based on the selected mode (classical or LLM).
-        returns: A list of dictionaries, each containing the parsed components of an ingredient.
+        Parses the ingredients based on the selected mode.
+
+        - "classical": spaCy-based pipeline only.
+        - "hybrid": try LLM first; if it fails for any reason, fall back to classical.
+        - anything else: treat as full LLM mode.
         """
         if self.mode == "classical":
             return self._parse_classical()
-        else:
-            return self._parse_llm()
+
+        if self.mode == "hybrid":
+            try:
+                return self._parse_llm()
+            except Exception:
+                return self._parse_classical()
+
+        return self._parse_llm()
