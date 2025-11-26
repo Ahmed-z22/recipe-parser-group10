@@ -11,7 +11,7 @@ A recipe parsing project — developed as part of **COMP SCI 337** at **Northwes
 
 &nbsp;
 
-## Gemini API token
+## Gemini API key
 1. Create an API key from [Google AI Studio](https://aistudio.google.com/api-keys).
 2. Put your API key in the next command
 >> echo "GEMINI_API_KEY=PUT_YOUR_API_KEY_HERE" > apikey.env 
