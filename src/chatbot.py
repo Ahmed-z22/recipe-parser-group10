@@ -1,4 +1,3 @@
-import time
 from src.scraper import get_recipe_data
 from src.ingredients_parser import IngredientsParser
 from src.steps_parser import StepsParser
@@ -20,7 +19,6 @@ YELLOW = "\033[93m"
 MAGENTA = "\033[95m"
 RESET = "\033[0m"
 BOLD = "\033[1m"
-
 
 class Chatbot:
     """Initialize Chatbot"""
