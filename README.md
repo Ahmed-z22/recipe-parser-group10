@@ -21,6 +21,7 @@ A recipe parsing project — developed as part of **COMP SCI 337** at **Northwes
 ### Backend
 Run the backend api in separate terminal:
 >> python backend/api.py
+
 Runs on **[http://localhost:5001](http://localhost:5001)**.
 
 ### Frontend
@@ -68,17 +69,17 @@ Backend must be running on port **5001**.
 >> python -m src.LLM_based_qa
 
 ### Usage (CLI)
-1. Enter a recipe URL from a supported website
+1. Choose the mode if applicable
+2. Enter a recipe URL from a supported website
     - allrecipes.com
     - epicurious.com
     - bonappetit.com
-2. Ask questions about the recipe
+3. Ask questions about the recipe
 
 &nbsp;
 
 ## Allowed questions (Only for Classical NLP mode)
-- **Please look at `allowed_questions.txt` to see some of the questions examples**
-- **Click here to go to [`allowed_questions.txt`](allowed_questions.txt)**
+- **Please look at [`allowed_questions.txt`](allowed_questions.txt) to see some of the questions examples**
 
 &nbsp;
 
