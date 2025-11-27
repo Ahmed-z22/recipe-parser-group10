@@ -1,125 +1,111 @@
-from flask import Flask, request, jsonify
-from flask_cors import CORS
-import sys
+from dotenv import load_dotenv
+from google import genai
+from google.genai import types
 import os
+from pathlib import Path
+from src.scraper import get_recipe_data
 
-parent_dir = os.path.join(os.path.dirname(__file__), "..")
-src_dir = os.path.join(parent_dir, "src")
-sys.path.insert(0, parent_dir)
-sys.path.insert(0, src_dir)
-
-from src.chatbot import Chatbot
-from src.LLM_based_qa import LLMBasedQA
-
-app = Flask(__name__)
-CORS(app)
-
-sessions = {}
+GREEN = "\033[92m"
+CYAN = "\033[96m"
+YELLOW = "\033[93m"
+MAGENTA = "\033[95m"
+RESET = "\033[0m"
+BOLD = "\033[1m"
 
 
-def make_classical_bot(url):
-    bot = Chatbot(backend=True, mode="classical")
-    success = bot.process_url(url)
-    if not success:
-        raise RuntimeError("Failed to process recipe URL in classical mode")
-    return bot
+class LLMBasedQA:
+    def __init__(self, url, model_name="gemini-2.5-flash"):
 
-
-def make_hybrid_bot(url):
-    bot = Chatbot(backend=True, mode="hybrid")
-    success = bot.process_url(url)
-    if not success:
-        raise RuntimeError("Failed to process recipe URL in hybrid mode")
-    return bot
-
-
-def make_llm_bot(url):
-    return LLMBasedQA(url)
-
-
-@app.route("/api/initialize", methods=["POST"])
-def initialize():
-    data = request.json
-    url = data.get("url")
-    sid = data.get("session_id", "default")
-    mode = data.get("mode", "classical")
-
-    if not url:
-        return jsonify({"error": "URL is required"}), 400
-
-    if mode not in ["classical", "llm", "hybrid"]:
-        return jsonify({"error": "Invalid mode"}), 400
-
-    try:
-        if mode == "classical":
-            bot = make_classical_bot(url)
-            title = bot.title.get("title", "Unknown Recipe")
-        elif mode == "llm":
-            bot = make_llm_bot(url)
-            title = bot.title.get("title", "Unknown Recipe")
-        else:
-            bot = make_hybrid_bot(url)
-            title = bot.title.get("title", "Unknown Recipe")
-
-        sessions[sid] = {"mode": mode, "bot": bot}
-
-        return jsonify({"success": True, "title": title, "mode": mode})
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-
-@app.route("/api/chat", methods=["POST"])
-def chat():
-    data = request.json
-    question = data.get("question")
-    sid = data.get("session_id", "default")
-
-    if not question:
-        return jsonify({"error": "Question is required"}), 400
-
-    if sid not in sessions:
-        return jsonify({"error": "Chatbot not initialized"}), 400
-
-    session = sessions[sid]
-    mode = session["mode"]
-    bot = session["bot"]
-
-    try:
-        if mode in ["classical", "hybrid"]:
-            response = bot.respond(question)
-            if not response:
-                response = "No response."
-
-            return jsonify(
-                {
-                    "response": response,
-                    "current_step": bot.current_step,
-                    "total_steps": len(bot.steps),
-                    "mode": mode,
-                }
+        self.path = Path(__file__).resolve().parent.parent
+        load_dotenv(self.path / "apikey.env")
+        self.api_key = os.getenv("GEMINI_API_KEY")
+        if not self.api_key:
+            raise ValueError(
+                "GEMINI_API_KEY not found. Please set it in your .env file."
             )
 
-        else:
-            _, answer = bot.answer(question)
-            response = answer or "No response."
+        with open(self.path / "src" / "prompts" / "LLM_based_qa_prompt.txt", "r") as f:
+            self.system_prompt = f.read()
 
-            return jsonify(
-                {
-                    "response": response,
-                    "current_step": 0,
-                    "total_steps": 0,
-                    "mode": mode,
-                }
+        self.client = genai.Client()
+        self.chat = self.client.chats.create(
+            model=model_name,
+            config=types.GenerateContentConfig(
+                system_instruction=self.system_prompt,
+                temperature=0.2,
+                top_p=0.8,
+                top_k=40,
+            ),
+        )
+
+        self.title, self.ingredients, self.directions = get_recipe_data(url)
+
+    def _question_formatting(
+        self, question: str, title: str, ingredients: list, steps: list
+    ) -> (str, str):
+        return (
+            (
+                "=== RECIPE DATA START ===\n"
+                f"Title:\n{title}\n\n"
+                "Ingredients:\n" + "\n".join(ingredients) + "\n\n"
+                "Steps:\n" + "\n".join(steps) + "\n"
+                "=== RECIPE DATA END ===\n\n"
+                "User Question:\n"
+                f"{question}\n\n"
+                "Answer:"
+            ),
+            question,
+        )
+
+    def answer(self, question: str) -> (str, str):
+        formatted_question, user_question = self._question_formatting(
+            question,
+            self.title["title"],
+            self.ingredients["ingredients"],
+            self.directions["directions"],
+        )
+
+        try:
+            self.chat.send_message(formatted_question)
+
+            history = self.chat.get_history()
+
+            if not history or not history[-1].parts:
+                return user_question, "The model returned an unexpected empty response. Please try again."
+
+            return user_question, history[-1].parts[0].text
+
+        except Exception as e:
+            err_type = type(e).__name__
+            return user_question, (
+                f"The model encountered an error ({err_type}). "
+                f"Please try your question again."
             )
-
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-
-@app.route("/api/health", methods=["GET"])
-def health():
-    return jsonify({"status": "ok"})
-
 
 if __name__ == "__main__":
-    app.run(debug=True, host="127.0.0.1", port=5001)
+    print(BOLD + CYAN + "\n=== Recipe Explainer Chatbot ===\n" + RESET)
+
+    input_url = input(YELLOW + "Enter the recipe URL: " + RESET)
+
+    llm_qa = LLMBasedQA(input_url)
+
+    print(
+        CYAN + "\n------------------------------------------------------------" + RESET
+    )
+    print(BOLD + "You can now ask questions about the recipe." + RESET)
+    print("(Type 'exit' or 'quit' to stop)")
+    print(
+        CYAN + "------------------------------------------------------------\n" + RESET
+    )
+
+    while True:
+        user_question = input(GREEN + "You: " + RESET)
+
+        if user_question.lower() in ("exit", "quit"):
+            print(CYAN + "\nGoodbye!\n" + RESET)
+            break
+
+        question, answer = llm_qa.answer(user_question)
+
+        print(BOLD + MAGENTA + "Assistant:" + RESET)
+        print(f"{answer}\n")
