@@ -1,6 +1,10 @@
 *********************************************************** Only for Classical NLP mode ***********************************************************
 ********** ********** ********** These are some representative questions for each of the six questions categories ********** ********** ***********
 
+
+
+
+
 #+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-
 Retrieval Question
 1. Ask to show, display, list, give, or tell the recipe or any part of it, such as:
