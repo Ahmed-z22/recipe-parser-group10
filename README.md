@@ -39,7 +39,10 @@ Backend must be running on port **5001**.
     - <span style="color:red; font-weight:bold">Hybrid mode may be very slow without a Gemini subscription — loading can take up to around 5 minutes</span>
 
 ### Steps
-1. Enter a recipe URL from one of these supported websites (allrecipes.com, epicurious.com, bonappetit.com)
+1. Enter a recipe URL from a supported website
+    - allrecipes.com
+    - epicurious.com
+    - bonappetit.com
 2. Click **Load Recipe**
 3. Ask questions about the recipe
 4. Explore the TTS feature!
