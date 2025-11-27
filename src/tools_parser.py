@@ -7,6 +7,7 @@ from google import genai
 from google.genai import types
 import os
 
+
 class ToolsParser:
     def __init__(
         self, directions, mode="classical", model_name="gemini-2.0-flash-lite"
