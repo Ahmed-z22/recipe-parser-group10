@@ -10,7 +10,7 @@ import os
 
 class ToolsParser:
     def __init__(
-        self, directions, mode="classical", model_name="gemini-2.0-flash-lite"
+        self, directions, mode="classical", model_name="gemini-2.5-flash-lite"
     ):
         self.mode = mode
         self.model_name = model_name
