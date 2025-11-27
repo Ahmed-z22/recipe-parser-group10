@@ -31,6 +31,7 @@
 │   │   ├── methods_prompt.txt
 │   │   ├── parameter_clarification_procedure_prompt.txt
 │   │   ├── preparations_prompt.txt
+│   │   ├── qa_prompt.txt
 │   │   ├── quantities_prompt.txt
 │   │   └── tools_prompt.txt
 │   ├── __init__.py
@@ -246,6 +247,7 @@ descriptors_prompt.txt                              => extracts ingredient descr
 methods_prompt.txt                                  => extracts cooking methods from a single step
 tools_prompt.txt                                    => extracts kitchen tools from a single step
 parameter_clarification_procedure_prompt.txt        => Answers parameter, clarification, and procedure queries.
+qa_prompt.txt                                       => Fallback situation if the question is not supported in Hybrid mode
 
 quantities_prompt.txt                               => extracts quantities and amounts from a single ingredient sentence
     - Note: Requires a Gemini subscription (too costly to run without one)
