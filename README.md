@@ -35,8 +35,8 @@ Backend must be running on port **5001**.
 
 ### Select a Processing Mode
 - Classical NLP
-- LLM (Gemini)
-- Hybrid (NLP + LLM)
+- LLM (Gemini) -> `gemini-2.5-flash`
+- Hybrid (NLP + LLM) -> `gemini-2.5-flash-lite`
     - <span style="color:red; font-weight:bold">Hybrid mode may be very slow without a Gemini subscription — loading can take up to around 5 minutes</span>
 
 ### Steps
