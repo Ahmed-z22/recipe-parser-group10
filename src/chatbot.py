@@ -20,10 +20,17 @@ MAGENTA = "\033[95m"
 RESET = "\033[0m"
 BOLD = "\033[1m"
 
+
 class Chatbot:
     """Initialize Chatbot"""
 
-    def __init__(self, mode="classical", test=False, backend=False, model_name="gemini-2.5-flash-lite"):
+    def __init__(
+        self,
+        mode="classical",
+        test=False,
+        backend=False,
+        model_name="gemini-2.5-flash-lite",
+    ):
         self.mode = mode
         self.model_name = model_name
 
@@ -234,7 +241,9 @@ class Chatbot:
             except AttributeError:
                 raw_parts = []
                 for cand in getattr(response, "candidates", []) or []:
-                    for part in getattr(getattr(cand, "content", None), "parts", []) or []:
+                    for part in (
+                        getattr(getattr(cand, "content", None), "parts", []) or []
+                    ):
                         if hasattr(part, "text"):
                             raw_parts.append(part.text)
                 raw = "".join(raw_parts)
@@ -245,7 +254,9 @@ class Chatbot:
             text = raw.strip()
 
             if text.startswith("```"):
-                text = re.sub(r"^```(?:txt|text|plain)?", "", text, flags=re.IGNORECASE).strip()
+                text = re.sub(
+                    r"^```(?:txt|text|plain)?", "", text, flags=re.IGNORECASE
+                ).strip()
                 if text.endswith("```"):
                     text = text[:-3].strip()
 
