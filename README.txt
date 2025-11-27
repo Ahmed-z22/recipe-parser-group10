@@ -1,4 +1,4 @@
-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-
+#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-
 
                                                         Project Structure
 
@@ -48,12 +48,12 @@
 ├── pyproject.toml
 ├── README.md
 └── README.txt
-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-
+#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-
 
 
 
 
-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-
+#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-
 
                                                         src/ folder
 
@@ -68,7 +68,7 @@ Main function: get_recipe_data(url)
 Internal helpers:
 • _http_get_soup(url): GET request → BeautifulSoup object.
 • _extract_json_ld_recipe(...): Finds/normalizes JSON-LD “Recipe" fields (title, ingredients, instructions).
-------------------------------------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------------------------------------------------------
 
 ingredients_parser.py
 
@@ -85,7 +85,7 @@ Extracted fields:
 • ingredient_preparation
 
 parse() returns a list of dicts containing the extracted fields mentioned above, one per ingredient line.
-------------------------------------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------------------------------------------------------
 
 methods_parser.py
 
@@ -100,7 +100,7 @@ Behavior:
 • Deduplicates and orders methods per direction.
 
 parse() returns, for each direction: original text, list of step sentences, and extracted methods.
-------------------------------------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------------------------------------------------------
 
 tools_parser.py
 
@@ -111,7 +111,7 @@ Offers 2 methods of extraction:
 
 Detects noun chunks likely representing tools and normalizes them.
 parse() returns, for each direction: original text, step sentences, and extracted tools.
-------------------------------------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------------------------------------------------------
 
 steps_parser.py
 
@@ -128,7 +128,7 @@ For each atomic step extracts:
 • step type (action, observation, advice, warning)
 
 parse() returns a numbered list of atomic step dicts.
-------------------------------------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------------------------------------------------------
 
 chatbot.py
 
@@ -139,7 +139,7 @@ For answering questions about a scraped recipe.
 3 - Parses structured ingredients, tools, methods, and atomic steps using the aforementioned classes. 
 4 - Maintains current_step state for navigation.
 5 - Parses questions and answer them
-------------------------------------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------------------------------------------------------
 
 LLM_based_qa.py
 
@@ -154,12 +154,58 @@ Behavior:
 
 When run directly:
 • Prompts for a recipe URL, starts an interactive terminal Q&A loop, and responds until the user exits.
-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-
+
+
+---------------------------------------------------------------------------------------------------------------------------------------------------                                         
+                                                    
+                                                    helper_files/ folder
+
+method_keywords.json      => contains common cooking methods
+---------------------------------------------------------------------------------------------------------------------------------------------------
+tools_keywords.json       => contains common tools, preparation words, and tool-related verb lists
+---------------------------------------------------------------------------------------------------------------------------------------------------
+unicode_fractions.json    => maps Unicode fraction characters to numeric values
+---------------------------------------------------------------------------------------------------------------------------------------------------
+units_map.json            => contains measurement units and a mapping from variations to canonical forms
+---------------------------------------------------------------------------------------------------------------------------------------------------
+usages.json               => describes the common usages of kitchen tools
+---------------------------------------------------------------------------------------------------------------------------------------------------
+procedures.json           => contains explanations of common cooking procedures (methods)
+===================================================================================================================================================
+
+
+===================================================================================================================================================
+   
+                                                    src/prompts
+
+LLM_based_qa_prompt.txt                             => contains the full prompt for the LLM-Based QA; handles all QA-related logic
+---------------------------------------------------------------------------------------------------------------------------------------------------
+ingredients_names_prompt.txt                        => extracts ingredient names from full ingredient sentences
+---------------------------------------------------------------------------------------------------------------------------------------------------
+preparations_prompt.txt                             => extracts specific ingredient preparations from an ingredient sentence
+---------------------------------------------------------------------------------------------------------------------------------------------------
+descriptors_prompt.txt                              => extracts ingredient descriptors from an ingredient sentence
+---------------------------------------------------------------------------------------------------------------------------------------------------
+methods_prompt.txt                                  => extracts cooking methods from a single step
+---------------------------------------------------------------------------------------------------------------------------------------------------
+tools_prompt.txt                                    => extracts kitchen tools from a single step
+---------------------------------------------------------------------------------------------------------------------------------------------------
+parameter_clarification_procedure_prompt.txt        => Answers parameter, clarification, and procedure queries.
+---------------------------------------------------------------------------------------------------------------------------------------------------
+qa_prompt.txt                                       => Fallback situation if the question is not supported in Hybrid mode
+---------------------------------------------------------------------------------------------------------------------------------------------------
+quantities_prompt.txt                               => extracts quantities and amounts from a single ingredient sentence
+    - Note: Requires a Gemini subscription (too costly to run without one)
+---------------------------------------------------------------------------------------------------------------------------------------------------
+measurement_units_prompt.txt                        => extracts measurement units associated with a specific ingredient in a single ingredient step
+    - Note: Requires a Gemini subscription (too costly to run without one)
+===================================================================================================================================================
+#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-
 
 
 
 
-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-
+#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-
 
                                                         backend/ folder
 
@@ -179,34 +225,34 @@ creates the appropriate bot, stores it in sessions, and returns recipe title + m
     • GET /api/health → simple health check ({"status": "ok"}).
 
 Runs on 127.0.0.1:5001 with debug=True when executed directly.
-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-
+#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-
 
 
 
 
-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-
+#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-
 
                                                         frontend/ folder
 
 public/index.html
 
 HTML container for the React app with <div id="root">.
-------------------------------------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------------------------------------------------------
 
 src/index.js
 
 React entry point; renders App.
-------------------------------------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------------------------------------------------------
 
 src/index.css
 
 Global styles.
-------------------------------------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------------------------------------------------------
 
 src/App.css
 
 Layout and visuals for the chat interface.
-------------------------------------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------------------------------------------------------
 
 src/App.js
 
@@ -215,42 +261,4 @@ Behavior:
 • Handles URL input, recipe initialization, mode selection, chat messages, loading state, and step tracking.
 • Provides both text input and voice input via the Web Speech API, with optional auto-speak plus per-message Speak/Stop controls.
 • Talks to the Flask backend via /api/initialize and /api/chat, sending a fixed session_id to preserve conversation state.
-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-
-
-
-
-
-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-
-                                           
-                                                    src/helper_files
-
-method_keywords.json      => contains common cooking methods
-tools_keywords.json       => contains common tools, preparation words, and tool-related verb lists
-unicode_fractions.json    => maps Unicode fraction characters to numeric values
-units_map.json            => contains measurement units and a mapping from variations to canonical forms
-usages.json               => describes the common usages of kitchen tools
-procedures.json           => contains explanations of common cooking procedures (methods)
-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-
-
-
-
-
-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-
-   
-                                                    src/prompts
-
-LLM_based_qa_prompt.txt                             => contains the full prompt for the LLM-Based QA; handles all QA-related logic
-
-ingredients_names_prompt.txt                        => extracts ingredient names from full ingredient sentences
-preparations_prompt.txt                             => extracts specific ingredient preparations from an ingredient sentence
-descriptors_prompt.txt                              => extracts ingredient descriptors from an ingredient sentence
-methods_prompt.txt                                  => extracts cooking methods from a single step
-tools_prompt.txt                                    => extracts kitchen tools from a single step
-parameter_clarification_procedure_prompt.txt        => Answers parameter, clarification, and procedure queries.
-qa_prompt.txt                                       => Fallback situation if the question is not supported in Hybrid mode
-
-quantities_prompt.txt                               => extracts quantities and amounts from a single ingredient sentence
-    - Note: Requires a Gemini subscription (too costly to run without one)
-measurement_units_prompt.txt                        => extracts measurement units associated with a specific ingredient in a single ingredient step
-    - Note: Requires a Gemini subscription (too costly to run without one)
-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-
+#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-#+-
