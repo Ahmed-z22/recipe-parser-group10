@@ -139,6 +139,13 @@ For answering questions about a scraped recipe.
 3 - Parses structured ingredients, tools, methods, and atomic steps using the aforementioned classes. 
 4 - Maintains current_step state for navigation.
 5 - Parses questions and answer them
+
+It offers 2 modes of chatbot:
+1. First one is the classical NLP mode.
+2. The second one is the hybrid mode, basically, ingredients, tools, and methods parsing will be done using LLM. Also, parameter, clarification,
+   and procedure questions will be routed directly to the LLM. However, Navigation, retrieval, and quantity questions will be handled by classical
+   part as long they have been asked in the supported way. Last thing, is that any unclassified question type, or even unsupported questions will 
+   be routed to an LLM to be answered.
 ---------------------------------------------------------------------------------------------------------------------------------------------------
 
 LLM_based_qa.py
