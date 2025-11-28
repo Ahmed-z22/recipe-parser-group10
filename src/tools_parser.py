@@ -2,10 +2,19 @@ import json
 import re
 import spacy
 from pathlib import Path
+from dotenv import load_dotenv
+from google import genai
+from google.genai import types
+import os
 
 
 class ToolsParser:
-    def __init__(self, directions):
+    def __init__(
+        self, directions, mode="classical", model_name="gemini-2.5-flash-lite"
+    ):
+        self.mode = mode
+        self.model_name = model_name
+
         self.directions = directions["directions"]
         self.tools = None
         self.nlp = spacy.load("en_core_web_sm")
@@ -23,6 +32,22 @@ class ToolsParser:
 
         # verbs that often imply tool usage
         self.tool_verb_list = data.get("tool_verb_list")
+
+        self.method_keywords = data.get("method_keywords")
+
+        if self.mode != "classical":
+            self.path = Path(__file__).resolve().parent.parent
+            load_dotenv(self.path / "apikey.env")
+            self.api_key = os.getenv("GEMINI_API_KEY")
+            if not self.api_key:
+                raise ValueError(
+                    "GEMINI_API_KEY not found. Please set it in your .env file."
+                )
+
+            self.client = genai.Client(api_key=self.api_key)
+
+            with open(self.path / "src" / "prompts" / "tools_prompt.txt", "r") as f:
+                self.tools_prompt = f.read()
 
     # can maybe add this to the Steps section
     def split_directions_into_steps(self):
@@ -123,7 +148,73 @@ class ToolsParser:
         )
         return tools
 
-    def parse(self):
+    def _message_formatting(self, context: str) -> str:
+        return "=== Context ===\n" f"{context}\n\n" "=== Context ===\n\n" "Output:"
+
+    def extract_tools_llm(self, step):
+        """
+        Extract cooking tools and equipment from recipe text using llm-based approach.
+        Args:
+            step (str): A single step from the recipe directions.
+        Returns:
+            list[str]: A list of normalized tool names found in the text.
+        Example:
+            >>> parser.extract_tools_llm("Heat oil in a large skillet and use a wooden spoon to stir")
+            ['large skillet', 'wooden spoon']
+        """
+        payload = json.dumps({"step": step}, ensure_ascii=False)
+        full_prompt = self.tools_prompt.strip() + "\n\nINPUT JSON:\n" + payload
+
+        contents = self._message_formatting(full_prompt)
+
+        response = self.client.models.generate_content(
+            model=self.model_name,
+            contents=contents,
+            config=types.GenerateContentConfig(
+                temperature=0.2,
+                top_p=0.8,
+                top_k=40,
+            ),
+        )
+
+        try:
+            raw = response.text
+        except AttributeError:
+            raw_parts = []
+            for cand in getattr(response, "candidates", []) or []:
+                for part in getattr(cand, "content", {}).parts or []:
+                    if hasattr(part, "text"):
+                        raw_parts.append(part.text)
+            raw = "".join(raw_parts)
+
+        if raw is None:
+            return self.extract_tools(step)
+
+        text = raw.strip()
+
+        if text.startswith("```"):
+            text = re.sub(r"^```(?:json)?", "", text, flags=re.IGNORECASE).strip()
+            if text.endswith("```"):
+                text = text[:-3].strip()
+
+        try:
+            parsed = json.loads(text)
+        except json.JSONDecodeError:
+            return self.extract_tools(step)
+
+        if not isinstance(parsed, list):
+            return self.extract_tools(step)
+
+        tools = []
+        for item in parsed:
+            if isinstance(item, str):
+                t = item.strip().lower()
+                if t:
+                    tools.append(t)
+
+        return tools
+
+    def parse(self, flag_llm=False):
         """
         Parse directions and extract tools used in each direction's steps.
         Relies on the extract_tools() method to identify tools from step text.
@@ -140,8 +231,10 @@ class ToolsParser:
         for direction, steps in self.directions_split.items():
             output_dict = {"direction": direction, "steps": steps, "tools": ()}
             for step in steps:
-                tools_in_step = self.extract_tools(step)
-                # output_dict["tools"].append(tools_in_step)
+                if flag_llm:
+                    tools_in_step = self.extract_tools_llm(step)
+                else:
+                    tools_in_step = self.extract_tools(step)
                 output_dict["tools"] = list(
                     set(output_dict["tools"]) | set(tools_in_step)
                 )

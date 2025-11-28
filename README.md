@@ -6,44 +6,50 @@ A recipe parsing project — developed as part of **COMP SCI 337** at **Northwes
 &nbsp;
 
 ## Conda environment
-
 >> conda env create -f environment.yml
-
 >> conda activate recipe-parser-group10
 
 &nbsp;
 
+## Gemini API key
+1. Create an API key from [Google AI Studio](https://aistudio.google.com/api-keys).
+2. Put your API key in the next command
+>> echo "GEMINI_API_KEY=PUT_YOUR_API_KEY_HERE" > apikey.env 
+
 ## Running the recipe parser (UI)
 
 ### Backend
-
 Run the backend api in separate terminal:
-
 >> python backend/api.py
 
 Runs on **[http://localhost:5001](http://localhost:5001)**.
 
 ### Frontend
-
 To setup and run the UI, open new terminal window and run the following commands
-
 >> cd frontend/ 
-
 >> npm install
-
 >> npm start
 
 Opens at **[http://localhost:3000](http://localhost:3000)**.
 Backend must be running on port **5001**.
 
-### Usage (UI)
-1. Enter a supported recipe URL (allrecipes.com, epicurious.com, bonappetit.com)
+### Select a Processing Mode
+- Classical NLP
+- LLM (Gemini) -> `gemini-2.5-flash`
+- Hybrid (NLP + LLM) -> `gemini-2.5-flash-lite`
+    - <span style="color:red; font-weight:bold">Hybrid mode may be very slow without a Gemini subscription — loading can take up to around 5 minutes</span>
+
+### Steps
+1. Enter a recipe URL from a supported website
+    - allrecipes.com
+    - epicurious.com
+    - bonappetit.com
 2. Click **Load Recipe**
 3. Ask questions about the recipe
 4. Explore the TTS feature!
 5. Explore talking to the agent using the record button! (STT)
 
-### Supported websites
+### Supported browsers
 1. `Google Chroom`
 2. `Safari`
 3. `Firefox (only TTS is supported)`
@@ -55,18 +61,25 @@ Backend must be running on port **5001**.
 &nbsp;
 
 ## Running the recipe parser (CLI)
-In the CLI run the following command:
+
+### Classical NLP or Hybrid (NLP + LLM) modes
 >> python -m src.chatbot
 
+### LLM (Gemini) mode:
+>> python -m src.LLM_based_qa
+
 ### Usage (CLI)
-1. Enter a supported recipe URL (allrecipes.com, epicurious.com, bonappetit.com)
-2. Ask questions about the recipe
+1. Choose the mode if applicable
+2. Enter a recipe URL from a supported website
+    - allrecipes.com
+    - epicurious.com
+    - bonappetit.com
+3. Ask questions about the recipe
 
 &nbsp;
 
-## Allowed questions
-- **Please look at `allowed_questions.txt` to see some of the questions examples**
-- **Click here to go to [`allowed_questions.txt`](allowed_questions.txt)**
+## Allowed questions (Only for Classical NLP mode)
+- **Please look at [`allowed_questions.txt`](allowed_questions.txt) to see some of the questions examples**
 
 &nbsp;
 
@@ -88,20 +101,34 @@ In the CLI run the following command:
 ├── src
 │   ├── helper_files
 │   │   ├── method_keywords.json
+│   │   ├── procedures.json
 │   │   ├── tools_keywords.json
 │   │   ├── unicode_fractions.json
-│   │   └── units_map.json
+│   │   ├── units_map.json
+│   │   └── usages.json
+│   ├── prompts
+│   │   ├── descriptors_prompt.txt
+│   │   ├── ingredients_names_prompt.txt
+│   │   ├── LLM_based_qa_prompt.txt
+│   │   ├── measurement_units_prompt.txt
+│   │   ├── methods_prompt.txt
+│   │   ├── parameter_clarification_procedure_prompt.txt
+│   │   ├── preparations_prompt.txt
+│   │   ├── qa_prompt.txt
+│   │   ├── quantities_prompt.txt
+│   │   └── tools_prompt.txt
 │   ├── __init__.py
 │   ├── chatbot.py
 │   ├── ingredients_parser.py
+│   ├── LLM_based_qa.py
 │   ├── methods_parser.py
 │   ├── scraper.py
 │   ├── steps_parser.py
 │   └── tools_parser.py
 ├── .gitignore
+├── allowed_questions.txt
 ├── environment.yml
 ├── pyproject.toml
-├── allowed_questions.txt
 ├── README.md
 └── README.txt
 ```

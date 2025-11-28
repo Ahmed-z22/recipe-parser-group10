@@ -37,6 +37,8 @@ function App() {
   const recognitionRef = useRef(null);
   const [autoSpeak, setAutoSpeak] = useState(false);
 
+  const [mode, setMode] = useState('classical');
+
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
@@ -49,7 +51,11 @@ function App() {
       const res = await fetch(`${API_URL}/api/initialize`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url: url.trim(), session_id: 'default' }),
+        body: JSON.stringify({
+          url: url.trim(),
+          session_id: 'default',
+          mode,
+        }),
       });
 
       const data = await res.json();
@@ -57,6 +63,13 @@ function App() {
       if (res.ok) {
         setInitialized(true);
         setMessages([{ type: 'bot', text: 'Recipe loaded! Ask me anything.' }]);
+
+        if (data.mode) {
+          setMode(data.mode);
+        }
+
+        setCurrentStep(0);
+        setTotalSteps(0);
       } else {
         alert(`Error: ${data.error || 'Failed to load recipe'}`);
       }
@@ -73,7 +86,7 @@ function App() {
     if (!text.trim() || loading) return;
 
     setInput('');
-    setMessages((prev) => [...prev, { type: 'user', text: text }]);
+    setMessages((prev) => [...prev, { type: 'user', text }]);
     setLoading(true);
 
     try {
@@ -87,15 +100,26 @@ function App() {
 
       if (res.ok) {
         setMessages((prev) => [...prev, { type: 'bot', text: data.response }]);
+
         setCurrentStep(data.current_step || 0);
         setTotalSteps(data.total_steps || 0);
 
+        if (data.mode) {
+          setMode(data.mode);
+        }
+
         if (autoSpeak) speak(data.response);
       } else {
-        setMessages((prev) => [...prev, { type: 'bot', text: `Error: ${data.error}` }]);
+        setMessages((prev) => [
+          ...prev,
+          { type: 'bot', text: `Error: ${data.error}` },
+        ]);
       }
     } catch (error) {
-      setMessages((prev) => [...prev, { type: 'bot', text: `Error: ${error.message}` }]);
+      setMessages((prev) => [
+        ...prev,
+        { type: 'bot', text: `Error: ${error.message}` },
+      ]);
     } finally {
       setLoading(false);
     }
@@ -147,6 +171,16 @@ function App() {
           <div>
             <h1>Recipe Chatbot</h1>
             <p className="course-info">CS 337 - Group 10</p>
+            {initialized && (
+              <p style={{ fontSize: '0.9rem', color: '#ccc', marginTop: '4px' }}>
+                Mode:{' '}
+                {mode === 'classical'
+                  ? 'Classical NLP'
+                  : mode === 'llm'
+                  ? 'LLM (Gemini)'
+                  : 'Hybrid (NLP + LLM)'}
+              </p>
+            )}
           </div>
           {initialized && (
             <div className="recipe-info">
@@ -155,7 +189,9 @@ function App() {
                   Step {currentStep + 1} of {totalSteps}
                 </span>
               )}
-              <button onClick={resetChat} className="reset-btn">New Recipe</button>
+              <button onClick={resetChat} className="reset-btn">
+                New Recipe
+              </button>
             </div>
           )}
         </div>
@@ -201,10 +237,91 @@ function App() {
                   className="url-input"
                   onKeyPress={(e) => e.key === 'Enter' && initializeRecipe()}
                 />
-                <button onClick={initializeRecipe} disabled={loading} className="load-btn">
+                <button
+                  onClick={initializeRecipe}
+                  disabled={loading}
+                  className="load-btn"
+                >
                   {loading ? 'Loading...' : 'Load Recipe'}
                 </button>
               </div>
+
+              <div
+                style={{
+                  marginTop: '20px',
+                  display: 'flex',
+                  justifyContent: 'center',
+                  gap: '20px'
+                }}
+              >
+                <button
+                  onClick={() => setMode('classical')}
+                  className="mode-btn"
+                  style={{
+                    padding: '12px 22px',
+                    borderRadius: '10px',
+                    border: mode === 'classical' ? '2px solid #2196f3' : '2px solid #1b3a57',
+                    backgroundColor: mode === 'classical' ? '#2196f3' : '#1b3a57',
+                    color: 'white',
+                    cursor: 'pointer',
+                    fontSize: '16px',
+                    transition: '0.2s ease',
+                    minWidth: '190px',
+                  }}
+                >
+                  Classical NLP
+                </button>
+
+                <button
+                  onClick={() => setMode('llm')}
+                  className="mode-btn"
+                  style={{
+                    padding: '12px 22px',
+                    borderRadius: '10px',
+                    border: mode === 'llm' ? '2px solid #2196f3' : '2px solid #1b3a57',
+                    backgroundColor: mode === 'llm' ? '#2196f3' : '#1b3a57',
+                    color: 'white',
+                    cursor: 'pointer',
+                    fontSize: '16px',
+                    transition: '0.2s ease',
+                    minWidth: '190px',
+                  }}
+                >
+                  LLM (Gemini)
+                </button>
+
+                <button
+                  onClick={() => setMode('hybrid')}
+                  className="mode-btn"
+                  style={{
+                    padding: '12px 22px',
+                    borderRadius: '10px',
+                    border: mode === 'hybrid' ? '2px solid #2196f3' : '2px solid #1b3a57',
+                    backgroundColor: mode === 'hybrid' ? '#2196f3' : '#1b3a57',
+                    color: 'white',
+                    cursor: 'pointer',
+                    fontSize: '16px',
+                    transition: '0.2s ease',
+                    minWidth: '190px',
+                  }}
+                >
+                  Hybrid (NLP + LLM)
+                </button>
+              </div>
+
+              {mode === 'hybrid' && (
+                <p
+                  style={{
+                    marginTop: '16px',
+                    color: '#ff4d4f',
+                    fontWeight: 600,
+                    textAlign: 'center',
+                    maxWidth: '520px',
+                  }}
+                >
+                  Hybrid mode may be very slow without a Gemini subscription — loading can take up to around 5 minutes.
+                </p>
+              )}
 
               <div className="supported-sites">
                 <p>Supported sites:</p>
@@ -222,13 +339,23 @@ function App() {
               {messages.map((msg, idx) => (
                 <div
                   key={idx}
-                  className={`message ${msg.type === 'user' ? 'user-message' : 'bot-message'}`}
+                  className={`message ${
+                    msg.type === 'user' ? 'user-message' : 'bot-message'
+                  }`}
                 >
                   <div className="message-content">
-                    {msg.text.split('\n').map((line, i) => <p key={i}>{line}</p>)}
+                    {msg.text.split('\n').map((line, i) => (
+                      <p key={i}>{line}</p>
+                    ))}
 
                     {msg.type === 'bot' && (
-                      <div style={{ display: "flex", gap: "10px", marginTop: "6px" }}>
+                      <div
+                        style={{
+                          display: "flex",
+                          gap: "10px",
+                          marginTop: "6px"
+                        }}
+                      >
                         <button
                           className="speak-btn"
                           onClick={() => speak(msg.text)}
@@ -252,7 +379,9 @@ function App() {
                 <div className="message bot-message">
                   <div className="message-content">
                     <div className="typing-indicator">
-                      <span></span><span></span><span></span>
+                      <span></span>
+                      <span></span>
+                      <span></span>
                     </div>
                   </div>
                 </div>

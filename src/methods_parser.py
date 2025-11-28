@@ -1,12 +1,21 @@
 import json
 import spacy
 from pathlib import Path
+from dotenv import load_dotenv
+from google import genai
+from google.genai import types
+import os
+import re
 
 
 class MethodsParser:
-    def __init__(self, directions):
+    def __init__(
+        self, directions, mode="classical", model_name="gemini-2.5-flash-lite"
+    ):
+        self.mode = mode
+        self.model_name = model_name
+
         self.directions = directions["directions"]
-        self.tools = None
         self.nlp = spacy.load("en_core_web_sm")
         self.directions_split = self.split_directions_into_steps()
         # Load method keywords from JSON file
@@ -17,7 +26,20 @@ class MethodsParser:
 
         self.method_keywords = data.get("method_keywords")
 
-    # can maybe add this to the Steps section
+        if self.mode != "classical":
+            self.path = Path(__file__).resolve().parent.parent
+            load_dotenv(self.path / "apikey.env")
+            self.api_key = os.getenv("GEMINI_API_KEY")
+            if not self.api_key:
+                raise ValueError(
+                    "GEMINI_API_KEY not found. Please set it in your .env file."
+                )
+
+            self.client = genai.Client(api_key=self.api_key)
+
+            with open(self.path / "src" / "prompts" / "methods_prompt.txt", "r") as f:
+                self.methods_prompt = f.read()
+
     def split_directions_into_steps(self):
         """
         Split recipe directions into individual sentence steps.
@@ -40,11 +62,11 @@ class MethodsParser:
         return split_dirs
 
     def extract_methods(self, step):
-        """Extracts tools from a given step using spaCy NLP.
+        """Extracts methods from a given step using spaCy NLP.
         Args:
             step (str): A single step from the recipe directions.
         Returns:
-            list: A list of extracted tools found in the step.
+            list: A list of extracted methods found in the step.
         """
         doc = self.nlp(step)
         methods = []
@@ -128,7 +150,69 @@ class MethodsParser:
 
         return methods
 
-    def parse(self):
+    def _message_formatting(self, context: str) -> str:
+        return "=== Context ===\n" f"{context}\n\n" "=== Context ===\n\n" "Output:"
+
+    def extract_methods_llm(self, step):
+        """Extracts methods from a given step using LLM-based approach.
+        Args:
+            step (str): A single step from the recipe directions.
+        Returns:
+            list: A list of extracted methods found in the step.
+        """
+        payload = json.dumps({"step": step}, ensure_ascii=False)
+        full_prompt = self.methods_prompt.strip() + "\n\nINPUT JSON:\n" + payload
+
+        contents = self._message_formatting(full_prompt)
+
+        response = self.client.models.generate_content(
+            model=self.model_name,
+            contents=contents,
+            config=types.GenerateContentConfig(
+                temperature=0.2,
+                top_p=0.8,
+                top_k=40,
+            ),
+        )
+
+        try:
+            raw = response.text
+        except AttributeError:
+            raw_parts = []
+            for cand in getattr(response, "candidates", []) or []:
+                for part in getattr(cand, "content", {}).parts or []:
+                    if hasattr(part, "text"):
+                        raw_parts.append(part.text)
+            raw = "".join(raw_parts)
+
+        if raw is None:
+            return self.extract_methods(step)
+
+        text = raw.strip()
+
+        if text.startswith("```"):
+            text = re.sub(r"^```(?:json)?", "", text, flags=re.IGNORECASE).strip()
+            if text.endswith("```"):
+                text = text[:-3].strip()
+
+        try:
+            parsed = json.loads(text)
+        except json.JSONDecodeError:
+            return self.extract_methods(step)
+
+        if not isinstance(parsed, list):
+            return self.extract_methods(step)
+
+        methods = []
+        for item in parsed:
+            if isinstance(item, str):
+                m = item.strip().lower()
+                if m:
+                    methods.append(m)
+
+        return methods
+
+    def parse(self, flag_llm=False):
         """
         Parse cooking directions and extract cooking methods from each step.
         Uses self.extract_methods() to identify cooking methods in each step.
@@ -145,8 +229,10 @@ class MethodsParser:
         for direction, steps in self.directions_split.items():
             output_dict = {"direction": direction, "steps": steps, "methods": ()}
             for step in steps:
-                methods_in_step = self.extract_methods(step)
-                # output_dict["methods"].append(methods_in_step)
+                if flag_llm:
+                    methods_in_step = self.extract_methods_llm(step)
+                else:
+                    methods_in_step = self.extract_methods(step)
                 output_dict["methods"] = list(
                     set(output_dict["methods"]) | set(methods_in_step)
                 )

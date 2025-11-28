@@ -8,12 +8,32 @@ from collections import Counter
 from urllib.parse import quote
 from pathlib import Path
 import json
+import os
+from dotenv import load_dotenv
+from google import genai
+from google.genai import types
+
+GREEN = "\033[92m"
+CYAN = "\033[96m"
+YELLOW = "\033[93m"
+MAGENTA = "\033[95m"
+RESET = "\033[0m"
+BOLD = "\033[1m"
 
 
 class Chatbot:
     """Initialize Chatbot"""
 
-    def __init__(self, test=False, backend=False):
+    def __init__(
+        self,
+        mode="classical",
+        test=False,
+        backend=False,
+        model_name="gemini-2.5-flash-lite",
+    ):
+        self.mode = mode
+        self.model_name = model_name
+
         self.responses = [
             self._retrieval_query,
             self._navigation_query,
@@ -31,6 +51,35 @@ class Chatbot:
         procedures_path = self.path / "procedures.json"
         with open(procedures_path, "r") as f:
             self.procedures = json.load(f)
+
+        if self.mode != "classical":
+            self.path = Path(__file__).resolve().parent.parent
+            load_dotenv(self.path / "apikey.env")
+            self.api_key = os.getenv("GEMINI_API_KEY")
+            if not self.api_key:
+                raise ValueError(
+                    "GEMINI_API_KEY not found. Please set it in your .env file."
+                )
+
+            self.client = genai.Client(api_key=self.api_key)
+
+            with open(
+                self.path
+                / "src"
+                / "prompts"
+                / "parameter_clarification_procedure_prompt.txt",
+                "r",
+            ) as f:
+                self.parameter_clarification_procedure_prompt = f.read()
+
+            with open(
+                self.path
+                / "src"
+                / "prompts"
+                / "qa_prompt.txt",
+                "r",
+            ) as f:
+                self.qa_prompt = f.read()
 
         self.step_words = [
             "first",
@@ -149,6 +198,75 @@ class Chatbot:
 
         self.current_step = 0
 
+    def _message_formatting(self, context: str) -> str:
+        return "=== Context ===\n" f"{context}\n\n" "=== Context ===\n\n" "Output:"
+
+    def _llm_parameter_clarification_procedure(self, question_type, question):
+        """
+        Hybrid-mode LLM helper for parameter / clarification / procedure questions.
+        Falls back to classical handling on any failure.
+        """
+        try:
+            payload = {
+                "user_query": question,
+                "current_step_index": self.current_step,
+                "steps": self.steps,
+                "ingredients": self.ingredients,
+                "tool_definitions": self.usages,
+                "procedure_definitions": self.procedures,
+                "youtube_search_url": self._get_youtube_link(question),
+                "question_type": question_type,
+            }
+
+            full_prompt = (
+                self.parameter_clarification_procedure_prompt.strip()
+                + "\n\nINPUT JSON:\n"
+                + json.dumps(payload, ensure_ascii=False)
+            )
+
+            contents = self._message_formatting(full_prompt)
+
+            response = self.client.models.generate_content(
+                model=self.model_name,
+                contents=contents,
+                config=types.GenerateContentConfig(
+                    temperature=0.2,
+                    top_p=0.8,
+                    top_k=40,
+                ),
+            )
+
+            try:
+                raw = response.text
+            except AttributeError:
+                raw_parts = []
+                for cand in getattr(response, "candidates", []) or []:
+                    for part in (
+                        getattr(getattr(cand, "content", None), "parts", []) or []
+                    ):
+                        if hasattr(part, "text"):
+                            raw_parts.append(part.text)
+                raw = "".join(raw_parts)
+
+            if raw is None:
+                return None
+
+            text = raw.strip()
+
+            if text.startswith("```"):
+                text = re.sub(
+                    r"^```(?:txt|text|plain)?", "", text, flags=re.IGNORECASE
+                ).strip()
+                if text.endswith("```"):
+                    text = text[:-3].strip()
+
+            if not text:
+                return None
+
+            return text
+        except Exception:
+            return None
+
     def process_url(self, url):
         """
         Parses metadata related to URL and stores in chatbot
@@ -173,7 +291,7 @@ class Chatbot:
             if self.test:
                 url = "https://www.allrecipes.com/recipe/166160/juicy-thanksgiving-turkey/"
             else:
-                url = input("Please input the recipe URL: ")
+                url = input(YELLOW + "Enter the recipe URL: " + RESET)
 
             if self.process_url(url):
                 break
@@ -231,12 +349,12 @@ class Chatbot:
         if self.test:
             print("Ingredients parsed")
 
-        methods = MethodsParser(self.raw_steps)
+        methods = MethodsParser(self.raw_steps, self.mode)
         self.methods = methods.parse()
         if self.test:
             print("Methods parsed")
 
-        steps = StepsParser(self.raw_steps, self.ingredients)
+        steps = StepsParser(self.raw_steps, self.ingredients, self.mode)
         self.steps = steps.parse()
 
         for step in self.steps:
@@ -245,7 +363,7 @@ class Chatbot:
         if self.test:
             print("Steps parsed")
 
-        tools = ToolsParser(self.raw_steps)
+        tools = ToolsParser(self.raw_steps, self.mode)
         self.tools = tools.parse()
         if self.test:
             print("Tools parsed")
@@ -283,9 +401,30 @@ class Chatbot:
         Maintains continual loop of conversation while updating internal state
         """
 
+        print(
+            CYAN
+            + "\n------------------------------------------------------------"
+            + RESET
+        )
+        print(BOLD + "You can now ask questions about the recipe." + RESET)
+        print("(Type 'exit' or 'quit' to stop)")
+        print(
+            CYAN
+            + "------------------------------------------------------------\n"
+            + RESET
+        )
+
         while True:
-            query = input("Please input a question: ")
-            print(self.respond(query))
+            query = input(GREEN + "You: " + RESET)
+
+            if query.lower().strip() in ("exit", "quit"):
+                print(CYAN + "\nGoodbye!\n" + RESET)
+                break
+
+            answer = self.respond(query)
+
+            print(BOLD + MAGENTA + "Assistant:" + RESET)
+            print(f"{answer}\n")
 
     def respond(self, query):
         try:
@@ -344,15 +483,89 @@ class Chatbot:
 
             question_type = self._identify_query(query)
 
-            if question_type == -1:
+            if question_type == -1 and self.mode == "classical":
                 return "Unclear question type.\n"
+            elif question_type == -1 and self.mode != "classical":
+                llm_answer = self.llm_respond(query, self.steps[self.current_step])
+                if llm_answer is not None and llm_answer != "":
+                    return llm_answer
+                else:
+                    return "Unclear question type.\n"
 
             if self.test:
                 print(self.query_types[question_type])
 
             return self.responses[question_type](query)
         except:
-            return "Unclear question.\n"
+            if self.mode == "classical":
+                return "Unclear question.\n"
+            else:
+                llm_answer = self.llm_respond(query, self.steps[self.current_step])
+                if llm_answer is not None and llm_answer != "":
+                    return llm_answer
+                else:
+                    return "Unclear question.\n"
+
+    def llm_respond(self, query, step):
+        """
+        Hybrid-mode LLM-based response for unsupported questions.
+        """
+        try:
+            ingredients_text = "\n".join(self.raw_ingredients["ingredients"])
+            steps_text = "\n".join(self.raw_steps["directions"])
+
+            full_prompt = (
+                self.qa_prompt.strip()
+                + "\n\nRECIPE INGREDIENTS:\n"
+                + ingredients_text
+                + "\n\nRECIPE STEPS:\n"
+                + steps_text
+                + "\n\nUser Question:\n"
+                + query.strip()
+            )
+
+            contents = self._message_formatting(full_prompt)
+
+            response = self.client.models.generate_content(
+                model=self.model_name,
+                contents=contents,
+                config=types.GenerateContentConfig(
+                    temperature=0.2,
+                    top_p=0.8,
+                    top_k=40,
+                ),
+            )
+
+            try:
+                raw = response.text
+            except AttributeError:
+                raw_parts = []
+                for cand in getattr(response, "candidates", []) or []:
+                    for part in (
+                        getattr(getattr(cand, "content", None), "parts", []) or []
+                    ):
+                        if hasattr(part, "text"):
+                            raw_parts.append(part.text)
+                raw = "".join(raw_parts)
+
+            if raw is None:
+                return None
+
+            text = raw.strip()
+
+            if text.startswith("```"):
+                text = re.sub(
+                    r"^```(?:txt|text|plain)?", "", text, flags=re.IGNORECASE
+                ).strip()
+                if text.endswith("```"):
+                    text = text[:-3].strip()
+
+            if not text:
+                return None
+
+            return text
+        except Exception:
+            return None
 
     def _clean_query(self, query):
         """
@@ -499,6 +712,13 @@ class Chatbot:
     """
 
     def _parameter_query(self, question):
+        if self.mode != "classical":
+            llm_answer = self._llm_parameter_clarification_procedure(
+                "parameter", question
+            )
+            if llm_answer is not None and llm_answer != "":
+                return llm_answer
+
         time_keywords = ["long", "time", "when", "done", "finished", "complete"]
         substitute_keywords = ["instead", "use", "replace", "what"]
         temperature_keywords = [
@@ -585,6 +805,13 @@ class Chatbot:
         return f"https://www.youtube.com/results?search_query={encoded_query}"
 
     def _clarification_query(self, query):
+        if self.mode != "classical":
+            llm_answer = self._llm_parameter_clarification_procedure(
+                "clarification", query
+            )
+            if llm_answer is not None and llm_answer != "":
+                return llm_answer
+
         keyword = self._extract_keyword(query)
 
         tokens = keyword.split()
@@ -606,7 +833,10 @@ class Chatbot:
             definition = self.usages[tool]["description"]
             result = f"{tool[0].upper() + tool[1:]} refers to {definition[0].lower() + definition[1:]}. {usage}\n"
 
-            result += f"Here is a YouTube search which may help further clarify your query: {self._get_youtube_link(query)}"
+            result += (
+                "Here is a YouTube search which may help further clarify your query: "
+                f"{self._get_youtube_link(query)}"
+            )
 
             return result
 
@@ -620,6 +850,13 @@ class Chatbot:
     """
 
     def _procedure_query(self, query):
+        if self.mode != "classical":
+            llm_answer = self._llm_parameter_clarification_procedure(
+                "procedure", query
+            )
+            if llm_answer is not None and llm_answer != "":
+                return llm_answer
+
         tokens = query.split()
         keyword = tokens[-1]
 
@@ -636,9 +873,15 @@ class Chatbot:
         result = ""
         if len(counter) > 0:
             mx = counter.most_common(1)[0][0]
-            result += f"{mx[0].upper() + mx[1:]} means {self.procedures[mx][0].lower() + self.procedures[mx][1:]}\n"
+            result += (
+                f"{mx[0].upper() + mx[1:]} means "
+                f"{self.procedures[mx][0].lower() + self.procedures[mx][1:]}\n"
+            )
 
-        result += f"Here is a YouTube search which may help further clarify your query: {self._get_youtube_link(query)}\n"
+        result += (
+            "Here is a YouTube search which may help further clarify your query: "
+            f"{self._get_youtube_link(query)}\n"
+        )
 
         return result
 
@@ -698,5 +941,24 @@ class Chatbot:
 
 
 if __name__ == "__main__":
-    chatbot = Chatbot()
+    print(BOLD + CYAN + "\n=== Recipe Navigation Chatbot ===\n" + RESET)
+
+    # Let the user choose the mode in the CLI
+    print(YELLOW + "Choose mode:" + RESET)
+    print("  1) Classical NLP")
+    print("  2) Hybrid (NLP + LLM)")
+    choice = input(GREEN + "Enter 1 or 2 [default 1]: " + RESET).strip()
+
+    if choice == "2":
+        selected_mode = "hybrid"
+    else:
+        selected_mode = "classical"
+
+    print(
+        BOLD
+        + f"\nMode selected: {selected_mode.capitalize() if selected_mode == 'classical' else 'Hybrid (NLP + LLM)'}"
+        + RESET
+    )
+
+    chatbot = Chatbot(mode=selected_mode)
     chatbot.converse()

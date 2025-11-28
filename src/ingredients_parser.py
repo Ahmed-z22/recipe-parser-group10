@@ -2,16 +2,29 @@ import json
 import re
 import spacy
 from pathlib import Path
+from dotenv import load_dotenv
+from google import genai
+from google.genai import types
+import os
+import time
 
 
 class IngredientsParser:
-    def __init__(self, ingredients: dict[str, list[str]]):
+    def __init__(
+        self,
+        ingredients: dict[str, list[str]],
+        mode: str = "classical",
+        model_name: str = "gemini-2.5-flash-lite",
+    ):
+        self.mode = mode
         self.ingredients = ingredients["ingredients"]
         self.ingredients_names = None
         self.ingredients_quantities_and_amounts = None
         self.ingredients_measurement_units = None
         self.descriptors = None
         self.preparations = None
+        self.model_name = model_name
+
         self.nlp = spacy.load("en_core_web_sm")
         self.path = Path(__file__).resolve().parent / "helper_files"
         self.alias_to_canon = self._load_json(self.path / "units_map.json")
@@ -28,6 +41,39 @@ class IngredientsParser:
         )
         self.unit = re.compile(r"^\s*(?:" + self.units_pattern + r")\b\.?\s*", re.I)
         self.paren = re.compile(r"\([^)]*\)")
+
+        if self.mode != "classical":
+            self.path = Path(__file__).resolve().parent.parent
+            load_dotenv(self.path / "apikey.env")
+            self.api_key = os.getenv("GEMINI_API_KEY")
+            if not self.api_key:
+                raise ValueError(
+                    "GEMINI_API_KEY not found. Please set it in your .env file."
+                )
+
+            self.client = genai.Client(api_key=self.api_key)
+
+            self.ingredients_names_prompt = self._load_text(
+                self.path / "src" / "prompts" / "ingredients_names_prompt.txt"
+            )
+            # self.quantities_prompt = self._load_text(
+            #     self.path / "src" / "prompts" / "quantities_prompt.txt"
+            # )
+            # self.measurement_units_prompt = self._load_text(
+            #     self.path / "src" / "prompts" / "measurement_units_prompt.txt"
+            # )
+            self.descriptors_prompt = self._load_text(
+                self.path / "src" / "prompts" / "descriptors_prompt.txt"
+            )
+            self.preparations_prompt = self._load_text(
+                self.path / "src" / "prompts" / "preparations_prompt.txt"
+            )
+
+            self.paren = re.compile(r"\([^)]*\)")
+
+    def _load_text(self, path: Path) -> str:
+        with path.open("r", encoding="utf-8") as f:
+            return f.read()
 
     def _load_json(self, path: Path) -> dict[str, str]:
         with path.open("r", encoding="utf-8") as f:
@@ -170,8 +216,121 @@ class IngredientsParser:
             results.append([line] if keep and line else [])
         self.preparations = results
 
-    def parse(self) -> list[dict[str, list[str] | str | int | float | None]]:
-        """ "
+    def _message_formatting(self, context: str) -> str:
+        return "=== Context ===\n" f"{context}\n\n" "=== Context ===\n\n" "Output:"
+
+    def _call_llm(self, task_prompt: str):
+        """
+        Calls the LLM with a given task prompt and the current ingredients list.
+        Expects the model to return ONLY a JSON array (no extra text).
+        """
+        payload = json.dumps({"ingredients": self.ingredients}, ensure_ascii=False)
+        full_prompt = task_prompt.strip() + "\n\nINPUT JSON:\n" + payload
+
+        contents = self._message_formatting(full_prompt)
+
+        response = self.client.models.generate_content(
+            model=self.model_name,
+            contents=contents,
+            config=types.GenerateContentConfig(
+                temperature=0.2,
+                top_p=0.8,
+                top_k=40,
+            ),
+        )
+
+        try:
+            raw = response.text
+        except AttributeError:
+            raw_parts = []
+            for cand in getattr(response, "candidates", []) or []:
+                for part in getattr(cand, "content", {}).parts or []:
+                    if hasattr(part, "text"):
+                        raw_parts.append(part.text)
+            raw = "".join(raw_parts)
+
+        if raw is None:
+            raise ValueError("LLM response had no text content.")
+
+        text = raw.strip()
+
+        if text.startswith("```"):
+            text = re.sub(r"^```(?:json)?", "", text, flags=re.IGNORECASE).strip()
+            if text.endswith("```"):
+                text = text[:-3].strip()
+
+        try:
+            return json.loads(text)
+        except json.JSONDecodeError as e:
+            raise ValueError(
+                f"Failed to parse LLM JSON output: {e}\nRaw output:\n{text}"
+            ) from e
+
+    def llm_based_extraction(self):
+        """
+        Uses the LLM (with 5 task-specific prompts) to populate:
+        - self.ingredients_names
+        - self.ingredients_quantities_and_amounts
+        - self.ingredients_measurement_units
+        - self.descriptors
+        - self.preparations
+        """
+
+        try:
+            self.ingredients_names = self._call_llm(self.ingredients_names_prompt)
+            time.sleep(5)
+        except Exception:
+            self.extract_ingredients_names()  # Fallback to classical extraction
+            time.sleep(20)
+
+        # self.ingredients_quantities_and_amounts = self._call_llm(self.quantities_prompt)
+        # self.ingredients_measurement_units = self._call_llm(self.measurement_units_prompt)
+        self.extract_quantities()  # Regular extraction for quantities
+        self.extract_measurement_units()  # Regular extraction for measurement units
+
+        try:
+            self.descriptors = self._call_llm(self.descriptors_prompt)
+            time.sleep(5)
+        except Exception:
+            self.extract_descriptors()  # Fallback to classical extraction
+            time.sleep(20)
+
+        try:
+            self.preparations = self._call_llm(self.preparations_prompt)
+            time.sleep(5)
+        except Exception:
+            self.extract_preparations()  # Fallback to classical extraction
+            time.sleep(20)
+
+        n = len(self.ingredients)
+        for name, arr in [
+            ("ingredient_name", self.ingredients_names),
+            ("ingredient_quantity", self.ingredients_quantities_and_amounts),
+            ("measurement_unit", self.ingredients_measurement_units),
+            ("ingredient_descriptors", self.descriptors),
+            ("ingredient_preparation", self.preparations),
+        ]:
+            if not isinstance(arr, list) or len(arr) != n:
+                raise ValueError(
+                    f"LLM output for {name} must be a list of length {n}, got {type(arr)} with length {len(arr) if isinstance(arr, list) else 'N/A'}."
+                )
+
+    def _clean_name_with_descriptors(self, name: str, descriptors: list[str]) -> str:
+        """
+        Remove any token from ingredient_name that also appears in ingredient_descriptors.
+        """
+        if not name:
+            return name
+
+        name_tokens = name.split()
+        desc_set = set(descriptors or [])
+
+        cleaned = [tok for tok in name_tokens if tok not in desc_set]
+
+        return " ".join(cleaned).strip()
+
+    def _parse_classical(self) -> list[dict[str, list[str] | str | int | float | None]]:
+        """
         Executes all extraction methods ingredients.
         returns: A list of dictionaries, each containing the parsed components of an ingredient:
             - original_ingredient_sentence: The original ingredient line.
@@ -181,6 +340,7 @@ class IngredientsParser:
             - ingredient_preparation: List of preparation phrases (list of str).
             - ingredient_descriptors: List of adjective descriptors (list of str).
         """
+
         self.extract_ingredients_names()
         self.extract_quantities()
         self.extract_measurement_units()
@@ -201,3 +361,39 @@ class IngredientsParser:
             )
 
         return output
+
+    def _parse_llm(self) -> list[dict[str, list[str] | str | int | float | None]]:
+        """
+        LLM-based parsing. Same output schema as _parse_classical.
+        """
+
+        self.llm_based_extraction()
+
+        output = []
+        for i in range(len(self.ingredients)):
+            cleaned_name = self._clean_name_with_descriptors(
+                self.ingredients_names[i], self.descriptors[i]
+            )
+            output.append(
+                {
+                    "original_ingredient_sentence": self.ingredients[i],
+                    "ingredient_name": cleaned_name,
+                    "ingredient_quantity": self.ingredients_quantities_and_amounts[i],
+                    "measurement_unit": self.ingredients_measurement_units[i],
+                    "ingredient_descriptors": self.descriptors[i],
+                    "ingredient_preparation": self.preparations[i],
+                }
+            )
+        return output
+
+    def parse(self) -> list[dict[str, list[str] | str | int | float | None]]:
+        """
+        Parses the ingredients based on the selected mode.
+
+        - "classical": spaCy-based pipeline only.
+        - "hybrid": LLM-based extraction with fallbacks to classical methods.
+        """
+        if self.mode == "classical":
+            return self._parse_classical()
+        else:
+            return self._parse_llm()
